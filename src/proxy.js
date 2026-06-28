@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 const PUBLIC_PATHS = ['/login', '/api', '/_next', '/favicon.ico', '/logo.png', '/icon.png', '/apple-icon.png'];
 
-export function middleware(request) {
+export function proxy(request) {
   const { pathname } = request.nextUrl;
 
   // Allow public paths and static assets
