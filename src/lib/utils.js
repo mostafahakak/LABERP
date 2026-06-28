@@ -11,7 +11,9 @@ export const PRIMARY_COLOR = '#c2a18c';
 
 export function formatPrice(price) {
   const num = Number(price) || 0;
-  return num % 1 === 0 ? String(Math.trunc(num)) : String(num);
+  const [intPart, decPart] = String(num).split('.');
+  const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return decPart ? `${formatted}.${decPart}` : formatted;
 }
 
 export function formatPriceLE(price) {

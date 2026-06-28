@@ -32,6 +32,10 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
+    // Sync cookie with localStorage
+    if (!document.cookie.includes('UID=')) {
+      document.cookie = `UID=${uid}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+    }
     loadUserProfile(uid)
       .then((profile) => {
         if (profile) setUser(profile);
@@ -44,6 +48,7 @@ export function AuthProvider({ children }) {
     const credential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
     const uid = credential.user.uid;
     localStorage.setItem('UID', uid);
+    document.cookie = `UID=${uid}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
     const profile = await loadUserProfile(uid);
     if (profile) {
       setUser(profile);
@@ -56,6 +61,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('UID');
+    document.cookie = 'UID=; path=/; max-age=0';
     setUser(null);
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 export default function LoginPage() {
   const { login, user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -20,9 +22,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/dashboard");
+      router.replace(redirect);
     }
-  }, [loading, user, router]);
+  }, [loading, user, router, redirect]);
 
   if (!loading && user) return null;
 
@@ -32,7 +34,7 @@ export default function LoginPage() {
     setError("");
     try {
       await login(email, password);
-      router.replace("/dashboard");
+      router.replace(redirect);
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {
