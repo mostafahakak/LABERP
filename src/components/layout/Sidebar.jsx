@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { getMenuForUserType } from '@/lib/menu-config';
-import { ChevronRight, LogOut, ChevronsUpDown } from 'lucide-react';
+import { ChevronRight, LogOut, ChevronsUpDown, PanelLeft } from 'lucide-react';
 import {
   Sidebar as SidebarRoot,
   SidebarContent,
@@ -21,6 +21,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   Collapsible,
@@ -35,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
 export default function AppSidebar() {
@@ -42,6 +44,7 @@ export default function AppSidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const menu = useMemo(() => getMenuForUserType(user?.type), [user?.type]);
+  const { toggleSidebar } = useSidebar();
 
   const isActive = (href) =>
     pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
@@ -81,6 +84,18 @@ export default function AppSidebar() {
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          {/* Collapse toggle inside sidebar */}
+          <SidebarMenuItem>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={toggleSidebar}
+              className="ml-auto text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            >
+              <PanelLeft className="size-4" />
+              <span className="sr-only">Toggle Sidebar</span>
+            </Button>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
@@ -97,13 +112,14 @@ export default function AppSidebar() {
                   className="group/collapsible"
                 >
                   <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip={item.title}>
-                        {item.icon && <item.icon />}
-                        <span>{item.title}</span>
-                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[open]/collapsible:rotate-90" />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
+                    <SidebarMenuButton
+                      tooltip={item.title}
+                      render={<CollapsibleTrigger />}
+                    >
+                      {item.icon && <item.icon />}
+                      <span>{item.title}</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
                     <CollapsibleContent>
                       <SidebarMenuSub>
                         {item.children.map((child) => (
@@ -142,27 +158,26 @@ export default function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[slot=sidebar-menu-button]:!p-1.5"
-                >
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {user?.name || 'User'}
-                    </span>
-                    <span className="truncate text-xs text-sidebar-foreground/50">
-                      {user?.email || ''}
-                    </span>
-                  </div>
-                  <ChevronsUpDown className="ml-auto size-4" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
+              <SidebarMenuButton
+                size="lg"
+                render={<DropdownMenuTrigger />}
+                className="data-[slot=sidebar-menu-button]:!p-1.5"
+              >
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">
+                    {user?.name || 'User'}
+                  </span>
+                  <span className="truncate text-xs text-sidebar-foreground/50">
+                    {user?.email || ''}
+                  </span>
+                </div>
+                <ChevronsUpDown className="ml-auto size-4" />
+              </SidebarMenuButton>
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                 side="bottom"

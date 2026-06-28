@@ -5,12 +5,28 @@ import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/f
 import { db } from '@/lib/firebase';
 import { formatDate } from '@/lib/utils';
 import Header from '@/components/layout/Header';
-import { PageCard, SelectField } from '@/components/ui/PageComponents';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { TrendingUp, TrendingDown, DollarSign, Activity } from 'lucide-react';
 
 const LOG_TYPES = ['All', 'Invoice', 'Purchase Invoice', 'Salary', 'Loan', 'Utility', 'Inventory'];
 const CHART_TYPES = ['Income', 'Expenses', 'Netprofit'];
@@ -65,81 +81,203 @@ export default function HomePageContent() {
     });
   }, []);
 
+  const totals = chartData.reduce(
+    (acc, row) => ({
+      income: acc.income + row.income,
+      expense: acc.expense + row.expense,
+      net: acc.net + row.net,
+    }),
+    { income: 0, expense: 0, net: 0 }
+  );
+
   return (
     <>
-      <Header />
-      <PageCard title="Dashboard" icon="🏠">
-        {/* Chart Type Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {CHART_TYPES.map((t) => (
-            <Button
-              key={t}
-              variant={selectedChart === t ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedChart(t)}
-            >
-              {t}
-            </Button>
-          ))}
-        </div>
+      <Header title="Dashboard" />
 
-        {/* Summary Table */}
-        <div className="overflow-x-auto mb-6 rounded-lg border border-border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-muted/50">
-                <th className="text-left py-2.5 px-3 font-medium text-muted-foreground">Date</th>
-                <th className="text-right py-2.5 px-3 font-medium text-muted-foreground">Income</th>
-                <th className="text-right py-2.5 px-3 font-medium text-muted-foreground">Expenses</th>
-                <th className="text-right py-2.5 px-3 font-medium text-muted-foreground">Net</th>
-              </tr>
-            </thead>
-            <tbody>
-              {chartData.map((row) => (
-                <tr key={row.day} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
-                  <td className="py-2.5 px-3 font-medium">{row.day}</td>
-                  <td className="text-right px-3 text-emerald-600 font-medium">{selectedChart !== 'Expenses' ? row.income.toFixed(0) : '-'}</td>
-                  <td className="text-right px-3 text-destructive font-medium">{selectedChart !== 'Income' ? row.expense.toFixed(0) : '-'}</td>
-                  <td className="text-right px-3 font-semibold">{selectedChart === 'Netprofit' ? row.net.toFixed(0) : '-'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* ── Summary Cards ── */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Income</CardTitle>
+            <TrendingUp className="size-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600">{totals.income.toFixed(0)} LE</div>
+            <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
+            <TrendingDown className="size-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">{totals.expense.toFixed(0)} LE</div>
+            <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Net Profit</CardTitle>
+            <DollarSign className="size-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${totals.net >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+              {totals.net.toFixed(0)} LE
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Activity</CardTitle>
+            <Activity className="size-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{logs.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Log entries</p>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Activity Logs */}
-        <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-          <span className="text-primary">📋</span>
-          Activity Logs
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-          <SelectField label="Category" value={logCategory} onChange={setLogCategory} options={['All', 'Income', 'Expense']} />
-          <SelectField label="Type" value={logType} onChange={setLogType} options={LOG_TYPES} />
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground">Start</Label>
-            <Input type="date" value={logStart} onChange={(e) => setLogStart(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground">End</Label>
-            <Input type="date" value={logEnd} onChange={(e) => setLogEnd(e.target.value)} />
-          </div>
-        </div>
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {logs.map((log) => (
-            <Card key={log.id} className="shadow-none border-border/50 hover:border-primary/30 transition-colors">
-              <CardContent className="flex justify-between items-center py-3 px-4">
-                <div>
-                  <p className="font-medium text-sm text-foreground">{log.cName || log.name} — {log.type}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{log.Date} {log.Time} · {log.adminName}</p>
+      {/* ── Financial Overview ── */}
+      <div className="grid gap-4 lg:grid-cols-7 mb-6">
+        <Card className="lg:col-span-4">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Financial Overview</CardTitle>
+                <CardDescription>Daily breakdown for the last 7 days</CardDescription>
+              </div>
+              <div className="flex gap-1">
+                {CHART_TYPES.map((t) => (
+                  <Button
+                    key={t}
+                    variant={selectedChart === t ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedChart(t)}
+                  >
+                    {t}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Income</TableHead>
+                  <TableHead className="text-right">Expenses</TableHead>
+                  <TableHead className="text-right">Net</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {chartData.map((row) => (
+                  <TableRow key={row.day}>
+                    <TableCell className="font-medium">{row.day}</TableCell>
+                    <TableCell className="text-right text-emerald-600 font-medium">
+                      {selectedChart !== 'Expenses' ? row.income.toFixed(0) : '—'}
+                    </TableCell>
+                    <TableCell className="text-right text-destructive font-medium">
+                      {selectedChart !== 'Income' ? row.expense.toFixed(0) : '—'}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {selectedChart === 'Netprofit' ? row.net.toFixed(0) : '—'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* ── Quick Filters ── */}
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle>Filters</CardTitle>
+            <CardDescription>Filter activity logs</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground">Category</Label>
+              <Select value={logCategory} onValueChange={setLogCategory}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {['All', 'Income', 'Expense'].map((opt) => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground">Type</Label>
+              <Select value={logType} onValueChange={setLogType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOG_TYPES.map((opt) => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground">Start Date</Label>
+                <Input type="date" value={logStart} onChange={(e) => setLogStart(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground">End Date</Label>
+                <Input type="date" value={logEnd} onChange={(e) => setLogEnd(e.target.value)} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Activity Logs ── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="size-5 text-primary" />
+            Activity Logs
+          </CardTitle>
+          <CardDescription>{logs.length} entries found</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+            {logs.map((log) => (
+              <div
+                key={log.id}
+                className="flex items-center justify-between rounded-lg border border-border/50 px-4 py-3 hover:bg-muted/50 transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm text-foreground truncate">
+                    {log.cName || log.name} — {log.type}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {log.Date} {log.Time} · {log.adminName}
+                  </p>
                 </div>
-                <Badge variant={log.type === 'Income' || log.type === 'Invoice' ? 'default' : 'secondary'} className="font-semibold">
+                <Badge
+                  variant={log.type === 'Income' || log.type === 'Invoice' ? 'default' : 'secondary'}
+                  className="ml-3 font-semibold shrink-0"
+                >
                   {Number(log.amount || 0).toFixed(0)} LE
                 </Badge>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </PageCard>
+              </div>
+            ))}
+            {logs.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-sm">No log entries found</div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 }

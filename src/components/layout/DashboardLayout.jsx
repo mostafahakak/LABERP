@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="p-4 lg:p-6 max-w-7xl mx-auto">{children}</div>
+        <div className="w-full p-4 lg:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
