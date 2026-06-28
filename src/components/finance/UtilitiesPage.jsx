@@ -47,7 +47,7 @@ export default function UtilitiesPage() {
         ) : (
           <div className="space-y-3">
             {utilities.map((u) => (
-              <div key={u.id} className="flex items-center justify-between border rounded-xl p-4 bg-white">
+              <div key={u.id} className="flex items-center justify-between border rounded-xl p-4 bg-card">
                 <div className="flex items-center gap-4">
                   <span className="text-2xl">🔧</span>
                   <p className="font-semibold text-foreground">{u.name}</p>

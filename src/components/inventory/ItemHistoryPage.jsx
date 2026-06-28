@@ -27,7 +27,7 @@ function TransactionCard({ doc }) {
   const typeColor = isStockIn ? 'text-green-700' : 'text-red-700';
 
   return (
-    <div className="border rounded-lg p-4 bg-white shadow-sm">
+    <div className="border rounded-lg p-4 bg-card shadow-sm">
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
           <p className={`font-bold text-lg ${typeColor}`}>

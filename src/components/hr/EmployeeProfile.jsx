@@ -51,7 +51,7 @@ function FinanceRecordCard({ record, type }) {
   return (
     <Link
       href={href}
-      className="block border rounded-xl p-4 hover:shadow-md transition-shadow bg-white"
+      className="block border rounded-xl p-4 hover:shadow-md transition-shadow bg-card"
     >
       <div className="flex justify-between items-start gap-2 mb-2">
         <div>
@@ -354,7 +354,7 @@ export default function EmployeeProfile({ userId }) {
           />
         </div>
         <div
-          className="mt-4 inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-green-200 bg-green-50"
+          className="mt-4 inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10"
         >
           <span className="text-sm text-muted-foreground">Balance</span>
           <span className="font-bold text-green-700">{formatPriceLE(userData.balance)}</span>

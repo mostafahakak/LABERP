@@ -3,46 +3,63 @@
 import { useCallback, useEffect, useState } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { formatDate, formatPriceLE } from '@/lib/utils';
+import { formatPriceLE } from '@/lib/utils';
 import Header from '@/components/layout/Header';
-import { PageCard, Snackbar } from '@/components/ui/PageComponents';
+import { Snackbar } from '@/components/ui/PageComponents';
 import { buildFinancialTree } from './finance-helpers';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { TrendingUp, TrendingDown, DollarSign, Percent, ChevronRight, RefreshCw } from 'lucide-react';
 
 function TreeNode({ node, level = 0, expanded, toggle }) {
   const hasChildren = node.children?.length > 0;
   const isOpen = expanded.has(node.id);
-  const colors = {
-    income: 'border-green-200 bg-green-50',
-    expense: 'border-destructive/30 bg-destructive/10',
-    balance: 'border-blue-200 bg-blue-50',
-  };
 
   return (
-    <div className="mb-2">
-      <button
-        type="button"
-        onClick={() => hasChildren && toggle(node.id)}
-        className={`w-full text-left p-4 rounded-xl border ${colors[node.type] || 'border-border bg-white'}`}
-        style={{ marginLeft: level * 16 }}
-      >
-        <div className="flex justify-between items-start gap-3">
-          <div>
-            <p className="font-semibold text-foreground">{hasChildren ? (isOpen ? '▼' : '▶') : '•'} {node.title}</p>
-            <p className="text-sm text-muted-foreground">{node.subtitle}</p>
-            {node.metadata && Object.keys(node.metadata).length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {Object.entries(node.metadata).map(([k, v]) => (
-                  <span key={k} className="text-xs bg-white/70 px-2 py-0.5 rounded">{k}: {v}</span>
-                ))}
+    <div className={level > 0 ? 'ml-4 border-l border-border/50 pl-3' : ''}>
+      <Collapsible open={isOpen} onOpenChange={() => hasChildren && toggle(node.id)}>
+        <CollapsibleTrigger className="w-full" disabled={!hasChildren}>
+          <div className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors group">
+            <div className="flex items-center gap-2 min-w-0">
+              {hasChildren && (
+                <ChevronRight className={`size-4 text-muted-foreground shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+              )}
+              {!hasChildren && <div className="size-1.5 rounded-full bg-muted-foreground/40 shrink-0 ml-1 mr-0.5" />}
+              <div className="text-left min-w-0">
+                <p className="font-medium text-foreground text-sm truncate">{node.title}</p>
+                {node.subtitle && <p className="text-xs text-muted-foreground truncate">{node.subtitle}</p>}
               </div>
+            </div>
+            {node.amount > 0 && (
+              <span className="font-semibold text-sm text-foreground whitespace-nowrap shrink-0">
+                {formatPriceLE(node.amount)}
+              </span>
             )}
           </div>
-          {node.amount > 0 && <p className="font-bold text-foreground whitespace-nowrap">{formatPriceLE(node.amount)}</p>}
-        </div>
-      </button>
-      {isOpen && hasChildren && node.children.map((child) => (
-        <TreeNode key={child.id} node={child} level={level + 1} expanded={expanded} toggle={toggle} />
-      ))}
+        </CollapsibleTrigger>
+        {hasChildren && (
+          <CollapsibleContent>
+            {node.children.map((child) => (
+              <TreeNode key={child.id} node={child} level={level + 1} expanded={expanded} toggle={toggle} />
+            ))}
+          </CollapsibleContent>
+        )}
+      </Collapsible>
     </div>
   );
 }
@@ -110,48 +127,98 @@ export default function SummeryPage() {
   return (
     <>
       <Header title="Financial Summary" />
-      <PageCard title="Filters">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="text-sm text-muted-foreground">Branch</label>
-            <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-foreground">
-              {branches.map((b) => <option key={b} value={b}>{b}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="text-sm text-muted-foreground">Start Date</label>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-foreground" />
-          </div>
-          <div>
-            <label className="text-sm text-muted-foreground">End Date</label>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-foreground" />
-          </div>
-        </div>
-        <button type="button" onClick={load} className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">Refresh</button>
-      </PageCard>
 
-      {loading && <p className="text-center py-8">Loading financial data...</p>}
+      {/* Filters */}
+      <Card className="mb-5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <Label>Branch</Label>
+              <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {branches.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Start Date</Label>
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>End Date</Label>
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+          </div>
+          <Button onClick={load} disabled={loading} className="mt-4 gap-1.5">
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Loading...' : 'Refresh'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Loading skeleton */}
+      {loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2"><Skeleton className="h-4 w-24" /></CardHeader>
+              <CardContent><Skeleton className="h-8 w-28" /></CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {treeData && !loading && (
         <>
+          {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-            {[
-              ['Total Income', treeData.totalIncome, 'text-green-600'],
-              ['Total Expenses', treeData.totalExpenses, 'text-destructive'],
-              ['Net Profit', treeData.netProfit, 'text-blue-600'],
-              ['Profit Margin', `${marginPct}%`, 'text-purple-600'],
-            ].map(([title, val, cls]) => (
-              <div key={title} className="bg-card rounded-2xl border p-5 shadow-sm">
-                <p className="text-sm text-muted-foreground">{title}</p>
-                <p className={`text-2xl font-bold mt-1 ${cls}`}>
-                  {typeof val === 'number' ? formatPriceLE(val) : val}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Income</CardTitle>
+                <TrendingUp className="size-4 text-emerald-500" />
+              </CardHeader>
+              <CardContent><p className="text-2xl font-bold text-emerald-600">{formatPriceLE(treeData.totalIncome)}</p></CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
+                <TrendingDown className="size-4 text-destructive" />
+              </CardHeader>
+              <CardContent><p className="text-2xl font-bold text-destructive">{formatPriceLE(treeData.totalExpenses)}</p></CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Net Profit</CardTitle>
+                <DollarSign className="size-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <p className={`text-2xl font-bold ${treeData.netProfit >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                  {formatPriceLE(treeData.netProfit)}
                 </p>
-              </div>
-            ))}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Profit Margin</CardTitle>
+                <Percent className="size-4 text-primary" />
+              </CardHeader>
+              <CardContent><p className="text-2xl font-bold text-primary">{marginPct}%</p></CardContent>
+            </Card>
           </div>
-          <PageCard title={`Financial Tree — ${treeData.period}`}>
-            <TreeNode node={treeData.root} expanded={expanded} toggle={toggle} />
-          </PageCard>
+
+          {/* Financial Tree */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Financial Tree — {treeData.period}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TreeNode node={treeData.root} expanded={expanded} toggle={toggle} />
+            </CardContent>
+          </Card>
         </>
       )}
       <Snackbar message={snack} isError onClose={() => setSnack('')} />

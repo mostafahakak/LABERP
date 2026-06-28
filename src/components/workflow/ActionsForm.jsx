@@ -60,7 +60,7 @@ export default function ActionsForm() {
 
         <div className="space-y-3">
           {actions.map((action) => (
-            <div key={action.id} className="border rounded-lg p-4 bg-white">
+            <div key={action.id} className="border rounded-lg p-4 bg-card">
               <div className="flex justify-between items-start mb-2">
                 <h4 className="font-semibold text-foreground">
                   {action.action === 'Reassign Due Date' ? 'Reassign Due Date' : 'Phase Transition'}

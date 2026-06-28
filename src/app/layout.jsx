@@ -1,10 +1,10 @@
 import "./globals.css";
 import Providers from "@/components/Providers";
 import AppToaster from "@/components/ui/AppToaster";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Zain } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
+const zain = Zain({ subsets: ['latin'], weight: ['300', '400', '700', '800', '900'], variable: '--font-sans', display: 'swap' });
 
 export const metadata = {
   title: {
@@ -36,7 +36,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning className={cn("font-sans", jakarta.variable)}>
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", zain.variable)}>
       <body>
         <Providers>
           {children}

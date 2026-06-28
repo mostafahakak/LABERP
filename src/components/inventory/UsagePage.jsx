@@ -183,7 +183,7 @@ export default function UsagePage() {
                 addItem(e.target.value);
                 e.target.value = '';
               }}
-              className="w-full px-3 py-2.5 border border-input rounded-md text-foreground bg-white"
+              className="w-full px-3 py-2.5 border border-input rounded-md text-foreground bg-card"
             >
               <option value="">Choose an item to use</option>
               {allItems.map((item) => {
@@ -233,7 +233,7 @@ export default function UsagePage() {
                         </button>
                       </div>
                       <div className="flex items-center gap-3 mt-3">
-                        <div className="flex items-center gap-2 border rounded-lg bg-white px-2 py-1">
+                        <div className="flex items-center gap-2 border rounded-lg bg-card px-2 py-1">
                           <button
                             type="button"
                             onClick={() => adjustQuantity(index, -1)}

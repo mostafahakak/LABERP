@@ -61,7 +61,7 @@ export default function NotificationsPageContent() {
         <p className="text-sm text-muted-foreground mb-4">Net Profit: {formatPriceLE(totals.invoice - totals.purchase - totals.salary)}</p>
         <div className="space-y-3">
           {notifications.map((n) => (
-            <div key={n.id} className="border rounded-xl p-4 bg-white text-foreground">
+            <div key={n.id} className="border rounded-xl p-4 bg-card text-foreground">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-semibold">{n.name}</p>

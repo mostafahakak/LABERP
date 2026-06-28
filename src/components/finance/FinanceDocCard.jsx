@@ -17,7 +17,7 @@ export default function FinanceDocCard({ doc, linkable = true }) {
   const counterpartyName =
     type === 'Invoice' ? doc.drName || 'N/A' : doc.supplierName || doc.drName || 'N/A';
 
-  const statusColor = status === 'Paid' ? 'text-green-600 bg-green-50' : 'text-destructive bg-destructive/10';
+  const statusColor = status === 'Paid' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : 'text-destructive bg-destructive/10';
   const typeColor = type === 'Invoice' ? 'text-blue-600 bg-blue-50' : 'text-purple-600 bg-purple-50';
   const logType = type === 'Invoice' ? 'Income' : 'Expense';
   const href = `/dashboard/finance/invoices/${doc.id}?type=${logType}`;

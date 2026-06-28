@@ -33,7 +33,7 @@ function TransactionCard({ doc }) {
   const typeColor = isStockIn ? 'text-green-700' : 'text-red-700';
 
   return (
-    <div className="border rounded-lg p-4 bg-white shadow-sm">
+    <div className="border rounded-lg p-4 bg-card shadow-sm">
       <div className="flex items-start justify-between gap-2 mb-1">
         <div>
           <p className="font-bold text-lg text-foreground">{itemName}</p>
@@ -235,7 +235,7 @@ export default function TransactionsPage() {
                         type="button"
                         onClick={() => setSelectedItemId(isSelected ? null : item.id)}
                         className={`shrink-0 w-36 p-2 rounded-lg border text-sm ${
-                          isSelected ? 'bg-primary text-white border-black' : 'bg-white text-foreground border-input'
+                          isSelected ? 'bg-primary text-white border-black' : 'bg-card text-foreground border-input'
                         }`}
                       >
                         <p className="font-bold truncate">{item.name || 'N/A'}</p>

@@ -22,12 +22,12 @@ function InvoiceCard({ invoice }) {
   const total = Number(invoice.total) || 0;
   const remainingAmount = Number(invoice.remainingAmount) || 0;
   const status = invoice.status || 'N/A';
-  const statusColor = status === 'Paid' ? 'text-green-700 bg-green-50 border-green-200' : 'text-red-700 bg-destructive/10 border-destructive/30';
+  const statusColor = status === 'Paid' ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-destructive bg-destructive/10 border-destructive/30';
 
   return (
     <Link
       href={`/dashboard/finance/invoices/${invoice.id}`}
-      className="block border rounded-xl p-4 hover:shadow-md transition-shadow bg-white mb-3"
+      className="block border rounded-xl p-4 hover:shadow-md transition-shadow bg-card mb-3"
     >
       <div className="flex justify-between items-start gap-2 mb-2">
         <div>
@@ -259,7 +259,7 @@ export default function ClientDetail({ clientId }) {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-              <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-center">
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
                 <p className="text-xs text-muted-foreground mb-1">Total Amount</p>
                 <p className="font-bold text-green-700">{formatPriceLE(summary.totalAmount)}</p>
               </div>

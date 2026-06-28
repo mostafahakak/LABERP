@@ -109,7 +109,7 @@ export default function BankTransactions() {
       {!loading && logs.length === 0 && <p className="text-center text-muted-foreground">No transactions.</p>}
       <div className="space-y-2">
         {logs.map((l) => (
-          <div key={l.id} className="bg-white border rounded-xl p-4 flex justify-between gap-3">
+          <div key={l.id} className="bg-card border rounded-xl p-4 flex justify-between gap-3">
             <div>
               <p className="font-medium text-foreground">{l.name} — {l.cName}</p>
               <p className="text-sm text-muted-foreground">{l.Date} {l.Time} · {l.type}</p>

@@ -122,7 +122,7 @@ export default function PurchaseOrder() {
           <SelectField label="Supplier" value={supplierName} onChange={(v) => selectSupplier(v)} options={suppliers.map((s) => s.name)} />
           <div>
             <label className="block text-sm text-muted-foreground mb-1">Payment Method / DR Account</label>
-            <select value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full px-3 py-2.5 border border-input rounded-md text-foreground bg-white">
+            <select value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full px-3 py-2.5 border border-input rounded-md text-foreground bg-card">
               <option value="">Select...</option>
               {accounts.map((a) => (
                 <option key={`${a.sourceCollection}-${a.id}`} value={a.name}>

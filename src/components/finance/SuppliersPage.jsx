@@ -50,7 +50,7 @@ export default function SuppliersPage() {
         ) : (
           <div className="space-y-3">
             {suppliers.map((s) => (
-              <div key={s.id} className="flex items-center justify-between border rounded-xl p-4 bg-white">
+              <div key={s.id} className="flex items-center justify-between border rounded-xl p-4 bg-card">
                 <button
                   type="button"
                   onClick={() => router.push(`/dashboard/hr/suppliers/view?name=${encodeURIComponent(s.name)}&id=${s.id}`)}

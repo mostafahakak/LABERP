@@ -205,8 +205,8 @@ export default function ViewPurchaseRequests() {
     if (status === "Requested" || status === "Pending")
       return "text-orange-600 bg-orange-50";
     if (status === "Ordered") return "text-blue-600 bg-blue-50";
-    if (status === "Delivered") return "text-green-600 bg-green-50";
-    if (status === "Expired") return "text-red-600 bg-red-50";
+    if (status === "Delivered") return "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10";
+    if (status === "Expired") return "text-red-600 dark:text-red-400 bg-red-500/10";
     return "text-muted-foreground bg-muted";
   };
 

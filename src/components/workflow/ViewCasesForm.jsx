@@ -16,12 +16,25 @@ import {
 import { db } from "@/lib/firebase";
 import { formatDate, isDelayed, shortId, formatPriceLE } from "@/lib/utils";
 import Header from "@/components/layout/Header";
+import { SelectField, Snackbar } from "@/components/ui/PageComponents";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
-  PageCard,
-  SelectField,
-  Snackbar,
-} from "@/components/ui/PageComponents";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import ManageCaseDialog, { deleteCase } from "./ManageCaseDialog";
+import { Filter, X, CheckCircle2, Eye, Settings2, Trash2 } from "lucide-react";
 
 export default function ViewCasesForm() {
   const [clinics, setClinics] = useState([]);
@@ -146,79 +159,48 @@ export default function ViewCasesForm() {
 
   return (
     <>
-      <Header title="View Cases" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/view-cases' }]} />
-      <PageCard title="View Cases" icon="📋">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          <SelectField
-            label="Clinic Name"
-            value={selectedClinic}
-            onChange={setSelectedClinic}
-            options={clinics}
-            placeholder="All"
-          />
-          <SelectField
-            label="Type"
-            value={selectedType}
-            onChange={setSelectedType}
-            options={types}
-            placeholder="All"
-          />
-          <SelectField
-            label="Dr Name"
-            value={selectedDrName}
-            onChange={setSelectedDrName}
-            options={drNames}
-            placeholder="All"
-          />
-          <SelectField
-            label="Status"
-            value={selectedStatus}
-            onChange={setSelectedStatus}
-            options={statuses}
-            placeholder="All"
-          />
-          <SelectField
-            label="Due Status"
-            value={dueFilter}
-            onChange={setDueFilter}
-            options={["All", "Delayed"]}
-            placeholder="All"
-          />
-          <div>
-            <label className="block text-sm text-muted-foreground mb-1">
-              Date Arrival
-            </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full border rounded-md p-2.5 text-foreground"
-            />
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={clearFilters}
-          className="mb-6 px-4 py-2 border rounded-md text-foreground"
-        >
-          Clear Filters
-        </button>
+      <Header title="View Cases" />
 
-        <div className="space-y-4">
-          {cases.map((c) => (
-            <CaseCard
-              key={c.id}
-              caseData={c}
-              onManage={() => setManageCase(c)}
-              onDelete={() => setDeleteConfirm(c.id)}
-              onFinalize={() => handleFinalize(c.id)}
-            />
-          ))}
-          {cases.length === 0 && (
-            <p className="text-muted-foreground">No cases found.</p>
-          )}
-        </div>
-      </PageCard>
+      {/* Filters */}
+      <Card className="mb-5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2"><Filter className="size-4" /> Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            <SelectField label="Clinic Name" value={selectedClinic} onChange={setSelectedClinic} options={clinics} placeholder="All" />
+            <SelectField label="Type" value={selectedType} onChange={setSelectedType} options={types} placeholder="All" />
+            <SelectField label="Dr Name" value={selectedDrName} onChange={setSelectedDrName} options={drNames} placeholder="All" />
+            <SelectField label="Status" value={selectedStatus} onChange={setSelectedStatus} options={statuses} placeholder="All" />
+            <SelectField label="Due Status" value={dueFilter} onChange={setDueFilter} options={["All", "Delayed"]} placeholder="All" />
+            <div className="space-y-1.5">
+              <Label>Date Arrival</Label>
+              <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
+            </div>
+          </div>
+          <Button variant="outline" onClick={clearFilters} className="gap-1.5">
+            <X className="size-3.5" /> Clear Filters
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Cases List */}
+      <div className="space-y-4">
+        {cases.map((c) => (
+          <CaseCard
+            key={c.id}
+            caseData={c}
+            onManage={() => setManageCase(c)}
+            onDelete={() => setDeleteConfirm(c.id)}
+            onFinalize={() => handleFinalize(c.id)}
+          />
+        ))}
+        {cases.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">No cases found.</CardContent>
+          </Card>
+        )}
+      </div>
 
       {manageCase && (
         <ManageCaseDialog
@@ -229,37 +211,22 @@ export default function ViewCasesForm() {
         />
       )}
 
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-card rounded-xl p-6 max-w-sm w-full">
-            <p className="text-foreground mb-4">
-              Delete this case and its tracking records?
-            </p>
-            <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 border rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 bg-red-600 text-white rounded-md"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Case</AlertDialogTitle>
+            <AlertDialogDescription>Delete this case and its tracking records? This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleDelete(deleteConfirm)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <Snackbar
-        message={snack.message}
-        isError={snack.isError}
-        onClose={() => setSnack({ message: "", isError: false })}
-      />
+      <Snackbar message={snack.message} isError={snack.isError} onClose={() => setSnack({ message: "", isError: false })} />
     </>
   );
 }
@@ -287,87 +254,65 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
   }, [caseData.clinicName]);
 
   return (
-    <div
-      className={`relative border rounded-xl p-4 bg-white ${delayed ? "border-red-400" : "border-border"}`}
-    >
+    <Card className={`relative overflow-hidden ${delayed ? "border-destructive/60" : ""}`}>
       {delayed && (
-        <div className="absolute inset-0 bg-destructive/100/5 animate-pulse rounded-xl pointer-events-none" />
+        <div className="absolute inset-0 bg-destructive/5 animate-pulse pointer-events-none" />
       )}
-      <div className="flex flex-wrap justify-between gap-2 mb-2">
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={isFinalized}
-            disabled={isFinalized}
-            onChange={onFinalize}
-            title="Mark as Finalized"
-            className="w-5 h-5 accent-green-600"
-          />
-          <div>
-            <p className="font-bold text-foreground">{caseData.clinicName}</p>
-            {caseData.caseCode && (
-              <p className="text-xs text-muted-foreground">{caseData.caseCode}</p>
-            )}
-            {balance !== null && (
-              <p
-                className={`text-sm ${balance >= 0 ? "text-green-600" : "text-destructive"}`}
-              >
-                Balance: {formatPriceLE(balance)}
-              </p>
-            )}
+      <CardContent className="pt-5">
+        <div className="flex flex-wrap justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onFinalize}
+              disabled={isFinalized}
+              className="shrink-0"
+              title="Mark as Finalized"
+            >
+              <CheckCircle2 className={`size-5 ${isFinalized ? 'text-emerald-500' : 'text-muted-foreground/40 hover:text-emerald-500'} transition-colors`} />
+            </button>
+            <div>
+              <p className="font-bold text-foreground">{caseData.clinicName}</p>
+              {caseData.caseCode && (
+                <p className="text-xs text-muted-foreground">{caseData.caseCode}</p>
+              )}
+              {balance !== null && (
+                <p className={`text-sm ${balance >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                  Balance: {formatPriceLE(balance)}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-2 items-start">
+            <Badge variant="secondary">{caseData.caseType}</Badge>
+            <Badge variant={delayed ? 'destructive' : 'default'}>{caseData.status}</Badge>
           </div>
         </div>
-        <div className="flex gap-2">
-          <span className="text-xs px-2 py-1 bg-muted rounded text-foreground">
-            {caseData.caseType}
-          </span>
-          <span className="text-xs px-2 py-1 bg-blue-100 rounded text-blue-800">
-            {caseData.status}
-          </span>
+
+        <Separator className="mb-3" />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-foreground mb-4">
+          <p><span className="text-muted-foreground">ID:</span> {shortId(caseData.id)}</p>
+          <p><span className="text-muted-foreground">Price:</span> {formatPriceLE(caseData.price)}</p>
+          <p><span className="text-muted-foreground">Type:</span> {caseData.type}</p>
+          <p><span className="text-muted-foreground">Dr:</span> {caseData.drName}</p>
+          <p><span className="text-muted-foreground">Patient:</span> {caseData.patientName}</p>
+          <p><span className="text-muted-foreground">Due:</span> {caseData.dueDate || caseData.caseRequestDate}</p>
         </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-foreground mb-3">
-        <p>
-          <strong>ID:</strong> {shortId(caseData.id)}
-        </p>
-        <p>
-          <strong>Price:</strong> {formatPriceLE(caseData.price)}
-        </p>
-        <p>
-          <strong>Type:</strong> {caseData.type}
-        </p>
-        <p>
-          <strong>Dr:</strong> {caseData.drName}
-        </p>
-        <p>
-          <strong>Patient:</strong> {caseData.patientName}
-        </p>
-        <p>
-          <strong>Due:</strong> {caseData.dueDate || caseData.caseRequestDate}
-        </p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onManage}
-          className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm"
-        >
-          Manage
-        </button>
-        <Link
-          href={`/dashboard/workflow/cases/${caseData.id}`}
-          className="px-3 py-1.5 border rounded-md text-sm text-foreground"
-        >
-          View
-        </Link>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="px-3 py-1.5 border border-red-300 text-destructive rounded-md text-sm"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={onManage} className="gap-1.5">
+            <Settings2 className="size-3.5" /> Manage
+          </Button>
+          <Button size="sm" variant="outline" asChild className="gap-1.5">
+            <Link href={`/dashboard/workflow/cases/${caseData.id}`}>
+              <Eye className="size-3.5" /> View
+            </Link>
+          </Button>
+          <Button size="sm" variant="outline" onClick={onDelete} className="gap-1.5 text-destructive hover:text-destructive">
+            <Trash2 className="size-3.5" /> Delete
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -126,7 +126,7 @@ function ClientCard({ client }) {
       {address && <p className="text-xs text-muted-foreground mb-2 truncate">📍 {address}</p>}
       <div
         className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold ${
-          balance >= 0 ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-destructive/10 text-red-700 border border-destructive/30'
+          balance >= 0 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' : 'bg-destructive/10 text-destructive border border-destructive/30'
         }`}
       >
         Balance: {formatPriceLE(balance)}

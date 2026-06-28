@@ -59,7 +59,7 @@ export function getPhaseInfo(caseData) {
 
 export function getStatusBadgeColor(status) {
   if (status === "Pending delivery") return "bg-orange-100 text-orange-800";
-  if (status === "Design") return "bg-blue-100 text-blue-800";
+  if (status === "Design") return "bg-blue-500/10 text-blue-600 dark:text-blue-400";
   if (status === "Try in") return "bg-purple-100 text-purple-800";
   if (status === "Finalized") return "bg-green-100 text-green-800";
   return "bg-gray-100 text-gray-800";

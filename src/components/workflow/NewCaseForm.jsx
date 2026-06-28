@@ -298,7 +298,7 @@ export default function NewCaseForm() {
                             setTypePickerIndex(index);
                             setShowTypePicker(true);
                           }}
-                          className="flex-1 text-left px-3 py-3 bg-white border rounded-lg text-foreground"
+                          className="flex-1 text-left px-3 py-3 bg-card border rounded-lg text-foreground"
                         >
                           {entry.name || "Select type"}
                         </button>

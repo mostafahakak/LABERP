@@ -171,7 +171,7 @@ export default function BanksPage() {
             <h3 className="font-semibold text-foreground mb-3">{type}</h3>
             <div className="space-y-3">
               {list.map((bank) => (
-                <div key={bank.id} className="flex flex-wrap items-center justify-between gap-3 border rounded-xl p-4 bg-white">
+                <div key={bank.id} className="flex flex-wrap items-center justify-between gap-3 border rounded-xl p-4 bg-card">
                   <div>
                     <p className="font-bold text-foreground">{bank.name}</p>
                     <p className="text-green-700 font-semibold">{formatPriceLE(bank.balance)}</p>
