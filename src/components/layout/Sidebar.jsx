@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { getMenuForUserType } from '@/lib/menu-config';
@@ -10,7 +10,8 @@ import { ACCENT_COLOR } from '@/lib/utils';
 
 export default function Sidebar({ mobileOpen, onClose }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const menu = getMenuForUserType(user?.type);
   const [expanded, setExpanded] = useState({});
 
@@ -74,6 +75,16 @@ export default function Sidebar({ mobileOpen, onClose }) {
           </div>
         ))}
       </nav>
+      <button
+        type="button"
+        onClick={() => { logout(); router.push('/login'); }}
+        className="mt-4 w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1" />
+        </svg>
+        Logout
+      </button>
     </div>
   );
 
