@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, onSnapshot, orderBy, query, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { DetailSkeleton } from '@/components/ui/PageSkeleton';
 import Header from '@/components/layout/Header';
 import { PageCard } from '@/components/ui/PageComponents';
 import { formatPriceLE } from '@/lib/utils';
@@ -30,7 +31,7 @@ export default function CaseDetailForm({ caseId }) {
     return onSnapshot(q, (snap) => setNotes(snap.docs.map((d) => d.data())));
   }, [caseId, refreshKey]);
 
-  if (loading) return <div className="p-8 text-center text-foreground">Loading...</div>;
+  if (loading) return <DetailSkeleton />;
   if (!caseData) return <div className="p-8 text-center text-foreground">Case not found</div>;
 
   const rows = [
@@ -52,7 +53,7 @@ export default function CaseDetailForm({ caseId }) {
 
   return (
     <>
-      <Header />
+      <Header title="Case Detail" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }, { label: 'View Cases', href: '/dashboard/workflow/view-cases' }]} />
       <PageCard title={`Case ${caseId.substring(0, 8)}`} icon="📄">
         <div className="flex items-center gap-2 mb-4">
           <span className={`px-3 py-1 rounded-full text-sm ${getStatusBadgeColor(caseData.status)}`}>{caseData.status}</span>

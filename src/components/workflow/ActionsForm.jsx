@@ -43,7 +43,7 @@ export default function ActionsForm() {
 
   return (
     <>
-      <Header />
+      <Header title="Actions" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
       <PageCard title="Case Actions" icon="📊">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>

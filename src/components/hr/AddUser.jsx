@@ -110,7 +110,7 @@ export default function AddUser() {
 
   return (
     <>
-      <Header title="Add Employee" />
+      <Header title="Add Employee" breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }]} />
       <PageCard title="Employee Details" icon="👤">
         <form onSubmit={createUser} className="max-w-xl mx-auto space-y-4">
           <TextField label="Full Name" value={name} onChange={(e) => setName(e.target.value)} />

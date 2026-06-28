@@ -251,7 +251,7 @@ export default function NewCaseForm() {
 
   return (
     <>
-      <Header />
+      <Header title="New Case" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
       <PageCard title="New Case" icon="💼">
         <form onSubmit={submitCase}>
           <ResponsiveRow width={width}>

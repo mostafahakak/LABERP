@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, doc, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { DetailSkeleton } from '@/components/ui/PageSkeleton';
 import Header from '@/components/layout/Header';
 import { PageCard } from '@/components/ui/PageComponents';
 import { formatPriceLE, shortId } from '@/lib/utils';
@@ -32,11 +33,11 @@ export default function ClinicDetailForm({ clinicId }) {
     return () => { unsub1(); unsub2(); };
   }, [clinic?.name]);
 
-  if (!clinic) return <p className="text-foreground p-8">Loading...</p>;
+  if (!clinic) return <DetailSkeleton />;
 
   return (
     <>
-      <Header />
+      <Header title="Clinic Detail" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }, { label: 'Clinics', href: '/dashboard/workflow/clinics' }]} />
       <PageCard title={clinic.name} icon="🏥">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-foreground">
           <div className="border rounded-lg p-4">

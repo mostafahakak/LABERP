@@ -9,6 +9,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { ListSkeleton } from '@/components/ui/PageSkeleton';
 import Header from '@/components/layout/Header';
 import { TextField, SelectField, Snackbar } from '@/components/ui/PageComponents';
 import { formatPriceLE } from '@/lib/utils';
@@ -169,7 +170,7 @@ export default function ClientsList() {
 
   return (
     <>
-      <Header title="Clients" />
+      <Header title="Clients" breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }]} />
 
       <div className="bg-card rounded-2xl shadow-sm border border-border p-4 mb-5">
         <input
@@ -181,11 +182,7 @@ export default function ClientsList() {
         />
       </div>
 
-      {loading && (
-        <div className="flex justify-center py-16">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
+      {loading && <ListSkeleton />}
 
       {error && <p className="text-destructive text-center py-8">Error loading clients: {error}</p>}
 

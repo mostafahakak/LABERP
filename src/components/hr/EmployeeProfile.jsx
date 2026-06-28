@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth-context';
+import { DetailSkeleton } from '@/components/ui/PageSkeleton';
 import Header from '@/components/layout/Header';
 import { PageCard, TextField, SelectField, Snackbar, LoadingOverlay } from '@/components/ui/PageComponents';
 import { formatPriceLE } from '@/lib/utils';
@@ -260,17 +261,13 @@ export default function EmployeeProfile({ userId }) {
   );
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-16">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <DetailSkeleton />;
   }
 
   if (!userData) {
     return (
       <>
-        <Header title="Employee Profile" />
+        <Header title="Employee Profile" breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }]} />
         <p className="text-center text-muted-foreground py-12">User not found.</p>
       </>
     );
@@ -278,7 +275,7 @@ export default function EmployeeProfile({ userId }) {
 
   return (
     <>
-      <Header title={userData.name || 'Employee Profile'} />
+      <Header title={userData.name || 'Employee Profile'} breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }]} />
 
       <PageCard
         title="Profile"

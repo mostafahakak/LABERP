@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { ListSkeleton } from '@/components/ui/PageSkeleton';
 import Header from '@/components/layout/Header';
 import { formatPriceLE } from '@/lib/utils';
 
@@ -81,7 +82,7 @@ export default function LoanHistory() {
 
   return (
     <>
-      <Header title="Loans History" />
+      <Header title="Loans History" breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }]} />
 
       <div className="bg-card rounded-2xl shadow-sm border border-border p-5 mb-5">
         <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -112,11 +113,7 @@ export default function LoanHistory() {
         />
       </div>
 
-      {loading && (
-        <div className="flex justify-center py-16">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
+      {loading && <ListSkeleton rows={4} />}
 
       {error && <p className="text-destructive text-center py-8">Error: {error}</p>}
 

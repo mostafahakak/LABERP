@@ -6,7 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { getMenuForUserType } from '@/lib/menu-config';
-import { ChevronRight, LogOut, ChevronsUpDown, PanelLeft } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { ChevronRight, LogOut, ChevronsUpDown, Sun, Moon } from 'lucide-react';
 import {
   Sidebar as SidebarRoot,
   SidebarContent,
@@ -21,7 +22,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   Collapsible,
@@ -36,15 +36,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import ThemeToggle from '@/components/ui/ThemeToggle';
 
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
   const menu = useMemo(() => getMenuForUserType(user?.type), [user?.type]);
-  const { toggleSidebar } = useSidebar();
 
   const isActive = (href) =>
     pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
@@ -76,25 +74,13 @@ export default function AppSidebar() {
                   className="size-8 object-contain"
                 />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="hidden md:grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">360 Lab ERP</span>
                 <span className="truncate text-xs text-sidebar-foreground/50 capitalize">
                   {user?.type || 'Staff'}
                 </span>
               </div>
             </SidebarMenuButton>
-          </SidebarMenuItem>
-          {/* Collapse toggle inside sidebar */}
-          <SidebarMenuItem>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={toggleSidebar}
-              className="ml-auto text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            >
-              <PanelLeft className="size-4" />
-              <span className="sr-only">Toggle Sidebar</span>
-            </Button>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -108,7 +94,7 @@ export default function AppSidebar() {
               item.children ? (
                 <Collapsible
                   key={item.title}
-                  defaultOpen={true}
+                  defaultOpen={false}
                   className="group/collapsible"
                 >
                   <SidebarMenuItem>
@@ -184,8 +170,14 @@ export default function AppSidebar() {
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem className="gap-2">
-                  <ThemeToggle />
+                <DropdownMenuItem
+                  className="gap-2 cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+                  }}
+                >
+                  {resolvedTheme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
                   <span>Toggle theme</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

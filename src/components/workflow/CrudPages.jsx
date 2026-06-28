@@ -95,7 +95,7 @@ export function ManageTypesForm() {
 
   return (
     <>
-      <Header />
+      <Header title="Manage Types" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
       <PageCard
         title="Manage Types"
         icon="🏷️"
@@ -168,7 +168,7 @@ export function ManageClinicsForm() {
 
   return (
     <>
-      <Header />
+      <Header title="Manage Clinics" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
       <PageCard
         title="Manage Clinics"
         icon="🏥"
@@ -233,7 +233,7 @@ export function ManageDrsForm() {
 
   return (
     <>
-      <Header />
+      <Header title="Manage Doctors" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
       <PageCard
         title="Manage Doctors"
         icon="👨‍⚕️"
@@ -290,7 +290,7 @@ export function ManageDeliveryForm() {
 
   return (
     <>
-      <Header />
+      <Header title="Manage Delivery" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
       <PageCard
         title="Manage Delivery Companies"
         icon="🚚"

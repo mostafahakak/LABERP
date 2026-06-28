@@ -25,7 +25,7 @@ const NAV_ITEMS = [
 export default function EmployeesHub() {
   return (
     <>
-      <Header />
+      <Header title="HR" breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }]} />
       <div className="space-y-3">
         {NAV_ITEMS.map((item) => (
           <Link

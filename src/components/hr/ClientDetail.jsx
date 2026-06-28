@@ -12,6 +12,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { DetailSkeleton } from '@/components/ui/PageSkeleton';
 import Header from '@/components/layout/Header';
 import { PageCard, TextField, Snackbar, LoadingOverlay } from '@/components/ui/PageComponents';
 import { formatDate, formatPriceLE } from '@/lib/utils';
@@ -152,17 +153,13 @@ export default function ClientDetail({ clientId }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-16">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <DetailSkeleton />;
   }
 
   if (!client) {
     return (
       <>
-        <Header title="Client Detail" />
+        <Header title="Client Detail" breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }, { label: 'Clients', href: '/dashboard/hr/clients' }]} />
         <p className="text-center text-muted-foreground py-12">Client not found.</p>
       </>
     );
@@ -170,7 +167,7 @@ export default function ClientDetail({ clientId }) {
 
   return (
     <>
-      <Header title={client.name || 'Client Detail'} />
+      <Header title={client.name || 'Client Detail'} breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }, { label: 'Clients', href: '/dashboard/hr/clients' }]} />
 
       <PageCard title="Client Information" icon="👤">
         <div className="space-y-4 max-w-xl">

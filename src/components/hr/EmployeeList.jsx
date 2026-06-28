@@ -13,6 +13,7 @@ import {
   increment,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { ListSkeleton } from '@/components/ui/PageSkeleton';
 import Header from '@/components/layout/Header';
 import { Snackbar } from '@/components/ui/PageComponents';
 import { formatPriceLE } from '@/lib/utils';
@@ -241,12 +242,8 @@ export default function EmployeeList() {
 
   return (
     <>
-      <Header title="Employee Records" />
-      {loading && (
-        <div className="flex justify-center py-16">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
+      <Header title="Employee Records" breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }]} />
+      {loading && <ListSkeleton />}
       {error && <p className="text-destructive text-center py-8">Error: {error}</p>}
       {!loading && !error && employees.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
