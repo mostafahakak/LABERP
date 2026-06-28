@@ -1,20 +1,14 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import Sidebar from './Sidebar';
-
-const MenuContext = createContext({ openMenu: () => {} });
-
-export function useMenu() {
-  return useContext(MenuContext);
-}
+import AppSidebar from './Sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 
 export default function DashboardLayout({ children }) {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -34,13 +28,11 @@ export default function DashboardLayout({ children }) {
   if (!user) return null;
 
   return (
-    <MenuContext.Provider value={{ openMenu: () => setMobileOpen(true) }}>
-      <div className="min-h-screen flex bg-background">
-        <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-        <main className="flex-1 min-w-0 overflow-auto">
-          <div className="p-4 lg:p-6 max-w-7xl mx-auto">{children}</div>
-        </main>
-      </div>
-    </MenuContext.Provider>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <div className="p-4 lg:p-6 max-w-7xl mx-auto">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

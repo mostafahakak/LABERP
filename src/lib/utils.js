@@ -5,9 +5,9 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-export const ACCENT_COLOR = '#c3a28e';
-export const SHELL_BG = '#171821';
-export const PRIMARY_COLOR = '#A9DFD8';
+export const ACCENT_COLOR = '#c2a18c';
+export const SHELL_BG = '#30394d';
+export const PRIMARY_COLOR = '#c2a18c';
 
 export function formatPrice(price) {
   const num = Number(price) || 0;

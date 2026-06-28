@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function LoginPage() {
   const { login, user, loading } = useAuth();
@@ -40,7 +41,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-sidebar flex items-center justify-center p-6">
+    <div className="min-h-screen bg-secondary flex items-center justify-center p-6 relative">
+      <ThemeToggle className="absolute top-4 right-4 text-secondary-foreground/70 hover:text-secondary-foreground" />
       <Card className="w-full max-w-md border-border/30 shadow-2xl">
         <CardHeader className="flex flex-col items-center pb-2">
           <div className="w-28 h-28 rounded-2xl bg-primary/10 p-3 flex items-center justify-center mb-2">
