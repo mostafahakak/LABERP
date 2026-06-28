@@ -1,32 +1,35 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { useAuth } from '@/lib/auth-context';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
   const { login, user, loading } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  if (!loading && user) {
-    router.replace('/dashboard');
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard");
+    }
+  }, [loading, user, router]);
+
+  if (!loading && user) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
     try {
       await login(email, password);
-      router.replace('/dashboard');
+      router.replace("/dashboard");
     } catch (err) {
-      setError(err.message || 'Login failed');
+      setError(err.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
@@ -36,8 +39,17 @@ export default function LoginPage() {
     <div className="min-h-screen bg-white flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <Image src="/logo.png" alt="360 Lab ERP" width={200} height={200} className="object-contain" />
-          <h1 className="mt-4 text-xl font-bold text-black text-center">Welcome to 360 Lab ERP</h1>
+          <Image
+            src="/logo.png"
+            alt="360 Lab ERP"
+            width={200}
+            height={200}
+            className="object-contain"
+            loading="eager"
+          />
+          <h1 className="mt-4 text-xl font-bold text-black text-center">
+            Welcome to 360 Lab ERP
+          </h1>
         </div>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -66,7 +78,7 @@ export default function LoginPage() {
             disabled={isLoading}
             className="w-full py-3.5 bg-black text-[#d9ae02] font-bold rounded-lg disabled:opacity-50"
           >
-            {isLoading ? 'Logging in...' : 'Login'}
+            {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>
