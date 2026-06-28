@@ -39,7 +39,7 @@ function InvoiceCard({ invoice }) {
           {status}
         </span>
       </div>
-      <div className="grid grid-cols-3 gap-2 mb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
         <div>
           <p className="text-xs text-muted-foreground">Total</p>
           <p className="text-sm font-bold text-green-700">{formatPriceLE(total)}</p>

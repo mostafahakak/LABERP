@@ -294,7 +294,7 @@ export default function CreateInvoice() {
             ))}
           </div>
         )}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm">
           <div>Subtotal: <strong>{formatPriceLE(subtotal)}</strong></div>
           <div>Total: <strong>{formatPriceLE(total)}</strong></div>
           <div>Remaining: <strong>{formatPriceLE(remaining)}</strong></div>

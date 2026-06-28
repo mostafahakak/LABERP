@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { formatDate } from '@/lib/utils';
+import { useTheme } from 'next-themes';
 import Header from '@/components/layout/Header';
+import Chart from '@/components/ui/Chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -18,14 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { TrendingUp, TrendingDown, DollarSign, Activity } from 'lucide-react';
 
 const LOG_TYPES = ['All', 'Invoice', 'Purchase Invoice', 'Salary', 'Loan', 'Utility', 'Inventory'];
@@ -33,6 +26,8 @@ const CHART_TYPES = ['Income', 'Expenses', 'Netprofit'];
 
 export default function HomePageContent() {
   const [selectedChart, setSelectedChart] = useState('Income');
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
   const [logCategory, setLogCategory] = useState('All');
   const [logType, setLogType] = useState('All');
   const [logStart, setLogStart] = useState('');
@@ -141,10 +136,10 @@ export default function HomePageContent() {
       </div>
 
       {/* ── Financial Overview ── */}
-      <div className="grid gap-4 lg:grid-cols-7 mb-6">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-7 mb-6">
         <Card className="lg:col-span-4">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <CardTitle>Financial Overview</CardTitle>
                 <CardDescription>Daily breakdown for the last 7 days</CardDescription>
@@ -164,32 +159,32 @@ export default function HomePageContent() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Income</TableHead>
-                  <TableHead className="text-right">Expenses</TableHead>
-                  <TableHead className="text-right">Net</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {chartData.map((row) => (
-                  <TableRow key={row.day}>
-                    <TableCell className="font-medium">{row.day}</TableCell>
-                    <TableCell className="text-right text-emerald-600 font-medium">
-                      {selectedChart !== 'Expenses' ? row.income.toFixed(0) : '—'}
-                    </TableCell>
-                    <TableCell className="text-right text-destructive font-medium">
-                      {selectedChart !== 'Income' ? row.expense.toFixed(0) : '—'}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {selectedChart === 'Netprofit' ? row.net.toFixed(0) : '—'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {chartData.length > 0 ? (
+              <Chart
+                type="area"
+                height={300}
+                series={[
+                  ...(selectedChart !== 'Expenses' ? [{ name: 'Income', data: chartData.map((r) => r.income) }] : []),
+                  ...(selectedChart !== 'Income' ? [{ name: 'Expenses', data: chartData.map((r) => r.expense) }] : []),
+                  ...(selectedChart === 'Netprofit' ? [{ name: 'Net', data: chartData.map((r) => r.net) }] : []),
+                ]}
+                options={{
+                  chart: { type: 'area', toolbar: { show: false }, background: 'transparent', fontFamily: 'inherit', sparkline: { enabled: false } },
+                  xaxis: { categories: chartData.map((r) => r.day), labels: { style: { colors: isDark ? '#9ca3af' : '#6b7280', fontSize: '11px' } } },
+                  yaxis: { labels: { style: { colors: isDark ? '#9ca3af' : '#6b7280' }, formatter: (v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0) } },
+                  colors: ['#22c55e', '#ef4444', '#c2a18c'],
+                  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 95, 100] } },
+                  stroke: { curve: 'smooth', width: 2 },
+                  grid: { borderColor: isDark ? '#1f2937' : '#e5e7eb', strokeDashArray: 4 },
+                  dataLabels: { enabled: false },
+                  tooltip: { theme: isDark ? 'dark' : 'light' },
+                  legend: { position: 'top', labels: { colors: isDark ? '#d1d5db' : '#374151' } },
+                  theme: { mode: isDark ? 'dark' : 'light' },
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">Loading chart data...</div>
+            )}
           </CardContent>
         </Card>
 

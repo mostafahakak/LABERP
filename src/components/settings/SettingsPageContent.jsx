@@ -127,7 +127,7 @@ export default function SettingsPageContent() {
             </label>
             <div className="space-y-2 mb-6">
               {employees.map((emp) => (
-                <label key={emp.id} className="flex items-center gap-2 text-foreground border rounded-lg p-3">
+                <label key={emp.id} className="flex flex-wrap items-center gap-2 text-foreground border rounded-lg p-3">
                   <input
                     type="checkbox"
                     checked={selected.has(emp.id)}

@@ -74,7 +74,7 @@ export default function ActionsForm() {
                   <span className="px-2 py-1 bg-primary/20 rounded">{action.toPhase}</span>
                 </p>
               )}
-              <div className="grid grid-cols-2 gap-2 text-sm text-foreground">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-foreground">
                 <p><strong>Admin:</strong> {action.adminName}</p>
                 <p><strong>Clinic:</strong> {action.clinicName}</p>
                 <p><strong>Case ID:</strong> {shortId(action.caseUID)}</p>

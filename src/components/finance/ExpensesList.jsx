@@ -124,7 +124,7 @@ export default function ExpensesList() {
 
       {loading ? <p className="text-center py-8">Loading...</p> : (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
             {[['Total Amount', totals.total], ['Total Paid', totals.paid], ['Total Remaining', totals.remaining]].map(([l, v]) => (
               <div key={l} className="bg-card rounded-xl border-border p-4 text-center">
                 <p className="text-sm text-muted-foreground">{l}</p>

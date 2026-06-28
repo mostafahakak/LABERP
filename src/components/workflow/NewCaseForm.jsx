@@ -291,7 +291,7 @@ export default function NewCaseForm() {
                     <p className="text-muted-foreground py-3">No types added yet</p>
                   ) : (
                     selectedTypesList.map((entry, index) => (
-                      <div key={index} className="flex items-center gap-3 py-2">
+                      <div key={index} className="flex flex-wrap items-center gap-3 py-2">
                         <button
                           type="button"
                           onClick={() => {

@@ -211,7 +211,7 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
     <>
       <Header title={`${invoice.type} — ${invoice.name}`} />
       <PageCard title="Invoice Details">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div><span className="text-muted-foreground">Date</span><p className="font-medium text-foreground">{invoice.Date} {invoice.Time}</p></div>
           <div><span className="text-muted-foreground">Status</span><p className="font-medium">{invoice.status}</p></div>
           <div><span className="text-muted-foreground">Bank</span><p className="font-medium">{invoice.bank}</p></div>
