@@ -6,7 +6,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 import { getMenuForUserType } from '@/lib/menu-config';
-import { ACCENT_COLOR } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 export default function Sidebar({ mobileOpen, onClose }) {
   const pathname = usePathname();
@@ -22,12 +25,20 @@ export default function Sidebar({ mobileOpen, onClose }) {
   const isActive = (href) => pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
 
   const content = (
-    <div className="h-full flex flex-col bg-white border-r border-gray-200 p-4 overflow-y-auto">
-      <div className="pt-6 pb-4 flex flex-col items-center">
-        <Image src="/logo.png" alt="360 Lab ERP" width={120} height={120} className="object-contain" />
-        <p className="mt-3 text-base font-semibold text-black">{user?.name}</p>
+    <div className="h-full flex flex-col bg-sidebar text-sidebar-foreground">
+      {/* Logo & User */}
+      <div className="pt-6 pb-2 px-4 flex flex-col items-center">
+        <div className="w-20 h-20 rounded-2xl bg-white/10 p-2 flex items-center justify-center">
+          <Image src="/logo.png" alt="360 Lab" width={64} height={64} className="object-contain" />
+        </div>
+        <p className="mt-3 text-sm font-semibold text-sidebar-foreground">{user?.name}</p>
+        <span className="text-xs text-sidebar-foreground/50 capitalize">{user?.type || 'Staff'}</span>
       </div>
-      <nav className="flex-1 space-y-1">
+
+      <Separator className="mx-4 my-3 bg-sidebar-border" />
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto scrollbar-thin">
         {menu.map((item, index) => (
           <div key={item.title}>
             {item.children ? (
@@ -35,24 +46,32 @@ export default function Sidebar({ mobileOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => toggleExpand(index)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-md text-black hover:bg-gray-50"
+                  className={cn(
+                    'w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors',
+                    'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                  )}
                 >
                   <span className="font-medium">{item.title}</span>
-                  <span className="text-gray-500">{expanded[index] ? '▲' : '▼'}</span>
+                  <svg
+                    className={cn('w-4 h-4 transition-transform', expanded[index] && 'rotate-180')}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
                 {expanded[index] && (
-                  <div className="ml-6 space-y-1">
+                  <div className="ml-3 pl-3 border-l border-sidebar-border space-y-0.5 mt-0.5">
                     {item.children.map((child) => (
                       <Link
                         key={child.href}
                         href={child.href}
                         onClick={onClose}
-                        className={`block px-3 py-2 rounded-md text-sm ${
+                        className={cn(
+                          'block px-3 py-1.5 rounded-lg text-sm transition-colors',
                           isActive(child.href)
-                            ? 'font-bold'
-                            : 'text-black hover:bg-gray-50'
-                        }`}
-                        style={isActive(child.href) ? { color: ACCENT_COLOR } : undefined}
+                            ? 'bg-sidebar-primary text-sidebar-primary-foreground font-medium'
+                            : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                        )}
                       >
                         {child.title}
                       </Link>
@@ -64,10 +83,12 @@ export default function Sidebar({ mobileOpen, onClose }) {
               <Link
                 href={item.href}
                 onClick={onClose}
-                className={`block px-3 py-2 rounded-md font-medium ${
-                  isActive(item.href) ? 'text-black' : 'text-black hover:bg-gray-50'
-                }`}
-                style={isActive(item.href) ? { backgroundColor: ACCENT_COLOR } : undefined}
+                className={cn(
+                  'block px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  isActive(item.href)
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                    : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
+                )}
               >
                 {item.title}
               </Link>
@@ -75,28 +96,36 @@ export default function Sidebar({ mobileOpen, onClose }) {
           </div>
         ))}
       </nav>
-      <button
-        type="button"
-        onClick={() => { logout(); router.push('/login'); }}
-        className="mt-4 w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1" />
-        </svg>
-        Logout
-      </button>
+
+      <Separator className="mx-4 my-2 bg-sidebar-border" />
+
+      {/* Logout */}
+      <div className="p-3">
+        <Button
+          variant="ghost"
+          onClick={() => { logout(); router.push('/login'); }}
+          className="w-full justify-start gap-2 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1" />
+          </svg>
+          Logout
+        </Button>
+      </div>
     </div>
   );
 
   return (
     <>
+      {/* Desktop sidebar */}
       <aside className="hidden lg:block w-64 shrink-0">{content}</aside>
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-xl">{content}</aside>
-        </div>
-      )}
+
+      {/* Mobile sheet */}
+      <Sheet open={mobileOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+        <SheetContent side="left" className="w-64 p-0 bg-sidebar border-sidebar-border">
+          {content}
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

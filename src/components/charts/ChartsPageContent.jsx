@@ -5,6 +5,8 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Header from '@/components/layout/Header';
 import { PageCard } from '@/components/ui/PageComponents';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { formatPriceLE } from '@/lib/utils';
 
 function groupSum(docs, keyField, valueField = 'paidAmount') {
@@ -19,20 +21,22 @@ function groupSum(docs, keyField, valueField = 'paidAmount') {
 function PieTable({ title, rows }) {
   const total = rows.reduce((s, [, v]) => s + v, 0) || 1;
   return (
-    <div className="border rounded-xl p-4 bg-white">
-      <h4 className="font-bold text-black mb-3">{title}</h4>
-      <div className="space-y-2">
+    <Card className="shadow-none border-border/50">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-semibold text-foreground">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
         {rows.slice(0, 10).map(([label, value]) => (
-          <div key={label} className="flex items-center gap-2 text-sm text-black">
-            <div className="flex-1 truncate">{label}</div>
-            <div className="w-24 bg-gray-100 rounded-full h-2 overflow-hidden">
-              <div className="h-full bg-[#c3a28e]" style={{ width: `${(value / total) * 100}%` }} />
+          <div key={label} className="flex items-center gap-3 text-sm">
+            <div className="flex-1 truncate text-foreground">{label}</div>
+            <div className="w-28 bg-muted rounded-full h-2 overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(value / total) * 100}%` }} />
             </div>
-            <span className="w-20 text-right">{formatPriceLE(value)}</span>
+            <span className="w-20 text-right font-medium text-muted-foreground">{formatPriceLE(value)}</span>
           </div>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -67,14 +71,14 @@ export default function ChartsPageContent() {
       <PageCard title="Charts" icon="📈">
         <div className="flex gap-2 mb-6">
           {tabs.map((t) => (
-            <button
+            <Button
               key={t}
-              type="button"
+              variant={tab === t ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === t ? 'bg-black text-[#c3a28e]' : 'border text-black'}`}
             >
               {t}
-            </button>
+            </Button>
           ))}
         </div>
         <PieTable title={`${tab} breakdown`} rows={data} />

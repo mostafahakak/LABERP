@@ -2,50 +2,64 @@
 
 import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { ACCENT_COLOR } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
-export function PageCard({ title, icon, children, action }) {
+export function PageCard({ title, icon, children, action, className }) {
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          {icon && <span style={{ color: ACCENT_COLOR }}>{icon}</span>}
-          <h2 className="text-lg font-bold text-black">{title}</h2>
+    <Card className={cn('shadow-sm border-border/60 mb-5', className)}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            {icon && <span className="text-primary">{icon}</span>}
+            {title}
+          </CardTitle>
+          {action}
         </div>
-        {action}
-      </div>
-      <hr className="mb-4" />
-      {children}
-    </div>
+        <Separator className="mt-3" />
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
   );
 }
 
 export function TextField({ label, value, onChange, type = 'text', readOnly = false, required = true, maxLines = 1, className = '' }) {
-  const Input = maxLines > 1 ? 'textarea' : 'input';
   return (
-    <div className={className}>
-      <label className="block text-sm text-gray-600 mb-1">{label}</label>
-      <Input
-        type={maxLines > 1 ? undefined : type}
-        value={value}
-        onChange={onChange}
-        readOnly={readOnly}
-        required={required}
-        rows={maxLines > 1 ? maxLines : undefined}
-        className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#c3a28e] read-only:bg-gray-50"
-      />
+    <div className={cn('space-y-1.5', className)}>
+      <Label className="text-muted-foreground">{label}</Label>
+      {maxLines > 1 ? (
+        <textarea
+          value={value}
+          onChange={onChange}
+          readOnly={readOnly}
+          required={required}
+          rows={maxLines}
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 read-only:bg-muted read-only:cursor-default transition-colors"
+        />
+      ) : (
+        <Input
+          type={type}
+          value={value}
+          onChange={onChange}
+          readOnly={readOnly}
+          required={required}
+        />
+      )}
     </div>
   );
 }
 
 export function SelectField({ label, value, onChange, options, className = '', placeholder = 'Select...' }) {
   return (
-    <div className={className}>
-      <label className="block text-sm text-gray-600 mb-1">{label}</label>
+    <div className={cn('space-y-1.5', className)}>
+      <Label className="text-muted-foreground">{label}</Label>
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value || null)}
-        className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#c3a28e] bg-white"
+        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
       >
         <option value="">{placeholder}</option>
         {options.map((opt) => (
@@ -58,11 +72,8 @@ export function SelectField({ label, value, onChange, options, className = '', p
 
 export function ResponsiveRow({ children, width }) {
   const fieldsPerRow = width > 1200 ? 3 : width > 800 ? 2 : 1;
-  if (fieldsPerRow === 1) {
-    return <div className="grid grid-cols-1 gap-4">{children}</div>;
-  }
   return (
-    <div className={`grid gap-4 grid-cols-${fieldsPerRow}`} style={{ gridTemplateColumns: `repeat(${fieldsPerRow}, minmax(0, 1fr))` }}>
+    <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${fieldsPerRow}, minmax(0, 1fr))` }}>
       {children}
     </div>
   );
@@ -96,8 +107,11 @@ export function Snackbar({ message, isError, onClose }) {
 export function LoadingOverlay({ show }) {
   if (!show) return null;
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-      <div className="w-10 h-10 border-4 border-[#c3a28e] border-t-transparent rounded-full animate-spin" />
+    <div className="fixed inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <span className="text-sm text-muted-foreground font-medium">Loading...</span>
+      </div>
     </div>
   );
 }
@@ -105,7 +119,7 @@ export function LoadingOverlay({ show }) {
 export function PlaceholderPage({ title, description }) {
   return (
     <PageCard title={title}>
-      <p className="text-gray-600">{description || 'This page mirrors the Flutter ERP module. Full port in progress.'}</p>
+      <p className="text-muted-foreground">{description || 'This page mirrors the Flutter ERP module. Full port in progress.'}</p>
     </PageCard>
   );
 }

@@ -6,7 +6,11 @@ import { db } from '@/lib/firebase';
 import { formatDate } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import { PageCard, SelectField } from '@/components/ui/PageComponents';
-import { ACCENT_COLOR } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const LOG_TYPES = ['All', 'Invoice', 'Purchase Invoice', 'Salary', 'Loan', 'Utility', 'Inventory'];
 const CHART_TYPES = ['Income', 'Expenses', 'Netprofit'];
@@ -65,65 +69,74 @@ export default function HomePageContent() {
     <>
       <Header />
       <PageCard title="Dashboard" icon="🏠">
+        {/* Chart Type Tabs */}
         <div className="flex flex-wrap gap-2 mb-6">
           {CHART_TYPES.map((t) => (
-            <button
+            <Button
               key={t}
-              type="button"
+              variant={selectedChart === t ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setSelectedChart(t)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${selectedChart === t ? 'bg-black text-[#c3a28e]' : 'border text-black'}`}
             >
               {t}
-            </button>
+            </Button>
           ))}
         </div>
-        <div className="overflow-x-auto mb-6">
-          <table className="w-full text-sm text-black">
+
+        {/* Summary Table */}
+        <div className="overflow-x-auto mb-6 rounded-lg border border-border">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Date</th>
-                <th className="text-right py-2">Income</th>
-                <th className="text-right py-2">Expenses</th>
-                <th className="text-right py-2">Net</th>
+              <tr className="bg-muted/50">
+                <th className="text-left py-2.5 px-3 font-medium text-muted-foreground">Date</th>
+                <th className="text-right py-2.5 px-3 font-medium text-muted-foreground">Income</th>
+                <th className="text-right py-2.5 px-3 font-medium text-muted-foreground">Expenses</th>
+                <th className="text-right py-2.5 px-3 font-medium text-muted-foreground">Net</th>
               </tr>
             </thead>
             <tbody>
               {chartData.map((row) => (
-                <tr key={row.day} className="border-b border-gray-100">
-                  <td className="py-2">{row.day}</td>
-                  <td className="text-right text-green-600">{selectedChart !== 'Expenses' ? row.income.toFixed(0) : '-'}</td>
-                  <td className="text-right text-red-600">{selectedChart !== 'Income' ? row.expense.toFixed(0) : '-'}</td>
-                  <td className="text-right font-semibold">{selectedChart === 'Netprofit' ? row.net.toFixed(0) : '-'}</td>
+                <tr key={row.day} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
+                  <td className="py-2.5 px-3 font-medium">{row.day}</td>
+                  <td className="text-right px-3 text-emerald-600 font-medium">{selectedChart !== 'Expenses' ? row.income.toFixed(0) : '-'}</td>
+                  <td className="text-right px-3 text-destructive font-medium">{selectedChart !== 'Income' ? row.expense.toFixed(0) : '-'}</td>
+                  <td className="text-right px-3 font-semibold">{selectedChart === 'Netprofit' ? row.net.toFixed(0) : '-'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <h3 className="font-bold text-black mb-3">Activity Logs</h3>
+        {/* Activity Logs */}
+        <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+          <span className="text-primary">📋</span>
+          Activity Logs
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
           <SelectField label="Category" value={logCategory} onChange={setLogCategory} options={['All', 'Income', 'Expense']} />
           <SelectField label="Type" value={logType} onChange={setLogType} options={LOG_TYPES} />
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Start</label>
-            <input type="date" value={logStart} onChange={(e) => setLogStart(e.target.value)} className="w-full border rounded-md p-2.5 text-black" />
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground">Start</Label>
+            <Input type="date" value={logStart} onChange={(e) => setLogStart(e.target.value)} />
           </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">End</label>
-            <input type="date" value={logEnd} onChange={(e) => setLogEnd(e.target.value)} className="w-full border rounded-md p-2.5 text-black" />
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground">End</Label>
+            <Input type="date" value={logEnd} onChange={(e) => setLogEnd(e.target.value)} />
           </div>
         </div>
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {logs.map((log) => (
-            <div key={log.id} className="flex justify-between items-center border rounded-lg p-3 text-black text-sm">
-              <div>
-                <p className="font-medium">{log.cName || log.name} — {log.type}</p>
-                <p className="text-gray-500">{log.Date} {log.Time} · {log.adminName}</p>
-              </div>
-              <span className="font-bold" style={{ color: log.type === 'Income' ? '#16a34a' : ACCENT_COLOR }}>
-                {Number(log.amount || 0).toFixed(0)} LE
-              </span>
-            </div>
+            <Card key={log.id} className="shadow-none border-border/50 hover:border-primary/30 transition-colors">
+              <CardContent className="flex justify-between items-center py-3 px-4">
+                <div>
+                  <p className="font-medium text-sm text-foreground">{log.cName || log.name} — {log.type}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{log.Date} {log.Time} · {log.adminName}</p>
+                </div>
+                <Badge variant={log.type === 'Income' || log.type === 'Invoice' ? 'default' : 'secondary'} className="font-semibold">
+                  {Number(log.amount || 0).toFixed(0)} LE
+                </Badge>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </PageCard>
