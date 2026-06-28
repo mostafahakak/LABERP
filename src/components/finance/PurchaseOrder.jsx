@@ -121,8 +121,8 @@ export default function PurchaseOrder() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectField label="Supplier" value={supplierName} onChange={(v) => selectSupplier(v)} options={suppliers.map((s) => s.name)} />
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Payment Method / DR Account</label>
-            <select value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-black bg-white">
+            <label className="block text-sm text-muted-foreground mb-1">Payment Method / DR Account</label>
+            <select value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full px-3 py-2.5 border border-input rounded-md text-foreground bg-white">
               <option value="">Select...</option>
               {accounts.map((a) => (
                 <option key={`${a.sourceCollection}-${a.id}`} value={a.name}>
@@ -134,7 +134,7 @@ export default function PurchaseOrder() {
           <TextField label="Date" value={date} onChange={(e) => setDate(e.target.value)} type="date" />
           <TextField label="Time" value={time} onChange={(e) => setTime(e.target.value)} />
           <TextField label="Note" value={note} onChange={(e) => setNote(e.target.value)} required={false} className="md:col-span-2" />
-          <label className="flex items-center gap-2 text-black">
+          <label className="flex items-center gap-2 text-foreground">
             <input type="checkbox" checked={isFullPayment} onChange={(e) => setIsFullPayment(e.target.checked)} />
             Full Payment
           </label>
@@ -147,7 +147,7 @@ export default function PurchaseOrder() {
       <PageCard title="Items">
         <div className="flex flex-wrap gap-2 mb-4">
           {items.map((item) => (
-            <button key={item.id} type="button" onClick={() => addItem(item)} className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm text-black">
+            <button key={item.id} type="button" onClick={() => addItem(item)} className="px-3 py-1.5 bg-muted rounded-lg text-sm text-foreground">
               {item.name} — {formatPriceLE(item.price)}
             </button>
           ))}
@@ -162,7 +162,7 @@ export default function PurchaseOrder() {
           Total: <strong>{formatPriceLE(total)}</strong>
           {!isFullPayment && <> · Remaining: <strong>{formatPriceLE(remaining)}</strong></>}
         </div>
-        <button type="button" onClick={submit} disabled={loading} className="mt-4 px-6 py-2.5 bg-black text-[#c3a28e] rounded-md">Submit Purchase</button>
+        <button type="button" onClick={submit} disabled={loading} className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-md">Submit Purchase</button>
       </PageCard>
       <LoadingOverlay show={loading} />
       <Snackbar message={snack.message} isError={snack.isError} onClose={() => setSnack({ message: '', isError: false })} />

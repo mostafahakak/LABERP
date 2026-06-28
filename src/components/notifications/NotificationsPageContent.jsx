@@ -47,25 +47,25 @@ export default function NotificationsPageContent() {
     <>
       <Header />
       <PageCard title="Notifications" icon="🔔">
-        <div className="flex flex-wrap gap-4 mb-6 text-black">
+        <div className="flex flex-wrap gap-4 mb-6 text-foreground">
           <label className="flex items-center gap-2"><input type="checkbox" checked={showInvoice} onChange={(e) => setShowInvoice(e.target.checked)} /> Invoice</label>
           <label className="flex items-center gap-2"><input type="checkbox" checked={showPurchase} onChange={(e) => setShowPurchase(e.target.checked)} /> Purchase</label>
           <label className="flex items-center gap-2"><input type="checkbox" checked={showSalary} onChange={(e) => setShowSalary(e.target.checked)} /> Salary</label>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="border rounded-lg p-3 text-black"><p className="text-sm text-gray-500">Total</p><p className="font-bold">{formatPriceLE(totals.total)}</p></div>
-          <div className="border rounded-lg p-3 text-black"><p className="text-sm text-gray-500">Invoice</p><p className="font-bold text-green-600">{formatPriceLE(totals.invoice)}</p></div>
-          <div className="border rounded-lg p-3 text-black"><p className="text-sm text-gray-500">Purchase</p><p className="font-bold text-red-600">{formatPriceLE(totals.purchase)}</p></div>
-          <div className="border rounded-lg p-3 text-black"><p className="text-sm text-gray-500">Salary</p><p className="font-bold">{formatPriceLE(totals.salary)}</p></div>
+          <div className="border rounded-lg p-3 text-foreground"><p className="text-sm text-muted-foreground">Total</p><p className="font-bold">{formatPriceLE(totals.total)}</p></div>
+          <div className="border rounded-lg p-3 text-foreground"><p className="text-sm text-muted-foreground">Invoice</p><p className="font-bold text-green-600">{formatPriceLE(totals.invoice)}</p></div>
+          <div className="border rounded-lg p-3 text-foreground"><p className="text-sm text-muted-foreground">Purchase</p><p className="font-bold text-destructive">{formatPriceLE(totals.purchase)}</p></div>
+          <div className="border rounded-lg p-3 text-foreground"><p className="text-sm text-muted-foreground">Salary</p><p className="font-bold">{formatPriceLE(totals.salary)}</p></div>
         </div>
-        <p className="text-sm text-gray-600 mb-4">Net Profit: {formatPriceLE(totals.invoice - totals.purchase - totals.salary)}</p>
+        <p className="text-sm text-muted-foreground mb-4">Net Profit: {formatPriceLE(totals.invoice - totals.purchase - totals.salary)}</p>
         <div className="space-y-3">
           {notifications.map((n) => (
-            <div key={n.id} className="border rounded-xl p-4 bg-white text-black">
+            <div key={n.id} className="border rounded-xl p-4 bg-white text-foreground">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-semibold">{n.name}</p>
-                  <p className="text-sm text-gray-500">{n.type} · {n.date} {n.time}</p>
+                  <p className="text-sm text-muted-foreground">{n.type} · {n.date} {n.time}</p>
                 </div>
                 <span className="font-bold">{formatPriceLE(n.amount)}</span>
               </div>

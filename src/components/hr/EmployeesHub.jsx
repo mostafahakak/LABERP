@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
-import { ACCENT_COLOR } from '@/lib/utils';
+
 
 const NAV_ITEMS = [
   {
@@ -31,16 +31,15 @@ export default function EmployeesHub() {
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center gap-4 bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg transition-shadow"
+            className="flex items-center gap-4 bg-card rounded-2xl shadow-sm border border-border p-5 hover:shadow-lg transition-shadow"
           >
             <div
-              className="w-14 h-14 rounded-full flex items-center justify-center text-2xl shrink-0"
-              style={{ backgroundColor: `${ACCENT_COLOR}20` }}
+              className="w-14 h-14 rounded-full flex items-center justify-center text-2xl shrink-0 bg-primary/10"
             >
               {item.icon}
             </div>
-            <span className="flex-1 text-lg font-bold text-black">{item.label}</span>
-            <span className="text-gray-400 text-xl">›</span>
+            <span className="flex-1 text-lg font-bold text-foreground">{item.label}</span>
+            <span className="text-muted-foreground/70 text-xl">›</span>
           </Link>
         ))}
       </div>

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Header from '@/components/layout/Header';
-import { formatPriceLE, ACCENT_COLOR } from '@/lib/utils';
+import { formatPriceLE } from '@/lib/utils';
 
 function formatMonthYear(date) {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -83,20 +83,20 @@ export default function SalaryHistory() {
     <>
       <Header title="Salary History" />
 
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mb-5">
+      <div className="bg-card rounded-2xl shadow-sm border border-border p-5 mb-5">
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          <span className="text-gray-600">📅 Selected Month: {monthLabel}</span>
+          <span className="text-muted-foreground">📅 Selected Month: {monthLabel}</span>
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 border rounded-md text-black"
+            className="px-3 py-2 border rounded-md text-foreground"
           />
           {selectedMonth && (
             <button
               type="button"
               onClick={() => setSelectedMonth('')}
-              className="px-3 py-2 text-red-600 border border-red-200 rounded-md text-sm"
+              className="px-3 py-2 text-destructive border border-destructive/30 rounded-md text-sm"
             >
               Clear
             </button>
@@ -108,24 +108,24 @@ export default function SalaryHistory() {
           placeholder="Search employee by name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-black focus:outline-none focus:border-[#c3a28e]"
+          className="w-full px-3 py-2.5 border border-input rounded-md text-foreground focus:outline-none focus:border-primary"
         />
       </div>
 
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="w-10 h-10 border-4 border-[#c3a28e] border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
-      {error && <p className="text-red-600 text-center py-8">Error: {error}</p>}
+      {error && <p className="text-destructive text-center py-8">Error: {error}</p>}
 
       {!loading && !error && records.length === 0 && (
-        <p className="text-center text-gray-500 py-12">No salary records found.</p>
+        <p className="text-center text-muted-foreground py-12">No salary records found.</p>
       )}
 
       {!loading && !error && records.length > 0 && filteredRecords.length === 0 && (
-        <p className="text-center text-gray-500 py-12">No matching salary records found.</p>
+        <p className="text-center text-muted-foreground py-12">No matching salary records found.</p>
       )}
 
       {!loading && !error && filteredRecords.length > 0 && (
@@ -135,28 +135,26 @@ export default function SalaryHistory() {
             return (
               <div
                 key={item.id}
-                className="flex gap-4 bg-white rounded-2xl shadow-md border p-5"
-                style={{ borderColor: `${ACCENT_COLOR}15` }}
+                className="flex gap-4 bg-card rounded-2xl shadow-sm border border-primary/10 p-5"
               >
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center font-bold shrink-0"
-                  style={{ backgroundColor: `${ACCENT_COLOR}20`, color: ACCENT_COLOR }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center font-bold shrink-0 bg-primary/10 text-primary"
                 >
                   {item.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-black text-lg">{item.name}</p>
-                  <p className="text-sm text-gray-600">Paid Amount: {formatPriceLE(item.paidAmount)}</p>
-                  <p className="text-sm text-gray-600">Bank: {item.bank}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-semibold text-foreground text-lg">{item.name}</p>
+                  <p className="text-sm text-muted-foreground">Paid Amount: {formatPriceLE(item.paidAmount)}</p>
+                  <p className="text-sm text-muted-foreground">Bank: {item.bank}</p>
+                  <p className="text-sm text-muted-foreground">
                     Debit Before: {formatPriceLE(item.drBalanceBefore)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Debit After: {formatPriceLE(item.drBalanceAfter)}
                   </p>
                 </div>
                 {recordDate && (
-                  <p className="text-sm shrink-0" style={{ color: ACCENT_COLOR }}>
+                  <p className="text-sm shrink-0" style={{ color: 'var(--primary)' }}>
                     {recordDate.toLocaleDateString('en-GB', {
                       day: '2-digit',
                       month: 'short',

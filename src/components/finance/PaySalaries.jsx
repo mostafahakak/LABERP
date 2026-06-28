@@ -270,12 +270,12 @@ export default function PaySalaries() {
           )}
         </div>
         {currentBalance !== null && paymentType !== 'Utility' && (
-          <p className="text-sm text-gray-600 mt-3">
+          <p className="text-sm text-muted-foreground mt-3">
             Current balance: {formatPriceLE(currentBalance)}
             {newBalance !== null && <> → New: {formatPriceLE(newBalance)}</>}
           </p>
         )}
-        <button type="button" onClick={submit} disabled={loading} className="mt-4 px-6 py-2.5 bg-black text-[#c3a28e] rounded-md">Submit Payment</button>
+        <button type="button" onClick={submit} disabled={loading} className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-md">Submit Payment</button>
       </PageCard>
       <LoadingOverlay show={loading} />
       <Snackbar message={snack.message} isError={snack.isError} onClose={() => setSnack({ message: '', isError: false })} />

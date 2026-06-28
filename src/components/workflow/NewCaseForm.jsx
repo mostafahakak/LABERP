@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { addDoc, collection, getDocs } from "firebase/firestore";
@@ -271,7 +271,7 @@ export default function NewCaseForm() {
             <>
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-black">
+                  <span className="font-semibold text-foreground">
                     Selected Types
                   </span>
                   <button
@@ -281,14 +281,14 @@ export default function NewCaseForm() {
                       setTypePickerIndex(null);
                       setShowTypePicker(true);
                     }}
-                    className="flex items-center gap-1 px-3 py-2 bg-black text-white rounded-md text-sm disabled:opacity-50"
+                    className="flex items-center gap-1 px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm disabled:opacity-50"
                   >
                     + Add Items
                   </button>
                 </div>
-                <div className="border rounded-xl p-3 bg-gray-50">
+                <div className="border rounded-xl p-3 bg-muted">
                   {selectedTypesList.length === 0 ? (
-                    <p className="text-gray-600 py-3">No types added yet</p>
+                    <p className="text-muted-foreground py-3">No types added yet</p>
                   ) : (
                     selectedTypesList.map((entry, index) => (
                       <div key={index} className="flex items-center gap-3 py-2">
@@ -298,7 +298,7 @@ export default function NewCaseForm() {
                             setTypePickerIndex(index);
                             setShowTypePicker(true);
                           }}
-                          className="flex-1 text-left px-3 py-3 bg-white border rounded-lg text-black"
+                          className="flex-1 text-left px-3 py-3 bg-white border rounded-lg text-foreground"
                         >
                           {entry.name || "Select type"}
                         </button>
@@ -308,7 +308,7 @@ export default function NewCaseForm() {
                           onChange={(e) =>
                             onEntryPriceChanged(index, e.target.value)
                           }
-                          className="w-28 px-2 py-2 border rounded-md text-black"
+                          className="w-28 px-2 py-2 border rounded-md text-foreground"
                         />
                         <button
                           type="button"
@@ -320,7 +320,7 @@ export default function NewCaseForm() {
                       </div>
                     ))
                   )}
-                  <div className="text-right font-semibold text-black mt-2">
+                  <div className="text-right font-semibold text-foreground mt-2">
                     Total: {totalPrice} LE
                   </div>
                 </div>
@@ -344,7 +344,7 @@ export default function NewCaseForm() {
                   )}
                 </ResponsiveRow>
                 {caseCode && (
-                  <div className="px-3 py-2 bg-gray-100 rounded-md text-sm text-black">
+                  <div className="px-3 py-2 bg-muted rounded-md text-sm text-foreground">
                     <strong>Case Code:</strong> {caseCode}
                   </div>
                 )}
@@ -412,8 +412,8 @@ export default function NewCaseForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-6 w-full max-w-md px-6 py-3 bg-black rounded-lg font-bold flex items-center justify-center gap-2"
-                style={{ color: "#c3a28e" }}
+                className="mt-6 w-full max-w-md px-6 py-3 bg-primary rounded-lg font-bold flex items-center justify-center gap-2"
+                
               >
                 {loading ? "Creating..." : "Create Case"}
               </button>
@@ -423,13 +423,13 @@ export default function NewCaseForm() {
       </PageCard>
 
       {showTypePicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full max-h-[70vh] overflow-y-auto p-4">
-            <h3 className="font-bold text-black mb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl max-w-md w-full max-h-[70vh] overflow-y-auto p-4">
+            <h3 className="font-bold text-foreground mb-3">
               {typePickerIndex !== null ? "Change Type" : "Select Type"}
             </h3>
             {types.length === 0 ? (
-              <p className="text-black">
+              <p className="text-foreground">
                 Please add types first in the Types section.
               </p>
             ) : (
@@ -443,10 +443,10 @@ export default function NewCaseForm() {
                     else addTypeEntry(type);
                     setShowTypePicker(false);
                   }}
-                  className="w-full flex justify-between px-4 py-3 hover:bg-gray-50 text-black border-b"
+                  className="w-full flex justify-between px-4 py-3 hover:bg-muted text-foreground border-b"
                 >
                   <span>{type.name}</span>
-                  <span className="text-gray-500">
+                  <span className="text-muted-foreground">
                     {formatPriceLE(type.price)}
                   </span>
                 </button>

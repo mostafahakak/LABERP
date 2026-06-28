@@ -34,28 +34,28 @@ function TransactionCard({ doc }) {
             {isStockIn ? '↑ Stock In' : '↓ Stock Out'}
           </p>
         </div>
-        <p className="text-xs text-gray-500">{date} at {time}</p>
+        <p className="text-xs text-muted-foreground">{date} at {time}</p>
       </div>
       <hr className="mb-3" />
       <div className="space-y-1 text-sm mb-4">
-        <p><span className="font-medium text-black">User:</span> {userName}</p>
-        <p><span className="font-medium text-black">Supplier:</span> {supplier}</p>
-        <p><span className="font-medium text-black">Amount:</span> {formatPriceLE(amount)}</p>
+        <p><span className="font-medium text-foreground">User:</span> {userName}</p>
+        <p><span className="font-medium text-foreground">Supplier:</span> {supplier}</p>
+        <p><span className="font-medium text-foreground">Amount:</span> {formatPriceLE(amount)}</p>
       </div>
       <div className="flex items-center justify-around text-center">
         <div>
-          <p className="text-xl font-bold text-gray-700">{prevStock}</p>
-          <p className="text-xs text-gray-600">Previous</p>
+          <p className="text-xl font-bold text-foreground/80">{prevStock}</p>
+          <p className="text-xs text-muted-foreground">Previous</p>
         </div>
-        <span className="text-gray-400">→</span>
+        <span className="text-muted-foreground/70">→</span>
         <div>
           <p className={`text-xl font-bold ${typeColor}`}>{qtyUsed}</p>
-          <p className="text-xs text-gray-600">Quantity Used</p>
+          <p className="text-xs text-muted-foreground">Quantity Used</p>
         </div>
-        <span className="text-gray-400">→</span>
+        <span className="text-muted-foreground/70">→</span>
         <div>
           <p className="text-xl font-bold text-blue-600">{newStock}</p>
-          <p className="text-xs text-gray-600">New Stock</p>
+          <p className="text-xs text-muted-foreground">New Stock</p>
         </div>
       </div>
     </div>
@@ -92,10 +92,10 @@ export default function ItemHistoryPage({ itemId, itemName }) {
     <>
       <Header />
       <PageCard title={`Item History: ${itemName || itemId}`} icon="📋">
-        {loading && <p className="text-gray-600 text-center py-8">Loading history...</p>}
-        {error && <p className="text-red-600 text-center py-8">Error loading history: {error}</p>}
+        {loading && <p className="text-muted-foreground text-center py-8">Loading history...</p>}
+        {error && <p className="text-destructive text-center py-8">Error loading history: {error}</p>}
         {!loading && !error && records.length === 0 && (
-          <p className="text-gray-500 text-center py-8">No history found for this item.</p>
+          <p className="text-muted-foreground text-center py-8">No history found for this item.</p>
         )}
         {!loading && !error && records.length > 0 && (
           <div className="space-y-3">

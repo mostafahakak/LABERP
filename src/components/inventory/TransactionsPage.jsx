@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -36,31 +36,31 @@ function TransactionCard({ doc }) {
     <div className="border rounded-lg p-4 bg-white shadow-sm">
       <div className="flex items-start justify-between gap-2 mb-1">
         <div>
-          <p className="font-bold text-lg text-black">{itemName}</p>
+          <p className="font-bold text-lg text-foreground">{itemName}</p>
           <p className={`font-medium text-sm ${typeColor}`}>{isStockIn ? 'Stock In' : 'Stock Out'}</p>
         </div>
-        <p className="text-xs text-gray-500 whitespace-nowrap">{date} at {time}</p>
+        <p className="text-xs text-muted-foreground whitespace-nowrap">{date} at {time}</p>
       </div>
       <hr className="my-3" />
       <div className="space-y-1 text-sm mb-4">
-        <p><span className="font-medium text-black">User:</span> {userName}</p>
-        <p><span className="font-medium text-black">Supplier:</span> {supplier}</p>
-        <p><span className="font-medium text-black">Amount:</span> {formatPriceLE(amount)}</p>
+        <p><span className="font-medium text-foreground">User:</span> {userName}</p>
+        <p><span className="font-medium text-foreground">Supplier:</span> {supplier}</p>
+        <p><span className="font-medium text-foreground">Amount:</span> {formatPriceLE(amount)}</p>
       </div>
       <div className="flex items-center justify-around text-center">
         <div>
-          <p className="text-xl font-bold text-gray-700">{prevStock}</p>
-          <p className="text-xs text-gray-600">Previous</p>
+          <p className="text-xl font-bold text-foreground/80">{prevStock}</p>
+          <p className="text-xs text-muted-foreground">Previous</p>
         </div>
-        <span className="text-gray-400">→</span>
+        <span className="text-muted-foreground/70">→</span>
         <div>
           <p className={`text-xl font-bold ${typeColor}`}>{qtyUsed}</p>
-          <p className="text-xs text-gray-600">Quantity Used</p>
+          <p className="text-xs text-muted-foreground">Quantity Used</p>
         </div>
-        <span className="text-gray-400">→</span>
+        <span className="text-muted-foreground/70">→</span>
         <div>
           <p className="text-xl font-bold text-blue-600">{newStock}</p>
-          <p className="text-xs text-gray-600">New Stock</p>
+          <p className="text-xs text-muted-foreground">New Stock</p>
         </div>
       </div>
     </div>
@@ -216,7 +216,7 @@ export default function TransactionsPage() {
           <button
             type="button"
             onClick={() => setFiltersOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-3 text-left font-bold text-black"
+            className="w-full flex items-center justify-between px-4 py-3 text-left font-bold text-foreground"
           >
             <span>Filters</span>
             <span>{filtersOpen ? '▲' : '▼'}</span>
@@ -224,7 +224,7 @@ export default function TransactionsPage() {
           {filtersOpen && (
             <div className="px-4 pb-4 space-y-4 border-t pt-4">
               <div>
-                <p className="text-sm font-semibold text-black mb-2">Filter by Item</p>
+                <p className="text-sm font-semibold text-foreground mb-2">Filter by Item</p>
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {items.map((item) => {
                     const isSelected = selectedItemId === item.id;
@@ -235,7 +235,7 @@ export default function TransactionsPage() {
                         type="button"
                         onClick={() => setSelectedItemId(isSelected ? null : item.id)}
                         className={`shrink-0 w-36 p-2 rounded-lg border text-sm ${
-                          isSelected ? 'bg-[#d9ae02] text-white border-black' : 'bg-white text-black border-gray-300'
+                          isSelected ? 'bg-primary text-white border-black' : 'bg-white text-foreground border-input'
                         }`}
                       >
                         <p className="font-bold truncate">{item.name || 'N/A'}</p>
@@ -244,12 +244,12 @@ export default function TransactionsPage() {
                             <p className={`text-xs mt-1 ${isSelected ? 'text-white/80' : 'text-green-600'}`}>
                               In: {amounts.in.toFixed(2)}
                             </p>
-                            <p className={`text-xs ${isSelected ? 'text-white/80' : 'text-red-600'}`}>
+                            <p className={`text-xs ${isSelected ? 'text-white/80' : 'text-destructive'}`}>
                               Out: {amounts.out.toFixed(2)}
                             </p>
                           </>
                         ) : (
-                          <p className={`text-xs mt-1 ${isSelected ? 'text-white/70' : 'text-gray-500'}`}>Loading...</p>
+                          <p className={`text-xs mt-1 ${isSelected ? 'text-white/70' : 'text-muted-foreground'}`}>Loading...</p>
                         )}
                       </button>
                     );
@@ -259,21 +259,21 @@ export default function TransactionsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">From Date</label>
+                  <label className="block text-sm text-muted-foreground mb-1">From Date</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-black"
+                    className="w-full px-3 py-2.5 border border-input rounded-md text-foreground"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">To Date</label>
+                  <label className="block text-sm text-muted-foreground mb-1">To Date</label>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-black"
+                    className="w-full px-3 py-2.5 border border-input rounded-md text-foreground"
                   />
                 </div>
               </div>
@@ -287,13 +287,13 @@ export default function TransactionsPage() {
               />
 
               <div className="flex flex-wrap gap-2 justify-end">
-                <button type="button" onClick={clearFilters} className="px-4 py-2 text-red-600">
+                <button type="button" onClick={clearFilters} className="px-4 py-2 text-destructive">
                   Clear All
                 </button>
                 <button type="button" onClick={exportCsv} className="px-4 py-2 bg-teal-600 text-white rounded-md">
                   Export
                 </button>
-                <button type="button" onClick={fetchInitial} className="px-4 py-2 bg-black text-[#d9ae02] rounded-md">
+                <button type="button" onClick={fetchInitial} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">
                   Apply Filters
                 </button>
               </div>
@@ -302,9 +302,9 @@ export default function TransactionsPage() {
         </div>
 
         {loading ? (
-          <p className="text-gray-600 text-center py-8">Loading transactions...</p>
+          <p className="text-muted-foreground text-center py-8">Loading transactions...</p>
         ) : records.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No transactions found for the selected filters.</p>
+          <p className="text-muted-foreground text-center py-8">No transactions found for the selected filters.</p>
         ) : (
           <div className="space-y-3">
             {records.map((rec) => (
@@ -316,7 +316,7 @@ export default function TransactionsPage() {
                   type="button"
                   onClick={fetchMore}
                   disabled={fetchingMore}
-                  className="px-4 py-2 text-[#d9ae02] font-medium"
+                  className="px-4 py-2 text-primary font-medium"
                 >
                   {fetchingMore ? 'Loading...' : 'Load More'}
                 </button>

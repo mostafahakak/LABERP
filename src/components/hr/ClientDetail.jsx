@@ -21,7 +21,7 @@ function InvoiceCard({ invoice }) {
   const total = Number(invoice.total) || 0;
   const remainingAmount = Number(invoice.remainingAmount) || 0;
   const status = invoice.status || 'N/A';
-  const statusColor = status === 'Paid' ? 'text-green-700 bg-green-50 border-green-200' : 'text-red-700 bg-red-50 border-red-200';
+  const statusColor = status === 'Paid' ? 'text-green-700 bg-green-50 border-green-200' : 'text-red-700 bg-destructive/10 border-destructive/30';
 
   return (
     <Link
@@ -30,8 +30,8 @@ function InvoiceCard({ invoice }) {
     >
       <div className="flex justify-between items-start gap-2 mb-2">
         <div>
-          <p className="font-bold text-black text-sm">Invoice #{invoice.id}</p>
-          <p className="text-sm text-gray-500">
+          <p className="font-bold text-foreground text-sm">Invoice #{invoice.id}</p>
+          <p className="text-sm text-muted-foreground">
             {invoice.Date} at {invoice.Time || 'N/A'}
           </p>
         </div>
@@ -41,20 +41,20 @@ function InvoiceCard({ invoice }) {
       </div>
       <div className="grid grid-cols-3 gap-2 mb-2">
         <div>
-          <p className="text-xs text-gray-500">Total</p>
+          <p className="text-xs text-muted-foreground">Total</p>
           <p className="text-sm font-bold text-green-700">{formatPriceLE(total)}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">Paid</p>
+          <p className="text-xs text-muted-foreground">Paid</p>
           <p className="text-sm font-bold text-blue-700">{formatPriceLE(paidAmount)}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">Remaining</p>
+          <p className="text-xs text-muted-foreground">Remaining</p>
           <p className="text-sm font-bold text-red-700">{formatPriceLE(remainingAmount)}</p>
         </div>
       </div>
-      <p className="text-xs text-gray-600">Sales Person: {invoice.drName || 'N/A'}</p>
-      <p className="text-xs text-gray-600">Payment Method: {invoice.bank || 'N/A'}</p>
+      <p className="text-xs text-muted-foreground">Sales Person: {invoice.drName || 'N/A'}</p>
+      <p className="text-xs text-muted-foreground">Payment Method: {invoice.bank || 'N/A'}</p>
     </Link>
   );
 }
@@ -154,7 +154,7 @@ export default function ClientDetail({ clientId }) {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-10 h-10 border-4 border-[#c3a28e] border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -163,7 +163,7 @@ export default function ClientDetail({ clientId }) {
     return (
       <>
         <Header title="Client Detail" />
-        <p className="text-center text-gray-500 py-12">Client not found.</p>
+        <p className="text-center text-muted-foreground py-12">Client not found.</p>
       </>
     );
   }
@@ -193,26 +193,26 @@ export default function ClientDetail({ clientId }) {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Start Date</label>
+              <label className="block text-sm text-muted-foreground mb-1">Start Date</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg text-black"
+                className="w-full px-3 py-2 border rounded-lg text-foreground"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">End Date</label>
+              <label className="block text-sm text-muted-foreground mb-1">End Date</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg text-black"
+                className="w-full px-3 py-2 border rounded-lg text-foreground"
               />
             </div>
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-700 mb-2">Status Filter</p>
+            <p className="text-sm font-semibold text-foreground/80 mb-2">Status Filter</p>
             <div className="flex gap-2">
               {[
                 { label: 'All', value: null },
@@ -226,7 +226,7 @@ export default function ClientDetail({ clientId }) {
                   className={`flex-1 py-2 rounded-lg text-sm font-semibold ${
                     statusFilter === opt.value
                       ? 'bg-red-600 text-white'
-                      : 'bg-gray-200 text-gray-700'
+                      : 'bg-muted text-foreground/80'
                   }`}
                 >
                   {opt.label}
@@ -253,21 +253,21 @@ export default function ClientDetail({ clientId }) {
       <PageCard title="Client Invoices" icon="🧾">
         {invoicesLoading ? (
           <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-[#c3a28e] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : invoices.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">
+          <p className="text-center text-muted-foreground py-8">
             No invoices found for {client.name}.
           </p>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
               <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-center">
-                <p className="text-xs text-gray-600 mb-1">Total Amount</p>
+                <p className="text-xs text-muted-foreground mb-1">Total Amount</p>
                 <p className="font-bold text-green-700">{formatPriceLE(summary.totalAmount)}</p>
               </div>
-              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-center">
-                <p className="text-xs text-gray-600 mb-1">Total Remaining</p>
+              <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Total Remaining</p>
                 <p className="font-bold text-red-700">{formatPriceLE(summary.totalRemaining)}</p>
               </div>
             </div>

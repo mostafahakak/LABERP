@@ -84,11 +84,11 @@ function LogsTab({ logType, allTypesLabel }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {user?.type === 'Admin' && (
             <div>
-              <label className="text-sm text-gray-600">Filter by Admin</label>
+              <label className="text-sm text-muted-foreground">Filter by Admin</label>
               <select
                 value={adminFilterId}
                 onChange={(e) => setAdminFilterId(e.target.value)}
-                className="w-full mt-1 px-3 py-2 border rounded-md text-black"
+                className="w-full mt-1 px-3 py-2 border rounded-md text-foreground"
               >
                 {adminOptions.map((a) => (
                   <option key={a.id} value={a.id}>{a.name}</option>
@@ -97,30 +97,30 @@ function LogsTab({ logType, allTypesLabel }) {
             </div>
           )}
           <div>
-            <label className="text-sm text-gray-600">Start Date</label>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-black" />
+            <label className="text-sm text-muted-foreground">Start Date</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-foreground" />
           </div>
           <div>
-            <label className="text-sm text-gray-600">End Date</label>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-black" />
+            <label className="text-sm text-muted-foreground">End Date</label>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-foreground" />
           </div>
         </div>
         <button
           type="button"
           onClick={() => { setStartDate(''); setEndDate(''); setNameFilter(allTypesLabel); setAdminFilterId('All Admins'); }}
-          className="mt-4 px-4 py-2 bg-[#c3a28e] text-white rounded-md text-sm"
+          className="mt-4 px-4 py-2 bg-primary text-white rounded-md text-sm"
         >
           Clear Filters
         </button>
       </PageCard>
 
       <div>
-        <h3 className="font-bold text-black mb-2">Summary by Type</h3>
+        <h3 className="font-bold text-foreground mb-2">Summary by Type</h3>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setNameFilter(allTypesLabel)}
-            className={`px-3 py-1.5 rounded-full text-sm ${nameFilter === allTypesLabel ? 'bg-[#c3a28e] text-white' : 'bg-gray-200 text-black'}`}
+            className={`px-3 py-1.5 rounded-full text-sm ${nameFilter === allTypesLabel ? 'bg-primary text-white' : 'bg-muted text-foreground'}`}
           >
             {allTypesLabel}
           </button>
@@ -129,7 +129,7 @@ function LogsTab({ logType, allTypesLabel }) {
               key={name}
               type="button"
               onClick={() => setNameFilter(name)}
-              className={`px-3 py-1.5 rounded-full text-sm ${nameFilter === name ? 'bg-[#c3a28e] text-white' : 'bg-gray-100 text-black'}`}
+              className={`px-3 py-1.5 rounded-full text-sm ${nameFilter === name ? 'bg-primary text-white' : 'bg-muted text-foreground'}`}
             >
               {name}: {Math.round(total)} LE
             </button>
@@ -137,20 +137,20 @@ function LogsTab({ logType, allTypesLabel }) {
         </div>
       </div>
 
-      {loading && <p className="text-center text-gray-500">Loading...</p>}
-      {error && <p className="text-center text-red-600">{error}</p>}
-      {!loading && !error && logs.length === 0 && <p className="text-center text-gray-500">No records found.</p>}
+      {loading && <p className="text-center text-muted-foreground">Loading...</p>}
+      {error && <p className="text-center text-destructive">{error}</p>}
+      {!loading && !error && logs.length === 0 && <p className="text-center text-muted-foreground">No records found.</p>}
 
       <div className="space-y-3">
         {logs.map((d) => {
           const card = (
             <div key={d.id} className="border rounded-xl p-4 bg-white flex justify-between items-start gap-3">
               <div>
-                <p className="font-bold text-black">{d.name} — {d.cName}</p>
-                <p className="text-sm text-gray-600">{d.Date} at {d.Time}</p>
-                <p className="text-sm text-gray-500">Logged by: {d.adminName || 'Unknown'}</p>
+                <p className="font-bold text-foreground">{d.name} — {d.cName}</p>
+                <p className="text-sm text-muted-foreground">{d.Date} at {d.Time}</p>
+                <p className="text-sm text-muted-foreground">Logged by: {d.adminName || 'Unknown'}</p>
               </div>
-              <p className={`font-bold ${isExpense ? 'text-[#c3a28e]' : 'text-green-600'}`}>
+              <p className={`font-bold ${isExpense ? 'text-primary' : 'text-green-600'}`}>
                 {isExpense ? '-' : '+'}{formatPriceLE(d.amount)}
               </p>
             </div>
@@ -211,10 +211,10 @@ function NetProfitTab() {
     <div className="space-y-5">
       <PageCard title="Select Time Range">
         <div className="grid grid-cols-2 gap-4">
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
         </div>
-        <button type="button" onClick={calculate} disabled={loading} className="mt-4 px-6 py-2 bg-black text-[#c3a28e] rounded-md font-medium">
+        <button type="button" onClick={calculate} disabled={loading} className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium">
           {loading ? 'Calculating...' : 'Calculate'}
         </button>
       </PageCard>
@@ -222,13 +222,13 @@ function NetProfitTab() {
         <PageCard title="Financial Summary">
           <div className="space-y-3">
             <div className="flex justify-between"><span>Total Income</span><span className="text-green-600 font-bold">+{formatPriceLE(summary.totalIncome)}</span></div>
-            <div className="flex justify-between"><span>Total Expenses</span><span className="text-[#c3a28e] font-bold">-{formatPriceLE(summary.totalExpenses)}</span></div>
+            <div className="flex justify-between"><span>Total Expenses</span><span className="text-primary font-bold">-{formatPriceLE(summary.totalExpenses)}</span></div>
             <hr />
-            <div className="flex justify-between text-lg"><span className="font-bold">Net Profit</span><span className={`font-bold ${netProfit >= 0 ? 'text-green-700' : 'text-[#c3a28e]'}`}>{formatPriceLE(netProfit)}</span></div>
+            <div className="flex justify-between text-lg"><span className="font-bold">Net Profit</span><span className={`font-bold ${netProfit >= 0 ? 'text-green-700' : 'text-primary'}`}>{formatPriceLE(netProfit)}</span></div>
           </div>
         </PageCard>
       )}
-      {!summary && !loading && <p className="text-center text-gray-500 py-8">Select a time range and calculate net profit.</p>}
+      {!summary && !loading && <p className="text-center text-muted-foreground py-8">Select a time range and calculate net profit.</p>}
       <Snackbar message={snack} isError onClose={() => setSnack('')} />
     </div>
   );
@@ -251,7 +251,7 @@ export default function FinanceScreen() {
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-semibold whitespace-nowrap border-b-2 ${tab === t.id ? 'border-[#c3a28e] text-[#c3a28e]' : 'border-transparent text-gray-500'}`}
+            className={`px-4 py-2 text-sm font-semibold whitespace-nowrap border-b-2 ${tab === t.id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'}`}
           >
             {t.label}
           </button>

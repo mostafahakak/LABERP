@@ -90,29 +90,29 @@ export default function ExpensesList() {
       <Header title="All Expenses" />
       <PageCard title="Filter Expenses">
         <div className="flex flex-wrap gap-3 mb-4">
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="px-3 py-2 border rounded-md text-black">
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="px-3 py-2 border rounded-md text-foreground">
             <option value="">All Statuses</option>
             <option value="Paid">Paid</option>
             <option value="Remaining">Remaining</option>
           </select>
-          <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className="px-3 py-2 border rounded-md text-black">
+          <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className="px-3 py-2 border rounded-md text-foreground">
             <option value="">All Plans</option>
             <option value="Full Payment">Full Payment</option>
             <option value="Installments">Installments</option>
             <option value="Partial Payment">Partial Payment</option>
           </select>
-          <input list="exp-names" placeholder="Filter by Name" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
+          <input list="exp-names" placeholder="Filter by Name" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
           <datalist id="exp-names">{nameOptions.map((n) => <option key={n} value={n} />)}</datalist>
-          <input list="exp-phones" placeholder="Filter by Phone" value={phoneFilter} onChange={(e) => setPhoneFilter(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
+          <input list="exp-phones" placeholder="Filter by Phone" value={phoneFilter} onChange={(e) => setPhoneFilter(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
           <datalist id="exp-phones">{phoneOptions.map((p) => <option key={p} value={p} />)}</datalist>
         </div>
-        <div className="border rounded-lg p-3 bg-gray-50">
-          <p className="text-sm font-medium text-black mb-2">Expense Types</p>
+        <div className="border rounded-lg p-3 bg-muted">
+          <p className="text-sm font-medium text-foreground mb-2">Expense Types</p>
           <div className="flex flex-wrap gap-3">
             {DEFAULT_EXPENSE_TYPES.map((type) => (
-              <label key={type} className="flex items-center gap-2 text-sm text-black">
+              <label key={type} className="flex items-center gap-2 text-sm text-foreground">
                 <input type="checkbox" checked={selectedTypes.includes(type)} onChange={() => toggleType(type)} />
                 {type}
               </label>
@@ -126,8 +126,8 @@ export default function ExpensesList() {
         <>
           <div className="grid grid-cols-3 gap-4 mb-5">
             {[['Total Amount', totals.total], ['Total Paid', totals.paid], ['Total Remaining', totals.remaining]].map(([l, v]) => (
-              <div key={l} className="bg-white rounded-xl border p-4 text-center">
-                <p className="text-sm text-gray-500">{l}</p>
+              <div key={l} className="bg-card rounded-xl border-border p-4 text-center">
+                <p className="text-sm text-muted-foreground">{l}</p>
                 <p className="text-lg font-bold">{formatPriceLE(v)}</p>
               </div>
             ))}
@@ -135,7 +135,7 @@ export default function ExpensesList() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {filtered.map((doc) => <FinanceDocCard key={doc.id} doc={doc} />)}
           </div>
-          {filtered.length === 0 && <p className="text-center text-gray-500 py-8">No expenses found.</p>}
+          {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">No expenses found.</p>}
         </>
       )}
       <Snackbar message={snack} isError onClose={() => setSnack('')} />

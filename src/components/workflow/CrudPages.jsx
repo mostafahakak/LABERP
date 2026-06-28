@@ -24,9 +24,9 @@ function CrudDialog({ title, fields, onSave, onClose }) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full">
-        <h3 className="font-bold text-black mb-4">{title}</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-card rounded-xl p-6 max-w-md w-full">
+        <h3 className="font-bold text-foreground mb-4">{title}</h3>
         <div className="space-y-3">
           {fields.map((f) =>
             f.type === 'select' ? (
@@ -50,8 +50,8 @@ function CrudDialog({ title, fields, onSave, onClose }) {
           )}
         </div>
         <div className="flex gap-2 justify-end mt-6">
-          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-black">Cancel</button>
-          <button type="button" onClick={() => onSave(values)} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md">Save</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-foreground">Cancel</button>
+          <button type="button" onClick={() => onSave(values)} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">Save</button>
         </div>
       </div>
     </div>
@@ -100,7 +100,7 @@ export function ManageTypesForm() {
         title="Manage Types"
         icon="🏷️"
         action={
-          <button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md text-sm">
+          <button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">
             + Add New Type
           </button>
         }
@@ -109,12 +109,12 @@ export function ManageTypesForm() {
           {items.map((item) => (
             <div key={item.id} className="flex items-center justify-between border rounded-lg p-4">
               <div>
-                <p className="font-semibold text-black">{item.name}</p>
-                <p className="text-sm text-gray-600">{formatPriceLE(item.price)}</p>
+                <p className="font-semibold text-foreground">{item.name}</p>
+                <p className="text-sm text-muted-foreground">{formatPriceLE(item.price)}</p>
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setDialog({ mode: 'edit', id: item.id, item })} className="px-3 py-1 border rounded-md text-sm">Edit</button>
-                <button type="button" onClick={() => remove(item.id)} className="px-3 py-1 border border-red-300 text-red-600 rounded-md text-sm">Delete</button>
+                <button type="button" onClick={() => remove(item.id)} className="px-3 py-1 border border-red-300 text-destructive rounded-md text-sm">Delete</button>
               </div>
             </div>
           ))}
@@ -172,18 +172,18 @@ export function ManageClinicsForm() {
       <PageCard
         title="Manage Clinics"
         icon="🏥"
-        action={<button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md text-sm">+ Add Clinic</button>}
+        action={<button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">+ Add Clinic</button>}
       >
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between border rounded-lg p-4 hover:bg-gray-50">
+            <div key={item.id} className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted">
               <Link href={`/dashboard/workflow/clinics/${item.id}`} className="flex-1 min-w-0">
-                <p className="font-semibold text-black">{item.name}</p>
-                <p className="text-sm text-gray-600">Balance: {formatPriceLE(item.balance || 0)}</p>
+                <p className="font-semibold text-foreground">{item.name}</p>
+                <p className="text-sm text-muted-foreground">Balance: {formatPriceLE(item.balance || 0)}</p>
               </Link>
               <div className="flex gap-2 shrink-0">
                 <button type="button" onClick={() => setDialog({ mode: 'edit', id: item.id, item })} className="px-3 py-1 border rounded-md text-sm">Edit</button>
-                <button type="button" onClick={async () => { if (confirm('Delete?')) { await deleteDoc(doc(db, 'Clinics', item.id)); setSnack({ message: 'Deleted', isError: false }); } }} className="px-3 py-1 border border-red-300 text-red-600 rounded-md text-sm">Delete</button>
+                <button type="button" onClick={async () => { if (confirm('Delete?')) { await deleteDoc(doc(db, 'Clinics', item.id)); setSnack({ message: 'Deleted', isError: false }); } }} className="px-3 py-1 border border-red-300 text-destructive rounded-md text-sm">Delete</button>
               </div>
             </div>
           ))}
@@ -237,18 +237,18 @@ export function ManageDrsForm() {
       <PageCard
         title="Manage Doctors"
         icon="👨‍⚕️"
-        action={<button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md text-sm">+ Add Doctor</button>}
+        action={<button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">+ Add Doctor</button>}
       >
         <div className="space-y-3">
           {items.map((item) => (
             <div key={item.id} className="flex items-center justify-between border rounded-lg p-4">
               <div>
-                <p className="font-semibold text-black">{item.name}</p>
-                <p className="text-sm text-gray-600">{item.clinic}</p>
+                <p className="font-semibold text-foreground">{item.name}</p>
+                <p className="text-sm text-muted-foreground">{item.clinic}</p>
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setDialog({ mode: 'edit', id: item.id, item })} className="px-3 py-1 border rounded-md text-sm">Edit</button>
-                <button type="button" onClick={async () => { if (confirm('Delete?')) { await deleteDoc(doc(db, 'Drs', item.id)); setSnack({ message: 'Deleted', isError: false }); } }} className="px-3 py-1 border border-red-300 text-red-600 rounded-md text-sm">Delete</button>
+                <button type="button" onClick={async () => { if (confirm('Delete?')) { await deleteDoc(doc(db, 'Drs', item.id)); setSnack({ message: 'Deleted', isError: false }); } }} className="px-3 py-1 border border-red-300 text-destructive rounded-md text-sm">Delete</button>
               </div>
             </div>
           ))}
@@ -294,15 +294,15 @@ export function ManageDeliveryForm() {
       <PageCard
         title="Manage Delivery Companies"
         icon="🚚"
-        action={<button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md text-sm">+ Add Company</button>}
+        action={<button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">+ Add Company</button>}
       >
         <div className="space-y-3">
           {items.map((item) => (
             <div key={item.id} className="flex items-center justify-between border rounded-lg p-4">
-              <p className="font-semibold text-black">{item.name}</p>
+              <p className="font-semibold text-foreground">{item.name}</p>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setDialog({ mode: 'edit', id: item.id, item })} className="px-3 py-1 border rounded-md text-sm">Edit</button>
-                <button type="button" onClick={async () => { if (confirm('Delete?')) { await deleteDoc(doc(db, 'Delivery', item.id)); setSnack({ message: 'Deleted', isError: false }); } }} className="px-3 py-1 border border-red-300 text-red-600 rounded-md text-sm">Delete</button>
+                <button type="button" onClick={async () => { if (confirm('Delete?')) { await deleteDoc(doc(db, 'Delivery', item.id)); setSnack({ message: 'Deleted', isError: false }); } }} className="px-3 py-1 border border-red-300 text-destructive rounded-md text-sm">Delete</button>
               </div>
             </div>
           ))}

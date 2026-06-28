@@ -70,28 +70,28 @@ export default function CategoriesPage() {
           <button
             type="button"
             onClick={() => { setName(''); setDialogOpen(true); }}
-            className="px-4 py-2 bg-black text-[#c3a28e] rounded-md text-sm"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm"
           >
             + Add Category
           </button>
         }
       >
         {loading ? (
-          <p className="text-gray-600 text-center py-8">Loading...</p>
+          <p className="text-muted-foreground text-center py-8">Loading...</p>
         ) : categories.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No categories found.</p>
+          <p className="text-muted-foreground text-center py-8">No categories found.</p>
         ) : (
           <div className="space-y-3">
             {categories.map((cat) => (
               <div key={cat.id} className="flex items-center justify-between border rounded-lg p-4">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">📂</span>
-                  <p className="font-semibold text-black">{cat.name}</p>
+                  <p className="font-semibold text-foreground">{cat.name}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => removeCategory(cat.id, cat.name)}
-                  className="px-3 py-1 border border-red-300 text-red-600 rounded-md text-sm"
+                  className="px-3 py-1 border border-red-300 text-destructive rounded-md text-sm"
                 >
                   Delete
                 </button>
@@ -102,15 +102,15 @@ export default function CategoriesPage() {
       </PageCard>
 
       {dialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="font-bold text-black mb-4">Add New Category</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl p-6 max-w-md w-full">
+            <h3 className="font-bold text-foreground mb-4">Add New Category</h3>
             <TextField label="Category Name" value={name} onChange={(e) => setName(e.target.value)} />
             <div className="flex gap-2 justify-end mt-6">
-              <button type="button" onClick={() => setDialogOpen(false)} className="px-4 py-2 border rounded-md text-black">
+              <button type="button" onClick={() => setDialogOpen(false)} className="px-4 py-2 border rounded-md text-foreground">
                 Cancel
               </button>
-              <button type="button" onClick={addCategory} disabled={saving} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md">
+              <button type="button" onClick={addCategory} disabled={saving} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">
                 Submit
               </button>
             </div>

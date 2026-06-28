@@ -54,24 +54,24 @@ function FinanceRecordCard({ record, type }) {
     >
       <div className="flex justify-between items-start gap-2 mb-2">
         <div>
-          <p className="font-semibold text-black">{type}</p>
-          <p className="text-sm text-gray-500">{record.Date} {record.Time ? `at ${record.Time}` : ''}</p>
+          <p className="font-semibold text-foreground">{type}</p>
+          <p className="text-sm text-muted-foreground">{record.Date} {record.Time ? `at ${record.Time}` : ''}</p>
         </div>
-        {record.bank && <span className="text-xs bg-gray-100 px-2 py-1 rounded">{record.bank}</span>}
+        {record.bank && <span className="text-xs bg-muted px-2 py-1 rounded">{record.bank}</span>}
       </div>
-      <p className="text-sm text-gray-700">Paid: {formatPriceLE(paidAmount)}</p>
+      <p className="text-sm text-foreground/80">Paid: {formatPriceLE(paidAmount)}</p>
       {!Number.isNaN(drBefore) && !Number.isNaN(drAfter) && (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           DR Balance: Before {formatPriceLE(drBefore)} → After {formatPriceLE(drAfter)}
         </p>
       )}
       {!Number.isNaN(bankBefore) && !Number.isNaN(bankAfter) && (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Bank Balance: Before {formatPriceLE(bankBefore)} → After {formatPriceLE(bankAfter)}
         </p>
       )}
       {record.drAmount != null && (
-        <p className="text-sm text-gray-600">DR Amount: {formatPriceLE(record.drAmount)}</p>
+        <p className="text-sm text-muted-foreground">DR Amount: {formatPriceLE(record.drAmount)}</p>
       )}
     </Link>
   );
@@ -262,7 +262,7 @@ export default function EmployeeProfile({ userId }) {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-10 h-10 border-4 border-[#c3a28e] border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -271,7 +271,7 @@ export default function EmployeeProfile({ userId }) {
     return (
       <>
         <Header title="Employee Profile" />
-        <p className="text-center text-gray-500 py-12">User not found.</p>
+        <p className="text-center text-muted-foreground py-12">User not found.</p>
       </>
     );
   }
@@ -289,7 +289,7 @@ export default function EmployeeProfile({ userId }) {
               type="button"
               onClick={saveProfile}
               disabled={saving}
-              className="px-4 py-2 bg-black text-[#c3a28e] rounded-md text-sm disabled:opacity-50"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm disabled:opacity-50"
             >
               Save
             </button>
@@ -297,7 +297,7 @@ export default function EmployeeProfile({ userId }) {
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(true)}
-                className="px-4 py-2 border border-red-300 text-red-600 rounded-md text-sm"
+                className="px-4 py-2 border border-red-300 text-destructive rounded-md text-sm"
               >
                 Delete
               </button>
@@ -359,7 +359,7 @@ export default function EmployeeProfile({ userId }) {
         <div
           className="mt-4 inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-green-200 bg-green-50"
         >
-          <span className="text-sm text-gray-600">Balance</span>
+          <span className="text-sm text-muted-foreground">Balance</span>
           <span className="font-bold text-green-700">{formatPriceLE(userData.balance)}</span>
         </div>
       </PageCard>
@@ -372,7 +372,7 @@ export default function EmployeeProfile({ userId }) {
               type="button"
               onClick={() => setSelectedTab(tab)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                selectedTab === tab ? 'bg-black text-[#c3a28e]' : 'border text-black'
+                selectedTab === tab ? 'bg-primary text-primary-foreground' : 'border text-foreground'
               }`}
             >
               {tab}
@@ -382,28 +382,28 @@ export default function EmployeeProfile({ userId }) {
 
         <div className="flex flex-wrap gap-3 mb-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Start Date</label>
+            <label className="block text-xs text-muted-foreground mb-1">Start Date</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 border rounded-md text-black"
+              className="px-3 py-2 border rounded-md text-foreground"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">End Date</label>
+            <label className="block text-xs text-muted-foreground mb-1">End Date</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 border rounded-md text-black"
+              className="px-3 py-2 border rounded-md text-foreground"
             />
           </div>
           {(startDate || endDate) && (
             <button
               type="button"
               onClick={() => { setStartDate(''); setEndDate(''); }}
-              className="self-end px-3 py-2 text-red-600 border border-red-200 rounded-md text-sm"
+              className="self-end px-3 py-2 text-destructive border border-destructive/30 rounded-md text-sm"
             >
               Clear dates
             </button>
@@ -412,10 +412,10 @@ export default function EmployeeProfile({ userId }) {
 
         {financeLoading ? (
           <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-[#c3a28e] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : financeRecords.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">No records found.</p>
+          <p className="text-center text-muted-foreground py-8">No records found.</p>
         ) : (
           <div className="space-y-3">
             {financeRecords.map((rec) => (
@@ -426,13 +426,13 @@ export default function EmployeeProfile({ userId }) {
       </PageCard>
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="font-bold text-black mb-3">Delete User</h3>
-            <p className="text-sm text-gray-700 mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl p-6 max-w-md w-full">
+            <h3 className="font-bold text-foreground mb-3">Delete User</h3>
+            <p className="text-sm text-foreground/80 mb-2">
               Are you sure you want to delete {userData.name}?
             </p>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-gray-700 mb-4">
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-sm text-foreground/80 mb-4">
               <p className="font-bold text-red-700 mb-1">⚠️ WARNING: This action will:</p>
               <ul className="list-disc list-inside space-y-0.5">
                 <li>Delete the user from the Users collection</li>

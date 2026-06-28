@@ -13,7 +13,7 @@ function TreeNode({ node, level = 0, expanded, toggle }) {
   const isOpen = expanded.has(node.id);
   const colors = {
     income: 'border-green-200 bg-green-50',
-    expense: 'border-red-200 bg-red-50',
+    expense: 'border-destructive/30 bg-destructive/10',
     balance: 'border-blue-200 bg-blue-50',
   };
 
@@ -22,13 +22,13 @@ function TreeNode({ node, level = 0, expanded, toggle }) {
       <button
         type="button"
         onClick={() => hasChildren && toggle(node.id)}
-        className={`w-full text-left p-4 rounded-xl border ${colors[node.type] || 'border-gray-200 bg-white'}`}
+        className={`w-full text-left p-4 rounded-xl border ${colors[node.type] || 'border-border bg-white'}`}
         style={{ marginLeft: level * 16 }}
       >
         <div className="flex justify-between items-start gap-3">
           <div>
-            <p className="font-semibold text-black">{hasChildren ? (isOpen ? '▼' : '▶') : '•'} {node.title}</p>
-            <p className="text-sm text-gray-600">{node.subtitle}</p>
+            <p className="font-semibold text-foreground">{hasChildren ? (isOpen ? '▼' : '▶') : '•'} {node.title}</p>
+            <p className="text-sm text-muted-foreground">{node.subtitle}</p>
             {node.metadata && Object.keys(node.metadata).length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {Object.entries(node.metadata).map(([k, v]) => (
@@ -37,7 +37,7 @@ function TreeNode({ node, level = 0, expanded, toggle }) {
               </div>
             )}
           </div>
-          {node.amount > 0 && <p className="font-bold text-black whitespace-nowrap">{formatPriceLE(node.amount)}</p>}
+          {node.amount > 0 && <p className="font-bold text-foreground whitespace-nowrap">{formatPriceLE(node.amount)}</p>}
         </div>
       </button>
       {isOpen && hasChildren && node.children.map((child) => (
@@ -113,21 +113,21 @@ export default function SummeryPage() {
       <PageCard title="Filters">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="text-sm text-gray-600">Branch</label>
-            <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-black">
+            <label className="text-sm text-muted-foreground">Branch</label>
+            <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-foreground">
               {branches.map((b) => <option key={b} value={b}>{b}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Start Date</label>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-black" />
+            <label className="text-sm text-muted-foreground">Start Date</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-foreground" />
           </div>
           <div>
-            <label className="text-sm text-gray-600">End Date</label>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-black" />
+            <label className="text-sm text-muted-foreground">End Date</label>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-md text-foreground" />
           </div>
         </div>
-        <button type="button" onClick={load} className="mt-4 px-4 py-2 bg-black text-[#c3a28e] rounded-md text-sm">Refresh</button>
+        <button type="button" onClick={load} className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">Refresh</button>
       </PageCard>
 
       {loading && <p className="text-center py-8">Loading financial data...</p>}
@@ -137,12 +137,12 @@ export default function SummeryPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
             {[
               ['Total Income', treeData.totalIncome, 'text-green-600'],
-              ['Total Expenses', treeData.totalExpenses, 'text-red-600'],
+              ['Total Expenses', treeData.totalExpenses, 'text-destructive'],
               ['Net Profit', treeData.netProfit, 'text-blue-600'],
               ['Profit Margin', `${marginPct}%`, 'text-purple-600'],
             ].map(([title, val, cls]) => (
-              <div key={title} className="bg-white rounded-2xl border p-5 shadow-sm">
-                <p className="text-sm text-gray-500">{title}</p>
+              <div key={title} className="bg-card rounded-2xl border p-5 shadow-sm">
+                <p className="text-sm text-muted-foreground">{title}</p>
                 <p className={`text-2xl font-bold mt-1 ${cls}`}>
                   {typeof val === 'number' ? formatPriceLE(val) : val}
                 </p>

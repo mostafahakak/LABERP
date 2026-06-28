@@ -47,34 +47,34 @@ export default function ActionsForm() {
       <PageCard title="Case Actions" icon="📊">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Start Date</label>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full border rounded-md p-2.5 text-black" />
+            <label className="block text-sm text-muted-foreground mb-1">Start Date</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full border rounded-md p-2.5 text-foreground" />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">End Date</label>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full border rounded-md p-2.5 text-black" />
+            <label className="block text-sm text-muted-foreground mb-1">End Date</label>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full border rounded-md p-2.5 text-foreground" />
           </div>
           <SelectField label="Admin Name" value={selectedAdmin} onChange={setSelectedAdmin} options={adminNames} placeholder="All Admins" />
         </div>
-        <button type="button" onClick={clearFilters} className="mb-6 px-4 py-2 border rounded-md text-black">Clear Filters</button>
+        <button type="button" onClick={clearFilters} className="mb-6 px-4 py-2 border rounded-md text-foreground">Clear Filters</button>
 
         <div className="space-y-3">
           {actions.map((action) => (
             <div key={action.id} className="border rounded-lg p-4 bg-white">
               <div className="flex justify-between items-start mb-2">
-                <h4 className="font-semibold text-black">
+                <h4 className="font-semibold text-foreground">
                   {action.action === 'Reassign Due Date' ? 'Reassign Due Date' : 'Phase Transition'}
                 </h4>
-                <span className="text-sm text-gray-500">{action.date} {action.time}</span>
+                <span className="text-sm text-muted-foreground">{action.date} {action.time}</span>
               </div>
               {action.fromPhase && (
-                <p className="text-sm text-black mb-2">
-                  <span className="px-2 py-1 bg-gray-100 rounded">{action.fromPhase}</span>
+                <p className="text-sm text-foreground mb-2">
+                  <span className="px-2 py-1 bg-muted rounded">{action.fromPhase}</span>
                   {' → '}
-                  <span className="px-2 py-1 bg-[#c3a28e]/20 rounded">{action.toPhase}</span>
+                  <span className="px-2 py-1 bg-primary/20 rounded">{action.toPhase}</span>
                 </p>
               )}
-              <div className="grid grid-cols-2 gap-2 text-sm text-black">
+              <div className="grid grid-cols-2 gap-2 text-sm text-foreground">
                 <p><strong>Admin:</strong> {action.adminName}</p>
                 <p><strong>Clinic:</strong> {action.clinicName}</p>
                 <p><strong>Case ID:</strong> {shortId(action.caseUID)}</p>
@@ -83,7 +83,7 @@ export default function ActionsForm() {
               </div>
             </div>
           ))}
-          {actions.length === 0 && <p className="text-gray-600">No actions found.</p>}
+          {actions.length === 0 && <p className="text-muted-foreground">No actions found.</p>}
         </div>
       </PageCard>
     </>

@@ -64,33 +64,33 @@ export default function ViewSupplier({ supplierName: propName, supplierId: propI
       <Header title={`Supplier: ${supplierName}`} />
       <PageCard title="Filters">
         <div className="flex flex-wrap gap-3">
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
-          <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className="px-3 py-2 border rounded-md text-black">
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
+          <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className="px-3 py-2 border rounded-md text-foreground">
             <option value="">All Plans</option>
             <option value="Full Payment">Full Payment</option>
             <option value="Partial Payment">Partial Payment</option>
             <option value="Installments">Installments</option>
           </select>
-          <button type="button" onClick={() => { setStartDate(''); setEndDate(''); setPaymentPlan(''); }} className="px-4 py-2 bg-gray-200 rounded-md text-sm">Clear</button>
+          <button type="button" onClick={() => { setStartDate(''); setEndDate(''); setPaymentPlan(''); }} className="px-4 py-2 bg-muted rounded-md text-sm">Clear</button>
         </div>
       </PageCard>
 
       <div className="grid grid-cols-3 gap-4 mb-5">
         {[['Total', totals.total], ['Paid', totals.paid], ['Remaining', totals.remaining]].map(([l, v]) => (
-          <div key={l} className="bg-white rounded-xl border p-4 text-center">
-            <p className="text-sm text-gray-500">{l}</p>
+          <div key={l} className="bg-card rounded-xl border-border p-4 text-center">
+            <p className="text-sm text-muted-foreground">{l}</p>
             <p className="font-bold">{formatPriceLE(v)}</p>
           </div>
         ))}
       </div>
 
       {loading && <p className="text-center py-8">Loading...</p>}
-      {error && <p className="text-center text-red-600">{error}</p>}
+      {error && <p className="text-center text-destructive">{error}</p>}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {docs.map((d) => <FinanceDocCard key={d.id} doc={d} />)}
       </div>
-      {!loading && docs.length === 0 && <p className="text-center text-gray-500 py-8">No transactions for this supplier.</p>}
+      {!loading && docs.length === 0 && <p className="text-center text-muted-foreground py-8">No transactions for this supplier.</p>}
     </>
   );
 }

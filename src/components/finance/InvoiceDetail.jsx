@@ -205,22 +205,22 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
   };
 
   if (loading) return <p className="text-center py-8">Loading invoice...</p>;
-  if (!invoice) return <p className="text-center py-8 text-red-600">Invoice not found.</p>;
+  if (!invoice) return <p className="text-center py-8 text-destructive">Invoice not found.</p>;
 
   return (
     <>
       <Header title={`${invoice.type} — ${invoice.name}`} />
       <PageCard title="Invoice Details">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-          <div><span className="text-gray-500">Date</span><p className="font-medium text-black">{invoice.Date} {invoice.Time}</p></div>
-          <div><span className="text-gray-500">Status</span><p className="font-medium">{invoice.status}</p></div>
-          <div><span className="text-gray-500">Bank</span><p className="font-medium">{invoice.bank}</p></div>
-          <div><span className="text-gray-500">Total</span><p className="font-bold">{formatPriceLE(invoice.total)}</p></div>
-          <div><span className="text-gray-500">Paid</span><p className="text-green-600 font-bold">{formatPriceLE(invoice.paidAmount)}</p></div>
-          <div><span className="text-gray-500">Remaining</span><p className="text-red-600 font-bold">{formatPriceLE(invoice.remainingAmount)}</p></div>
-          {invoice.drName && <div><span className="text-gray-500">Doctor</span><p>{invoice.drName}</p></div>}
-          {invoice.clinicName && <div><span className="text-gray-500">Clinic</span><p>{invoice.clinicName}</p></div>}
-          {invoice.note && <div className="md:col-span-3"><span className="text-gray-500">Note</span><p>{invoice.note}</p></div>}
+          <div><span className="text-muted-foreground">Date</span><p className="font-medium text-foreground">{invoice.Date} {invoice.Time}</p></div>
+          <div><span className="text-muted-foreground">Status</span><p className="font-medium">{invoice.status}</p></div>
+          <div><span className="text-muted-foreground">Bank</span><p className="font-medium">{invoice.bank}</p></div>
+          <div><span className="text-muted-foreground">Total</span><p className="font-bold">{formatPriceLE(invoice.total)}</p></div>
+          <div><span className="text-muted-foreground">Paid</span><p className="text-green-600 font-bold">{formatPriceLE(invoice.paidAmount)}</p></div>
+          <div><span className="text-muted-foreground">Remaining</span><p className="text-destructive font-bold">{formatPriceLE(invoice.remainingAmount)}</p></div>
+          {invoice.drName && <div><span className="text-muted-foreground">Doctor</span><p>{invoice.drName}</p></div>}
+          {invoice.clinicName && <div><span className="text-muted-foreground">Clinic</span><p>{invoice.clinicName}</p></div>}
+          {invoice.note && <div className="md:col-span-3"><span className="text-muted-foreground">Note</span><p>{invoice.note}</p></div>}
         </div>
         <div className="flex flex-wrap gap-2 mt-4">
           {remaining > 0 && (
@@ -231,7 +231,7 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
       </PageCard>
 
       <PageCard title="Items">
-        {items.length === 0 ? <p className="text-gray-500">No items.</p> : (
+        {items.length === 0 ? <p className="text-muted-foreground">No items.</p> : (
           <div className="space-y-2">
             {items.map((item) => (
               <div key={item.id} className="flex justify-between border rounded-lg p-3">
@@ -244,15 +244,15 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
       </PageCard>
 
       <PageCard title="Payments">
-        {payments.length === 0 ? <p className="text-gray-500">No payments.</p> : (
+        {payments.length === 0 ? <p className="text-muted-foreground">No payments.</p> : (
           <div className="space-y-2">
             {payments.map((p) => (
               <div key={p.id} className="flex justify-between items-center border rounded-lg p-3">
                 <div>
-                  <p className="font-medium text-black">{formatPriceLE(p.paidAmount)} via {p.bank}</p>
-                  <p className="text-xs text-gray-500">{p.Date} {p.Time}</p>
+                  <p className="font-medium text-foreground">{formatPriceLE(p.paidAmount)} via {p.bank}</p>
+                  <p className="text-xs text-muted-foreground">{p.Date} {p.Time}</p>
                 </div>
-                <button type="button" onClick={() => deletePayment(p)} className="text-red-600 text-sm px-2 py-1 border border-red-200 rounded">Delete</button>
+                <button type="button" onClick={() => deletePayment(p)} className="text-destructive text-sm px-2 py-1 border border-destructive/30 rounded">Delete</button>
               </div>
             ))}
           </div>
@@ -260,8 +260,8 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
       </PageCard>
 
       {showPay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl p-6 max-w-md w-full">
             <h3 className="font-bold mb-4">Pay Remaining ({formatPriceLE(remaining)})</h3>
             <TextField label="Amount" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} type="number" />
             <SelectField

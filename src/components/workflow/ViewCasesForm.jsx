@@ -185,21 +185,21 @@ export default function ViewCasesForm() {
             placeholder="All"
           />
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
+            <label className="block text-sm text-muted-foreground mb-1">
               Date Arrival
             </label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full border rounded-md p-2.5 text-black"
+              className="w-full border rounded-md p-2.5 text-foreground"
             />
           </div>
         </div>
         <button
           type="button"
           onClick={clearFilters}
-          className="mb-6 px-4 py-2 border rounded-md text-black"
+          className="mb-6 px-4 py-2 border rounded-md text-foreground"
         >
           Clear Filters
         </button>
@@ -215,7 +215,7 @@ export default function ViewCasesForm() {
             />
           ))}
           {cases.length === 0 && (
-            <p className="text-gray-600">No cases found.</p>
+            <p className="text-muted-foreground">No cases found.</p>
           )}
         </div>
       </PageCard>
@@ -230,9 +230,9 @@ export default function ViewCasesForm() {
       )}
 
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full">
-            <p className="text-black mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl p-6 max-w-sm w-full">
+            <p className="text-foreground mb-4">
               Delete this case and its tracking records?
             </p>
             <div className="flex gap-2 justify-end">
@@ -288,10 +288,10 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
 
   return (
     <div
-      className={`relative border rounded-xl p-4 bg-white ${delayed ? "border-red-400" : "border-gray-200"}`}
+      className={`relative border rounded-xl p-4 bg-white ${delayed ? "border-red-400" : "border-border"}`}
     >
       {delayed && (
-        <div className="absolute inset-0 bg-red-500/5 animate-pulse rounded-xl pointer-events-none" />
+        <div className="absolute inset-0 bg-destructive/100/5 animate-pulse rounded-xl pointer-events-none" />
       )}
       <div className="flex flex-wrap justify-between gap-2 mb-2">
         <div className="flex items-center gap-3">
@@ -304,13 +304,13 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
             className="w-5 h-5 accent-green-600"
           />
           <div>
-            <p className="font-bold text-black">{caseData.clinicName}</p>
+            <p className="font-bold text-foreground">{caseData.clinicName}</p>
             {caseData.caseCode && (
-              <p className="text-xs text-gray-500">{caseData.caseCode}</p>
+              <p className="text-xs text-muted-foreground">{caseData.caseCode}</p>
             )}
             {balance !== null && (
               <p
-                className={`text-sm ${balance >= 0 ? "text-green-600" : "text-red-600"}`}
+                className={`text-sm ${balance >= 0 ? "text-green-600" : "text-destructive"}`}
               >
                 Balance: {formatPriceLE(balance)}
               </p>
@@ -318,7 +318,7 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <span className="text-xs px-2 py-1 bg-gray-100 rounded text-black">
+          <span className="text-xs px-2 py-1 bg-muted rounded text-foreground">
             {caseData.caseType}
           </span>
           <span className="text-xs px-2 py-1 bg-blue-100 rounded text-blue-800">
@@ -326,7 +326,7 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
           </span>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2 text-sm text-black mb-3">
+      <div className="grid grid-cols-2 gap-2 text-sm text-foreground mb-3">
         <p>
           <strong>ID:</strong> {shortId(caseData.id)}
         </p>
@@ -350,20 +350,20 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
         <button
           type="button"
           onClick={onManage}
-          className="px-3 py-1.5 bg-black text-[#c3a28e] rounded-md text-sm"
+          className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm"
         >
           Manage
         </button>
         <Link
           href={`/dashboard/workflow/cases/${caseData.id}`}
-          className="px-3 py-1.5 border rounded-md text-sm text-black"
+          className="px-3 py-1.5 border rounded-md text-sm text-foreground"
         >
           View
         </Link>
         <button
           type="button"
           onClick={onDelete}
-          className="px-3 py-1.5 border border-red-300 text-red-600 rounded-md text-sm"
+          className="px-3 py-1.5 border border-red-300 text-destructive rounded-md text-sm"
         >
           Delete
         </button>

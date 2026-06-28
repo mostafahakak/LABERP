@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef, useState } from 'react';
 import { collection, doc, setDoc } from 'firebase/firestore';
@@ -155,12 +155,12 @@ export default function UploadPage() {
     <>
       <Header />
       <PageCard title="CSV File Upload" icon="📁">
-        <p className="text-gray-600 text-center mb-6">
+        <p className="text-muted-foreground text-center mb-6">
           Please ensure your CSV file is saved with UTF-8 encoding (e.g., &quot;CSV UTF-8 (Comma delimited)&quot; in Excel)
           to avoid issues with special characters (like Arabic).
         </p>
 
-        <p className="text-sm text-gray-500 text-center mb-4">
+        <p className="text-sm text-muted-foreground text-center mb-4">
           Expected columns: id, name, category, supplier, price, low stock, type
         </p>
 
@@ -169,7 +169,7 @@ export default function UploadPage() {
             type="button"
             onClick={handleUpload}
             disabled={uploading}
-            className="px-8 py-4 bg-black text-white rounded-lg text-lg font-medium disabled:opacity-50"
+            className="px-8 py-4 bg-primary text-primary-foreground rounded-lg text-lg font-medium disabled:opacity-50"
           >
             Upload CSV Data to Inventory
           </button>
@@ -185,12 +185,12 @@ export default function UploadPage() {
 
         {uploading && progress.total > 0 && (
           <div className="mt-6">
-            <p className="text-center text-sm text-gray-600 mb-2">
+            <p className="text-center text-sm text-muted-foreground mb-2">
               Uploading data... ({progress.current}/{progress.total} rows)
             </p>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div
-                className="bg-[#d9ae02] h-2 rounded-full transition-all"
+                className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${(progress.current / progress.total) * 100}%` }}
               />
             </div>

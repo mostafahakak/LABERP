@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -15,7 +15,7 @@ import {
 import { db } from '@/lib/firebase';
 import Header from '@/components/layout/Header';
 import { Snackbar } from '@/components/ui/PageComponents';
-import { formatPriceLE, ACCENT_COLOR } from '@/lib/utils';
+import { formatPriceLE } from '@/lib/utils';
 
 async function fetchSalaryCalcs(employeeName) {
   const q = query(
@@ -86,16 +86,16 @@ function SalaryCalcDialog({ employeeName, onClose, onSnack }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] flex flex-col">
-        <h3 className="font-bold text-black mb-2">Salary Calculations — {employeeName}</h3>
-        <p className="text-sm text-gray-500 mb-4">Click delete on any salary calculation to remove it.</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-card rounded-xl p-6 max-w-lg w-full max-h-[80vh] flex flex-col">
+        <h3 className="font-bold text-foreground mb-2">Salary Calculations — {employeeName}</h3>
+        <p className="text-sm text-muted-foreground mb-4">Click delete on any salary calculation to remove it.</p>
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="w-8 h-8 border-4 border-[#c3a28e] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : items.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No salary calculations found.</p>
+          <p className="text-muted-foreground text-center py-8">No salary calculations found.</p>
         ) : (
           <div className="overflow-y-auto flex-1 space-y-2">
             {items.map((item) => {
@@ -103,10 +103,10 @@ function SalaryCalcDialog({ employeeName, onClose, onSnack }) {
               return (
                 <div key={item.id} className="flex items-center justify-between border rounded-lg p-3">
                   <div>
-                    <p className="font-semibold text-black">
+                    <p className="font-semibold text-foreground">
                       {item.month} — {formatPriceLE(amount)}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Date: {item.date} at {item.time}
                     </p>
                   </div>
@@ -120,7 +120,7 @@ function SalaryCalcDialog({ employeeName, onClose, onSnack }) {
                         month: item.month,
                       })
                     }
-                    className="text-red-600 hover:text-red-800 p-2"
+                    className="text-destructive hover:text-destructive/80 p-2"
                     title="Delete"
                   >
                     🗑
@@ -131,17 +131,17 @@ function SalaryCalcDialog({ employeeName, onClose, onSnack }) {
           </div>
         )}
         <div className="flex justify-end mt-4">
-          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-black">
+          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-foreground">
             Close
           </button>
         </div>
       </div>
 
       {confirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h4 className="font-bold text-black mb-3">Confirm Deletion</h4>
-            <p className="text-sm text-gray-700 mb-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl p-6 max-w-md w-full">
+            <h4 className="font-bold text-foreground mb-3">Confirm Deletion</h4>
+            <p className="text-sm text-foreground/80 mb-4">
               Delete salary calculation for {employeeName}?
               <br />
               Month: {confirm.month}
@@ -184,32 +184,31 @@ function EmployeeCard({ employee, onLongPress }) {
         e.preventDefault();
         onLongPress();
       }}
-      className="block bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg transition-shadow"
+      className="block bg-card rounded-2xl shadow-sm border border-border p-5 hover:shadow-lg transition-shadow"
     >
       <div className="flex items-start gap-3 mb-3">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-          style={{ backgroundColor: `${ACCENT_COLOR}20` }}
+          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-primary/10"
         >
           👤
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-black truncate">{name}</p>
-          <p className="text-sm text-gray-600 truncate">{type}</p>
+          <p className="font-bold text-foreground truncate">{name}</p>
+          <p className="text-sm text-muted-foreground truncate">{type}</p>
         </div>
       </div>
       {email && (
-        <p className="text-xs text-gray-600 mb-1 truncate">✉ {email}</p>
+        <p className="text-xs text-muted-foreground mb-1 truncate">✉ {email}</p>
       )}
-      <p className="text-xs text-gray-600 mb-2">Monthly Salary: {formatPriceLE(salary)}</p>
+      <p className="text-xs text-muted-foreground mb-2">Monthly Salary: {formatPriceLE(salary)}</p>
       <div
         className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold ${
-          balance >= 0 ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+          balance >= 0 ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-destructive/10 text-red-700 border border-destructive/30'
         }`}
       >
         Balance: {formatPriceLE(balance)}
       </div>
-      <p className="text-xs text-gray-400 mt-2">Right-click for salary calculations</p>
+      <p className="text-xs text-muted-foreground/70 mt-2">Right-click for salary calculations</p>
     </Link>
   );
 }
@@ -245,12 +244,12 @@ export default function EmployeeList() {
       <Header title="Employee Records" />
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="w-10 h-10 border-4 border-[#c3a28e] border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
-      {error && <p className="text-red-600 text-center py-8">Error: {error}</p>}
+      {error && <p className="text-destructive text-center py-8">Error: {error}</p>}
       {!loading && !error && employees.length === 0 && (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-muted-foreground">
           <p className="text-4xl mb-3">👥</p>
           <p>No employees found.</p>
         </div>
@@ -281,8 +280,8 @@ export default function EmployeeList() {
       <button
         type="button"
         onClick={() => router.push('/dashboard/hr/employees/add')}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-black rounded-2xl shadow-lg flex items-center justify-center text-2xl hover:scale-105 transition-transform z-40"
-        style={{ color: ACCENT_COLOR }}
+        className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-primary-foreground rounded-2xl shadow-lg flex items-center justify-center text-2xl hover:scale-105 transition-transform z-40"
+        style={{ color: 'var(--primary)' }}
         aria-label="Add employee"
       >
         +

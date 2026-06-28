@@ -46,7 +46,7 @@ export default function SuppliersPage() {
         }
       >
         {suppliers.length === 0 ? (
-          <p className="text-gray-500">No suppliers found.</p>
+          <p className="text-muted-foreground">No suppliers found.</p>
         ) : (
           <div className="space-y-3">
             {suppliers.map((s) => (
@@ -58,11 +58,11 @@ export default function SuppliersPage() {
                 >
                   <span className="text-2xl">🚚</span>
                   <div>
-                    <p className="font-semibold text-black">{s.name}</p>
-                    <p className="text-sm text-gray-500">Balance: {formatPriceLE(s.balance)}</p>
+                    <p className="font-semibold text-foreground">{s.name}</p>
+                    <p className="text-sm text-muted-foreground">Balance: {formatPriceLE(s.balance)}</p>
                   </div>
                 </button>
-                <button type="button" onClick={() => remove(s.id, s.name)} className="text-red-600 px-3 py-1 border border-red-200 rounded-md text-sm">Delete</button>
+                <button type="button" onClick={() => remove(s.id, s.name)} className="text-destructive px-3 py-1 border border-destructive/30 rounded-md text-sm">Delete</button>
               </div>
             ))}
           </div>
@@ -70,13 +70,13 @@ export default function SuppliersPage() {
       </PageCard>
 
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl p-6 max-w-md w-full">
             <h3 className="font-bold mb-4">Add Supplier</h3>
             <TextField label="Supplier Name" value={name} onChange={(e) => setName(e.target.value)} />
             <div className="flex gap-2 justify-end mt-4">
               <button type="button" onClick={() => setShowAdd(false)} className="px-4 py-2 border rounded-md">Cancel</button>
-              <button type="button" onClick={addSupplier} className="px-4 py-2 bg-black text-red-400 rounded-md">Submit</button>
+              <button type="button" onClick={addSupplier} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">Submit</button>
             </div>
           </div>
         </div>

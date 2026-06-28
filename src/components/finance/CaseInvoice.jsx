@@ -339,7 +339,7 @@ export default function CaseInvoice() {
 
       <PageCard title="Cases Ready to Invoice">
         {cases.length === 0 ? (
-          <p className="text-gray-500">No cases ready to invoice.</p>
+          <p className="text-muted-foreground">No cases ready to invoice.</p>
         ) : (
           <div className="space-y-2">
             {cases.map((c) => (
@@ -353,14 +353,14 @@ export default function CaseInvoice() {
                   onChange={() => toggleCase(c.id)}
                 />
                 <div className="flex-1">
-                  <p className="font-medium text-black">
+                  <p className="font-medium text-foreground">
                     {c.patientName} — {c.type || c.caseType}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {c.clinicName || c.clinic} · Dr. {c.drName}
                   </p>
                   {c.teethCount > 0 && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Teeth: {c.teethCount}
                     </p>
                   )}
@@ -372,7 +372,7 @@ export default function CaseInvoice() {
             ))}
           </div>
         )}
-        <div className="mt-4 border-t pt-4 space-y-1 text-sm text-black">
+        <div className="mt-4 border-t pt-4 space-y-1 text-sm text-foreground">
           <div className="flex justify-between">
             <span>Subtotal:</span>
             <strong>{formatPriceLE(subtotal)}</strong>
@@ -391,14 +391,14 @@ export default function CaseInvoice() {
           </div>
           <div className="flex justify-between">
             <span>Remaining:</span>
-            <strong className="text-red-600">{formatPriceLE(remaining)}</strong>
+            <strong className="text-destructive">{formatPriceLE(remaining)}</strong>
           </div>
         </div>
         <button
           type="button"
           onClick={submit}
           disabled={loading}
-          className="mt-4 px-6 py-2.5 bg-black text-[#c3a28e] rounded-md"
+          className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-md"
         >
           Create Invoice
         </button>
@@ -410,18 +410,18 @@ export default function CaseInvoice() {
             {previousInvoices.map((inv) => (
               <div
                 key={inv.id}
-                className="flex justify-between items-center border rounded-lg p-3 text-sm text-black"
+                className="flex justify-between items-center border rounded-lg p-3 text-sm text-foreground"
               >
                 <div>
                   <p className="font-medium">{inv.Date}</p>
-                  <p className="text-gray-500">
+                  <p className="text-muted-foreground">
                     {inv.paymentPlan} · {inv.status}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold">{formatPriceLE(inv.total)}</p>
                   {inv.remainingAmount > 0 && (
-                    <p className="text-red-600 text-xs">
+                    <p className="text-destructive text-xs">
                       Remaining: {formatPriceLE(inv.remainingAmount)}
                     </p>
                   )}

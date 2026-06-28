@@ -68,7 +68,7 @@ export default function BankTransactions() {
     return (
       <>
         <Header title="Bank Transactions" />
-        <p className="text-gray-500">Select a bank from the Banks page.</p>
+        <p className="text-muted-foreground">Select a bank from the Banks page.</p>
       </>
     );
   }
@@ -78,44 +78,44 @@ export default function BankTransactions() {
       <Header title={`Transactions — ${selectedBankName}`} />
       <PageCard title="Filters">
         <div className="flex flex-wrap gap-3">
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
-          <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="px-3 py-2 border rounded-md text-black">
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
+          <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="px-3 py-2 border rounded-md text-foreground">
             <option value="">All Types</option>
             <option value="Income">Income</option>
             <option value="Expense">Expense</option>
           </select>
-          <select value={selectedPaymentPlan} onChange={(e) => setSelectedPaymentPlan(e.target.value)} className="px-3 py-2 border rounded-md text-black">
+          <select value={selectedPaymentPlan} onChange={(e) => setSelectedPaymentPlan(e.target.value)} className="px-3 py-2 border rounded-md text-foreground">
             <option value="">All Payment Plans</option>
             <option value="Full Payment">Full Payment</option>
             <option value="Partial Payment">Partial Payment</option>
             <option value="Installments">Installments</option>
           </select>
-          <button type="button" onClick={() => { setStartDate(''); setEndDate(''); setSelectedType(''); setSelectedPaymentPlan(''); }} className="px-4 py-2 bg-gray-200 rounded-md text-sm">Clear</button>
+          <button type="button" onClick={() => { setStartDate(''); setEndDate(''); setSelectedType(''); setSelectedPaymentPlan(''); }} className="px-4 py-2 bg-muted rounded-md text-sm">Clear</button>
         </div>
       </PageCard>
 
       <div className="grid grid-cols-3 gap-4 mb-5">
-        {[['Income', totals.income, 'text-green-600'], ['Expense', totals.expense, 'text-red-600'], ['Net', totals.net, 'text-black']].map(([l, v, c]) => (
-          <div key={l} className="bg-white rounded-xl border p-4 text-center">
-            <p className="text-sm text-gray-500">{l}</p>
+        {[['Income', totals.income, 'text-green-600'], ['Expense', totals.expense, 'text-destructive'], ['Net', totals.net, 'text-foreground']].map(([l, v, c]) => (
+          <div key={l} className="bg-card rounded-xl border-border p-4 text-center">
+            <p className="text-sm text-muted-foreground">{l}</p>
             <p className={`text-lg font-bold ${c}`}>{formatPriceLE(v)}</p>
           </div>
         ))}
       </div>
 
       {loading && <p className="text-center py-8">Loading...</p>}
-      {error && <p className="text-center text-red-600">{error}</p>}
-      {!loading && logs.length === 0 && <p className="text-center text-gray-500">No transactions.</p>}
+      {error && <p className="text-center text-destructive">{error}</p>}
+      {!loading && logs.length === 0 && <p className="text-center text-muted-foreground">No transactions.</p>}
       <div className="space-y-2">
         {logs.map((l) => (
           <div key={l.id} className="bg-white border rounded-xl p-4 flex justify-between gap-3">
             <div>
-              <p className="font-medium text-black">{l.name} — {l.cName}</p>
-              <p className="text-sm text-gray-600">{l.Date} {l.Time} · {l.type}</p>
-              {l.paymentPlan && <p className="text-xs text-gray-500">{l.paymentPlan}</p>}
+              <p className="font-medium text-foreground">{l.name} — {l.cName}</p>
+              <p className="text-sm text-muted-foreground">{l.Date} {l.Time} · {l.type}</p>
+              {l.paymentPlan && <p className="text-xs text-muted-foreground">{l.paymentPlan}</p>}
             </div>
-            <p className={`font-bold ${l.type === 'Income' ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`font-bold ${l.type === 'Income' ? 'text-green-600' : 'text-destructive'}`}>
               {l.type === 'Income' ? '+' : '-'}{formatPriceLE(l.amount)}
             </p>
           </div>

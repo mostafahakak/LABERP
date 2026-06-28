@@ -51,7 +51,7 @@ export default function InvoiceItemsPageContent() {
         title="Invoice Items"
         icon="🧾"
         action={
-          <button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md text-sm">
+          <button type="button" onClick={() => setDialog({ mode: 'add' })} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">
             + Add Item
           </button>
         }
@@ -60,12 +60,12 @@ export default function InvoiceItemsPageContent() {
           {items.map((item) => (
             <div key={item.id} className="flex items-center justify-between border rounded-lg p-4">
               <div>
-                <p className="font-semibold text-black">{item.name}</p>
-                <p className="text-sm text-gray-600">{formatPriceLE(item.price)}</p>
+                <p className="font-semibold text-foreground">{item.name}</p>
+                <p className="text-sm text-muted-foreground">{formatPriceLE(item.price)}</p>
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setDialog({ mode: 'edit', id: item.id, item })} className="px-3 py-1 border rounded-md text-sm">Edit</button>
-                <button type="button" onClick={async () => { if (confirm('Delete?')) await deleteDoc(doc(db, 'InvoiceItems', item.id)); }} className="px-3 py-1 border border-red-300 text-red-600 rounded-md text-sm">Delete</button>
+                <button type="button" onClick={async () => { if (confirm('Delete?')) await deleteDoc(doc(db, 'InvoiceItems', item.id)); }} className="px-3 py-1 border border-red-300 text-destructive rounded-md text-sm">Delete</button>
               </div>
             </div>
           ))}
@@ -73,9 +73,9 @@ export default function InvoiceItemsPageContent() {
       </PageCard>
 
       {dialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="font-bold text-black mb-4">{dialog.mode === 'add' ? 'Add Item' : 'Edit Item'}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl p-6 max-w-md w-full">
+            <h3 className="font-bold text-foreground mb-4">{dialog.mode === 'add' ? 'Add Item' : 'Edit Item'}</h3>
             <InvoiceItemForm item={dialog.item} onSave={save} onClose={() => setDialog(null)} />
           </div>
         </div>
@@ -95,7 +95,7 @@ function InvoiceItemForm({ item, onSave, onClose }) {
       <TextField label="Price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
       <div className="flex gap-2 justify-end mt-4">
         <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md">Cancel</button>
-        <button type="button" onClick={() => onSave({ name, price })} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md">Save</button>
+        <button type="button" onClick={() => onSave({ name, price })} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">Save</button>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import {
@@ -15,7 +15,7 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth-context';
 import { formatDate, formatTime, formatPriceLE } from '@/lib/utils';
 import { getPhaseInfo } from '@/lib/phase-utils';
-import { ACCENT_COLOR } from '@/lib/utils';
+
 
 export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess }) {
   const { user } = useAuth();
@@ -148,11 +148,11 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
-        <h3 className="text-xl font-bold text-black mb-4">Manage Case</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-card rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+        <h3 className="text-xl font-bold text-foreground mb-4">Manage Case</h3>
 
-        <div className="bg-gray-50 rounded-lg p-4 mb-4 text-sm text-black space-y-1">
+        <div className="bg-muted rounded-lg p-4 mb-4 text-sm text-foreground space-y-1">
           <p><strong>Phase:</strong> {caseData.phase}</p>
           <p><strong>Status:</strong> {caseData.status}</p>
           {caseData.assignedUser && <p><strong>Assigned:</strong> {caseData.assignedUser}</p>}
@@ -160,24 +160,24 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
 
         {phaseInfo.nextPhase ? (
           <>
-            <div className="mb-4 p-3 border rounded-lg text-black">
+            <div className="mb-4 p-3 border rounded-lg text-foreground">
               <p className="font-semibold">Next: {phaseInfo.nextPhase}</p>
-              <p className="text-sm text-gray-600">Status → {phaseInfo.nextStatus}</p>
+              <p className="text-sm text-muted-foreground">Status → {phaseInfo.nextStatus}</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm mb-1 text-black">Note (optional)</label>
-                <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full border rounded-md p-2 text-black" />
+                <label className="block text-sm mb-1 text-foreground">Note (optional)</label>
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full border rounded-md p-2 text-foreground" />
               </div>
               <div>
-                <label className="block text-sm mb-1 text-black">Due Date</label>
-                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full border rounded-md p-2 text-black" />
+                <label className="block text-sm mb-1 text-foreground">Due Date</label>
+                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full border rounded-md p-2 text-foreground" />
               </div>
               {needsUser && (
                 <div>
-                  <label className="block text-sm mb-1 text-black">Assign User *</label>
-                  <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full border rounded-md p-2 text-black">
+                  <label className="block text-sm mb-1 text-foreground">Assign User *</label>
+                  <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full border rounded-md p-2 text-foreground">
                     <option value="">Select user</option>
                     {users.map((u) => <option key={u} value={u}>{u}</option>)}
                   </select>
@@ -185,28 +185,28 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
               )}
               {phaseInfo.nextStatus === 'Ready to get invoice' && (
                 <div>
-                  <label className="block text-sm mb-1 text-black">Price *</label>
-                  <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border rounded-md p-2 text-black" />
+                  <label className="block text-sm mb-1 text-foreground">Price *</label>
+                  <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full border rounded-md p-2 text-foreground" />
                 </div>
               )}
             </div>
 
-            {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+            {error && <p className="text-destructive text-sm mt-3">{error}</p>}
 
             <div className="flex flex-wrap gap-2 mt-6 justify-end">
               <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md">Cancel</button>
-              <button type="button" onClick={reassignDueDate} disabled={reassignLoading} className="px-4 py-2 border rounded-md" style={{ borderColor: ACCENT_COLOR, color: ACCENT_COLOR }}>
+              <button type="button" onClick={reassignDueDate} disabled={reassignLoading} className="px-4 py-2 border border-primary text-primary rounded-md">
                 {reassignLoading ? 'Saving...' : 'Reassign Date'}
               </button>
-              <button type="button" onClick={moveToNextPhase} disabled={loading} className="px-4 py-2 rounded-md text-white bg-black">
+              <button type="button" onClick={moveToNextPhase} disabled={loading} className="px-4 py-2 rounded-md bg-primary text-primary-foreground">
                 {loading ? 'Moving...' : `Move to ${phaseInfo.nextPhase}`}
               </button>
             </div>
           </>
         ) : (
           <>
-            <p className="text-black mb-4">Case is ready to be delivered / in final phase.</p>
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-md bg-black text-white">Close</button>
+            <p className="text-foreground mb-4">Case is ready to be delivered / in final phase.</p>
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-md bg-primary text-primary-foreground">Close</button>
           </>
         )}
       </div>

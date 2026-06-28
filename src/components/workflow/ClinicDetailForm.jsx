@@ -32,43 +32,43 @@ export default function ClinicDetailForm({ clinicId }) {
     return () => { unsub1(); unsub2(); };
   }, [clinic?.name]);
 
-  if (!clinic) return <p className="text-black p-8">Loading...</p>;
+  if (!clinic) return <p className="text-foreground p-8">Loading...</p>;
 
   return (
     <>
       <Header />
       <PageCard title={clinic.name} icon="🏥">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-black">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-foreground">
           <div className="border rounded-lg p-4">
-            <p className="text-sm text-gray-500">Balance</p>
-            <p className={`text-xl font-bold ${(clinic.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p className="text-sm text-muted-foreground">Balance</p>
+            <p className={`text-xl font-bold ${(clinic.balance || 0) >= 0 ? 'text-green-600' : 'text-destructive'}`}>
               {formatPriceLE(clinic.balance || 0)}
             </p>
           </div>
           <div className="border rounded-lg p-4">
-            <p className="text-sm text-gray-500">Address</p>
+            <p className="text-sm text-muted-foreground">Address</p>
             <p>{clinic.address || 'N/A'}</p>
           </div>
           <div className="border rounded-lg p-4">
-            <p className="text-sm text-gray-500">Phone</p>
+            <p className="text-sm text-muted-foreground">Phone</p>
             <p>{clinic.phone || 'N/A'}</p>
           </div>
         </div>
 
-        <h3 className="font-bold text-black mb-3">Doctors ({doctors.length})</h3>
+        <h3 className="font-bold text-foreground mb-3">Doctors ({doctors.length})</h3>
         <div className="flex flex-wrap gap-2 mb-6">
           {doctors.map((d) => (
-            <span key={d.id} className="px-3 py-1 bg-gray-100 rounded-full text-sm text-black">{d.name}</span>
+            <span key={d.id} className="px-3 py-1 bg-muted rounded-full text-sm text-foreground">{d.name}</span>
           ))}
         </div>
 
-        <h3 className="font-bold text-black mb-3">Cases ({cases.length})</h3>
+        <h3 className="font-bold text-foreground mb-3">Cases ({cases.length})</h3>
         <div className="space-y-2">
           {cases.map((c) => (
-            <Link key={c.id} href={`/dashboard/workflow/cases/${c.id}`} className="block border rounded-lg p-3 hover:bg-gray-50 text-black">
+            <Link key={c.id} href={`/dashboard/workflow/cases/${c.id}`} className="block border rounded-lg p-3 hover:bg-muted text-foreground">
               <div className="flex justify-between">
                 <span>{c.patientName} — {c.type}</span>
-                <span className="text-sm text-gray-500">{shortId(c.id)} · {c.status}</span>
+                <span className="text-sm text-muted-foreground">{shortId(c.id)} · {c.status}</span>
               </div>
             </Link>
           ))}

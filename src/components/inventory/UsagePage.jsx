@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import {
@@ -167,15 +167,15 @@ export default function UsagePage() {
     <>
       <Header />
       <PageCard title="Inventory Usage" icon="📤">
-        <div className="bg-gray-50 border rounded-xl p-4 mb-6">
-          <p className="font-semibold text-black">Record Inventory Usage</p>
-          <p className="text-sm text-gray-600 mt-1">Select items and quantities to record usage</p>
+        <div className="bg-muted border rounded-xl p-4 mb-6">
+          <p className="font-semibold text-foreground">Record Inventory Usage</p>
+          <p className="text-sm text-muted-foreground mt-1">Select items and quantities to record usage</p>
         </div>
 
         <div className="border rounded-xl p-4 mb-6">
-          <p className="font-semibold text-black mb-3">Select Item</p>
+          <p className="font-semibold text-foreground mb-3">Select Item</p>
           {loading ? (
-            <p className="text-gray-600 text-center py-6">Loading items...</p>
+            <p className="text-muted-foreground text-center py-6">Loading items...</p>
           ) : (
             <select
               defaultValue=""
@@ -183,7 +183,7 @@ export default function UsagePage() {
                 addItem(e.target.value);
                 e.target.value = '';
               }}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-black bg-white"
+              className="w-full px-3 py-2.5 border border-input rounded-md text-foreground bg-white"
             >
               <option value="">Choose an item to use</option>
               {allItems.map((item) => {
@@ -199,17 +199,17 @@ export default function UsagePage() {
         </div>
 
         <div className="border rounded-xl p-4 mb-6">
-          <p className="font-semibold text-black mb-3">Selected Items</p>
+          <p className="font-semibold text-foreground mb-3">Selected Items</p>
           {selectedItems.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">
+            <div className="text-center py-10 text-muted-foreground">
               <p className="font-medium">No items selected</p>
               <p className="text-sm mt-1">Select items from the dropdown above</p>
             </div>
           ) : (
             <>
-              <div className="bg-[#d9ae02]/10 border border-[#d9ae02]/30 rounded-lg p-3 mb-4 flex justify-between items-center">
-                <span className="font-semibold text-black">Total Items:</span>
-                <span className="text-xl font-bold text-[#d9ae02]">{totalCount}</span>
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-4 flex justify-between items-center">
+                <span className="font-semibold text-foreground">Total Items:</span>
+                <span className="text-xl font-bold text-primary">{totalCount}</span>
               </div>
               <div className="space-y-3">
                 {selectedItems.map((item, index) => {
@@ -217,17 +217,17 @@ export default function UsagePage() {
                   const price = Number(item.price) || 0;
                   const totalPrice = price * item.quantityToUse;
                   return (
-                    <div key={item.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div key={item.id} className="border rounded-lg p-4 bg-muted">
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <p className="font-semibold text-black">{item.name}</p>
-                          <p className="text-xs text-gray-600">Available: {available}</p>
+                          <p className="font-semibold text-foreground">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">Available: {available}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeItem(index)}
                           disabled={submitting}
-                          className="text-red-600 text-sm"
+                          className="text-destructive text-sm"
                         >
                           Remove
                         </button>
@@ -238,7 +238,7 @@ export default function UsagePage() {
                             type="button"
                             onClick={() => adjustQuantity(index, -1)}
                             disabled={submitting}
-                            className="text-red-600 px-2 text-lg"
+                            className="text-destructive px-2 text-lg"
                           >
                             −
                           </button>
@@ -252,7 +252,7 @@ export default function UsagePage() {
                             +
                           </button>
                         </div>
-                        <span className="font-semibold text-[#d9ae02]">{totalPrice.toFixed(2)} LE</span>
+                        <span className="font-semibold text-primary">{totalPrice.toFixed(2)} LE</span>
                       </div>
                     </div>
                   );
@@ -266,7 +266,7 @@ export default function UsagePage() {
           type="button"
           onClick={submitUsage}
           disabled={submitting || selectedItems.length === 0}
-          className="w-full py-4 bg-[#d9ae02] text-white font-semibold rounded-xl disabled:opacity-50"
+          className="w-full py-4 bg-primary text-white font-semibold rounded-xl disabled:opacity-50"
         >
           {submitting ? 'Submitting...' : 'Submit Usage'}
         </button>

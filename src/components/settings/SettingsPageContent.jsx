@@ -101,16 +101,16 @@ export default function SettingsPageContent() {
     <>
       <Header />
       <PageCard title="Settings" icon="⚙️">
-        <div className="space-y-4 text-black">
+        <div className="space-y-4 text-foreground">
           <p><strong>Name:</strong> {user?.name}</p>
           <p><strong>Email:</strong> {user?.email}</p>
           <p><strong>Role:</strong> {user?.type}</p>
           <p><strong>Branch:</strong> {user?.branch}</p>
           <div className="flex flex-wrap gap-3 pt-4">
-            <button type="button" onClick={() => setSalaryDialog(true)} className="px-6 py-3 bg-black text-[#c3a28e] rounded-lg font-semibold">
+            <button type="button" onClick={() => setSalaryDialog(true)} className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold">
               Calculate Salaries
             </button>
-            <button type="button" onClick={handleLogout} className="px-6 py-3 border border-red-300 text-red-600 rounded-lg font-semibold">
+            <button type="button" onClick={handleLogout} className="px-6 py-3 border border-red-300 text-destructive rounded-lg font-semibold">
               Logout
             </button>
           </div>
@@ -118,16 +118,16 @@ export default function SettingsPageContent() {
       </PageCard>
 
       {salaryDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto">
-            <h3 className="font-bold text-black mb-4">Calculate Salaries</h3>
-            <label className="flex items-center gap-2 mb-4 text-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto">
+            <h3 className="font-bold text-foreground mb-4">Calculate Salaries</h3>
+            <label className="flex items-center gap-2 mb-4 text-foreground">
               <input type="checkbox" onChange={(e) => toggleAll(e.target.checked)} />
               Select all full-time employees
             </label>
             <div className="space-y-2 mb-6">
               {employees.map((emp) => (
-                <label key={emp.id} className="flex items-center gap-2 text-black border rounded-lg p-3">
+                <label key={emp.id} className="flex items-center gap-2 text-foreground border rounded-lg p-3">
                   <input
                     type="checkbox"
                     checked={selected.has(emp.id)}
@@ -140,13 +140,13 @@ export default function SettingsPageContent() {
                     disabled={!emp.salary}
                   />
                   <span className="flex-1">{emp.name}</span>
-                  <span className="text-gray-500">{emp.salary || 0} LE</span>
+                  <span className="text-muted-foreground">{emp.salary || 0} LE</span>
                 </label>
               ))}
             </div>
             <div className="flex gap-2 justify-end">
               <button type="button" onClick={() => setSalaryDialog(false)} className="px-4 py-2 border rounded-md">Cancel</button>
-              <button type="button" onClick={calculateSalaries} disabled={submitting} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md">
+              <button type="button" onClick={calculateSalaries} disabled={submitting} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">
                 {submitting ? 'Calculating...' : 'Submit'}
               </button>
             </div>

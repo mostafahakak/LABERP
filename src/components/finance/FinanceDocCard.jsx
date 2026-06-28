@@ -17,13 +17,13 @@ export default function FinanceDocCard({ doc, linkable = true }) {
   const counterpartyName =
     type === 'Invoice' ? doc.drName || 'N/A' : doc.supplierName || doc.drName || 'N/A';
 
-  const statusColor = status === 'Paid' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50';
+  const statusColor = status === 'Paid' ? 'text-green-600 bg-green-50' : 'text-destructive bg-destructive/10';
   const typeColor = type === 'Invoice' ? 'text-blue-600 bg-blue-50' : 'text-purple-600 bg-purple-50';
   const logType = type === 'Invoice' ? 'Income' : 'Expense';
   const href = `/dashboard/finance/invoices/${doc.id}?type=${logType}`;
 
   const inner = (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+    <div className="bg-card rounded-2xl shadow-sm border border-border p-5 hover:shadow-md transition-shadow">
       <div className="flex items-start gap-4">
         <div className={`p-3 rounded-xl ${typeColor}`}>
           <span className="text-xl">{type === 'Invoice' ? '🧾' : '🛒'}</span>
@@ -33,10 +33,10 @@ export default function FinanceDocCard({ doc, linkable = true }) {
             <p className={`font-bold ${typeColor.split(' ')[0]}`}>{type}</p>
             <span className={`text-xs font-semibold px-2 py-1 rounded ${statusColor}`}>{status}</span>
           </div>
-          <p className="text-black font-medium truncate">{name}</p>
-          <p className="text-sm text-gray-500">{date} at {time}</p>
+          <p className="text-foreground font-medium truncate">{name}</p>
+          <p className="text-sm text-muted-foreground">{date} at {time}</p>
           {counterpartyName !== 'N/A' && (
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {type === 'Invoice' ? 'Doctor' : 'Supplier'}: {counterpartyName}
             </p>
           )}
@@ -44,24 +44,24 @@ export default function FinanceDocCard({ doc, linkable = true }) {
       </div>
       <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t">
         <div>
-          <p className="text-xs text-gray-500">Total</p>
-          <p className="font-bold text-black">{formatPriceLE(totalAmount)}</p>
+          <p className="text-xs text-muted-foreground">Total</p>
+          <p className="font-bold text-foreground">{formatPriceLE(totalAmount)}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">Paid</p>
+          <p className="text-xs text-muted-foreground">Paid</p>
           <p className="font-semibold text-green-600">{formatPriceLE(paidAmount)}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">Remaining</p>
-          <p className="font-semibold text-red-600">{formatPriceLE(remainingAmount)}</p>
+          <p className="text-xs text-muted-foreground">Remaining</p>
+          <p className="font-semibold text-destructive">{formatPriceLE(remainingAmount)}</p>
         </div>
       </div>
-      <div className="flex items-center justify-between mt-3 text-sm text-gray-600">
+      <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
         <span>Payment: {bank}</span>
         <span>{paymentPlan}</span>
       </div>
       {linkable && (
-        <span className="mt-4 block w-full text-center py-2 bg-black text-[#c3a28e] rounded-lg text-sm font-medium">
+        <span className="mt-4 block w-full text-center py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">
           View Details
         </span>
       )}

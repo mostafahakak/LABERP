@@ -129,14 +129,14 @@ export default function AddUser() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2.5 border rounded-lg text-black"
+              className="px-4 py-2.5 border rounded-lg text-foreground"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 bg-black text-[#c3a28e] rounded-lg font-semibold disabled:opacity-50"
+              className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg font-semibold disabled:opacity-50"
             >
               Create User Account
             </button>

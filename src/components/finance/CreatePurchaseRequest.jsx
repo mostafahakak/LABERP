@@ -130,7 +130,7 @@ export default function CreatePurchaseRequest() {
       <PageCard title="Items">
         <div className="flex flex-wrap gap-2 mb-4">
           {items.map((item) => (
-            <button key={item.id} type="button" onClick={() => addItem(item)} className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm text-black">
+            <button key={item.id} type="button" onClick={() => addItem(item)} className="px-3 py-1.5 bg-muted rounded-lg text-sm text-foreground">
               {item.name} — {formatPriceLE(item.price)}
             </button>
           ))}
@@ -142,7 +142,7 @@ export default function CreatePurchaseRequest() {
           </div>
         ))}
         <p className="text-sm mt-2">Estimated total: <strong>{formatPriceLE(total)}</strong></p>
-        <button type="button" onClick={submit} disabled={loading} className="mt-4 px-6 py-2.5 bg-black text-[#c3a28e] rounded-md">Submit Request</button>
+        <button type="button" onClick={submit} disabled={loading} className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-md">Submit Request</button>
       </PageCard>
       <LoadingOverlay show={loading} />
       <Snackbar message={snack.message} isError={snack.isError} onClose={() => setSnack({ message: '', isError: false })} />

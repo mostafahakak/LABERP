@@ -73,9 +73,9 @@ function ItemDialog({ mode, item, categories, suppliers, onClose, onSave, onDele
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <h3 className="font-bold text-black mb-4">{isEditing ? 'Edit Item' : 'Add New Item'}</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-card rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <h3 className="font-bold text-foreground mb-4">{isEditing ? 'Edit Item' : 'Add New Item'}</h3>
         <div className="space-y-3">
           <TextField
             label="Barcode"
@@ -110,17 +110,17 @@ function ItemDialog({ mode, item, categories, suppliers, onClose, onSave, onDele
                 type="button"
                 onClick={() => onDelete(item.id)}
                 disabled={saving}
-                className="px-4 py-2 text-red-600 border border-red-300 rounded-md"
+                className="px-4 py-2 text-destructive border border-red-300 rounded-md"
               >
                 Delete
               </button>
             )}
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-black">
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-foreground">
               Cancel
             </button>
-            <button type="button" onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-black text-[#c3a28e] rounded-md">
+            <button type="button" onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">
               {isEditing ? 'Save' : 'Submit'}
             </button>
           </div>
@@ -167,12 +167,12 @@ function MakeItemsDialog({ item, onClose, onDone, saving, setSaving }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full">
-        <h3 className="font-bold text-black mb-4">Make Items from Powder</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-card rounded-xl p-6 max-w-md w-full">
+        <h3 className="font-bold text-foreground mb-4">Make Items from Powder</h3>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
           <p className="font-semibold">Source Item: {item.name}</p>
-          <p className="text-gray-600">Available: {stock} items ({grams}g each)</p>
+          <p className="text-muted-foreground">Available: {stock} items ({grams}g each)</p>
         </div>
         <div className="space-y-3">
           <TextField label="New Item Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
@@ -180,7 +180,7 @@ function MakeItemsDialog({ item, onClose, onDone, saving, setSaving }) {
           <TextField label="How many items to make" value={quantity} onChange={(e) => setQuantity(e.target.value)} type="number" />
         </div>
         <div className="flex gap-2 justify-end mt-6">
-          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-black">Cancel</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-foreground">Cancel</button>
           <button type="button" onClick={submit} disabled={saving} className="px-4 py-2 bg-green-600 text-white rounded-md">
             Make Items
           </button>
@@ -293,7 +293,7 @@ export default function ItemsPage() {
   };
 
   const quantityColor = (quantity, lowStock) => {
-    if (quantity <= lowStock) return 'text-red-600';
+    if (quantity <= lowStock) return 'text-destructive';
     if (quantity <= lowStock * 2) return 'text-orange-500';
     return 'text-green-600';
   };
@@ -308,7 +308,7 @@ export default function ItemsPage() {
           <button
             type="button"
             onClick={() => setDialog({ mode: 'add' })}
-            className="px-4 py-2 bg-black text-[#c3a28e] rounded-md text-sm"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm"
           >
             + Add Item
           </button>
@@ -331,14 +331,14 @@ export default function ItemsPage() {
         </div>
 
         <div className="flex justify-between items-center mb-4 px-1">
-          <span className="text-sm font-semibold text-gray-700">Total Inventory Value</span>
-          <span className="font-bold text-black">{totalValue.toFixed(2)} LE</span>
+          <span className="text-sm font-semibold text-foreground/80">Total Inventory Value</span>
+          <span className="font-bold text-foreground">{totalValue.toFixed(2)} LE</span>
         </div>
 
         {loading ? (
-          <p className="text-gray-600 text-center py-8">Loading items...</p>
+          <p className="text-muted-foreground text-center py-8">Loading items...</p>
         ) : filteredItems.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No items found.</p>
+          <p className="text-muted-foreground text-center py-8">No items found.</p>
         ) : (
           <div className="space-y-3">
             {filteredItems.map((item) => {
@@ -351,7 +351,7 @@ export default function ItemsPage() {
               return (
                 <div
                   key={item.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                  className="border rounded-lg p-4 hover:bg-muted cursor-pointer"
                   onClick={() =>
                     router.push(
                       `/dashboard/inventory/items/${item.id}/history?name=${encodeURIComponent(item.name || '')}`
@@ -359,11 +359,11 @@ export default function ItemsPage() {
                   }
                 >
                   <div className="flex justify-between items-start gap-2">
-                    <p className="font-bold text-black text-lg">{item.name}</p>
+                    <p className="font-bold text-foreground text-lg">{item.name}</p>
                     <p className="font-bold text-blue-600">{price.toFixed(2)} LE</p>
                   </div>
-                  <p className="text-sm text-gray-700 mt-1">Category: {item.category || 'N/A'}</p>
-                  <p className="text-sm text-gray-700">Supplier: {item.supplier || 'N/A'}</p>
+                  <p className="text-sm text-foreground/80 mt-1">Category: {item.category || 'N/A'}</p>
+                  <p className="text-sm text-foreground/80">Supplier: {item.supplier || 'N/A'}</p>
                   {isPowder && grams != null && (
                     <div className="flex justify-between items-center mt-2">
                       <p className="text-sm text-purple-700">Grams: {grams.toFixed(1)}g</p>
@@ -383,7 +383,7 @@ export default function ItemsPage() {
                   )}
                   <div className="flex justify-between items-center mt-2">
                     <p className={`font-bold ${quantityColor(quantity, lowStock)}`}>Quantity: {quantity}</p>
-                    <p className="text-sm text-gray-600">Low Stock: {lowStock}</p>
+                    <p className="text-sm text-muted-foreground">Low Stock: {lowStock}</p>
                   </div>
                   <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
                     <button
@@ -400,7 +400,7 @@ export default function ItemsPage() {
                           `/dashboard/inventory/items/${item.id}/history?name=${encodeURIComponent(item.name || '')}`
                         )
                       }
-                      className="px-3 py-1 border rounded-md text-sm text-[#c3a28e]"
+                      className="px-3 py-1 border rounded-md text-sm text-primary"
                     >
                       History
                     </button>

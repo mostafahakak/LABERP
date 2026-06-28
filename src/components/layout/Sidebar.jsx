@@ -104,7 +104,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
         <Button
           variant="ghost"
           onClick={() => { logout(); router.push('/login'); }}
-          className="w-full justify-start gap-2 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+          className="w-full justify-start gap-2 text-red-400 hover:text-red-300 hover:bg-destructive/100/10"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1" />

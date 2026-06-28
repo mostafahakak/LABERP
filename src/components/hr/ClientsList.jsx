@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -11,7 +11,7 @@ import {
 import { db } from '@/lib/firebase';
 import Header from '@/components/layout/Header';
 import { TextField, SelectField, Snackbar } from '@/components/ui/PageComponents';
-import { formatPriceLE, ACCENT_COLOR } from '@/lib/utils';
+import { formatPriceLE } from '@/lib/utils';
 
 function AddClientDialog({ onClose, onSaved, onError }) {
   const [submitting, setSubmitting] = useState(false);
@@ -61,9 +61,9 @@ function AddClientDialog({ onClose, onSaved, onError }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <h3 className="font-bold text-black mb-4">Add New Client</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-card rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <h3 className="font-bold text-foreground mb-4">Add New Client</h3>
         <div className="space-y-3">
           <TextField label="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
           <TextField label="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" />
@@ -79,14 +79,14 @@ function AddClientDialog({ onClose, onSaved, onError }) {
           />
         </div>
         <div className="flex gap-2 justify-end mt-6">
-          <button type="button" onClick={onClose} disabled={submitting} className="px-4 py-2 border rounded-md text-black">
+          <button type="button" onClick={onClose} disabled={submitting} className="px-4 py-2 border rounded-md text-foreground">
             Cancel
           </button>
           <button
             type="button"
             onClick={submit}
             disabled={submitting}
-            className="px-4 py-2 bg-black text-[#c3a28e] rounded-md disabled:opacity-50"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50"
           >
             {submitting ? 'Saving...' : 'Submit'}
           </button>
@@ -107,26 +107,25 @@ function ClientCard({ client }) {
   return (
     <Link
       href={`/dashboard/hr/clients/${client.id}`}
-      className="block bg-white rounded-2xl shadow-md border border-gray-100 p-5 hover:shadow-lg transition-shadow h-full"
+      className="block bg-card rounded-2xl shadow-sm border border-border p-5 hover:shadow-lg transition-shadow h-full"
     >
       <div className="flex items-start gap-3 mb-3">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-          style={{ backgroundColor: `${ACCENT_COLOR}20` }}
+          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-primary/10"
         >
           👤
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-black truncate">{name}</p>
-          <p className="text-sm text-gray-600 truncate">{companyName}</p>
+          <p className="font-bold text-foreground truncate">{name}</p>
+          <p className="text-sm text-muted-foreground truncate">{companyName}</p>
         </div>
       </div>
-      {phone && <p className="text-xs text-gray-600 mb-1 truncate">📞 {phone}</p>}
-      {secondPhone && <p className="text-xs text-gray-600 mb-1 truncate">📱 {secondPhone}</p>}
-      {address && <p className="text-xs text-gray-600 mb-2 truncate">📍 {address}</p>}
+      {phone && <p className="text-xs text-muted-foreground mb-1 truncate">📞 {phone}</p>}
+      {secondPhone && <p className="text-xs text-muted-foreground mb-1 truncate">📱 {secondPhone}</p>}
+      {address && <p className="text-xs text-muted-foreground mb-2 truncate">📍 {address}</p>}
       <div
         className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold ${
-          balance >= 0 ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+          balance >= 0 ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-destructive/10 text-red-700 border border-destructive/30'
         }`}
       >
         Balance: {formatPriceLE(balance)}
@@ -172,33 +171,33 @@ export default function ClientsList() {
     <>
       <Header title="Clients" />
 
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 mb-5">
+      <div className="bg-card rounded-2xl shadow-sm border border-border p-4 mb-5">
         <input
           type="search"
           placeholder="Search by name or phone..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-50 rounded-2xl text-black focus:outline-none focus:ring-2 focus:ring-[#c3a28e]"
+          className="w-full px-4 py-3 bg-muted rounded-2xl text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       {loading && (
         <div className="flex justify-center py-16">
-          <div className="w-10 h-10 border-4 border-[#c3a28e] border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
-      {error && <p className="text-red-600 text-center py-8">Error loading clients: {error}</p>}
+      {error && <p className="text-destructive text-center py-8">Error loading clients: {error}</p>}
 
       {!loading && !error && clients.length === 0 && (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-muted-foreground">
           <p className="text-4xl mb-3">👥</p>
           <p>No clients found.</p>
         </div>
       )}
 
       {!loading && !error && clients.length > 0 && filtered.length === 0 && (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-muted-foreground">
           <p className="text-4xl mb-3">🔍</p>
           <p>No clients match your search.</p>
         </div>
@@ -215,8 +214,8 @@ export default function ClientsList() {
       <button
         type="button"
         onClick={() => setShowAdd(true)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-black rounded-2xl shadow-lg flex items-center justify-center text-2xl hover:scale-105 transition-transform z-40"
-        style={{ color: ACCENT_COLOR }}
+        className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-primary-foreground rounded-2xl shadow-lg flex items-center justify-center text-2xl hover:scale-105 transition-transform z-40"
+        style={{ color: 'var(--primary)' }}
         aria-label="Add client"
       >
         +

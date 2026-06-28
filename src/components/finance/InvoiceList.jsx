@@ -78,28 +78,28 @@ export default function InvoiceList() {
       <Header title="All Invoices" />
       <PageCard title="Filter Invoices">
         <div className="flex flex-wrap gap-3">
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="px-3 py-2 border rounded-md text-black">
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="px-3 py-2 border rounded-md text-foreground">
             <option value="">All Statuses</option>
             <option value="Paid">Paid</option>
             <option value="Remaining">Remaining</option>
           </select>
-          <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className="px-3 py-2 border rounded-md text-black">
+          <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className="px-3 py-2 border rounded-md text-foreground">
             <option value="">All Plans</option>
             <option value="Full Payment">Full Payment</option>
             <option value="Installments">Installments</option>
             <option value="Partial Payment">Partial Payment</option>
           </select>
-          <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="px-3 py-2 border rounded-md text-black">
+          <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="px-3 py-2 border rounded-md text-foreground">
             <option value="">All Methods</option>
             <option value="Cash">Cash</option>
             <option value="Card">Card</option>
             <option value="Instapay">Instapay</option>
           </select>
-          <input list="client-names" placeholder="Filter by Name" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
+          <input list="client-names" placeholder="Filter by Name" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
           <datalist id="client-names">{nameOptions.map((n) => <option key={n} value={n} />)}</datalist>
-          <input list="client-phones" placeholder="Filter by Phone" value={phoneFilter} onChange={(e) => setPhoneFilter(e.target.value)} className="px-3 py-2 border rounded-md text-black" />
+          <input list="client-phones" placeholder="Filter by Phone" value={phoneFilter} onChange={(e) => setPhoneFilter(e.target.value)} className="px-3 py-2 border rounded-md text-foreground" />
           <datalist id="client-phones">{phoneOptions.map((p) => <option key={p} value={p} />)}</datalist>
           <button type="button" onClick={load} className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm">Refresh</button>
           <button type="button" onClick={() => { setStartDate(''); setEndDate(''); setStatus(''); setPaymentPlan(''); setPaymentMethod(''); setNameFilter(''); setPhoneFilter(''); }} className="px-4 py-2 bg-red-600 text-white rounded-md text-sm">Clear</button>
@@ -109,7 +109,7 @@ export default function InvoiceList() {
       {loading ? (
         <p className="text-center py-8">Loading invoices...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-center py-8 text-gray-500">No invoices found.</p>
+        <p className="text-center py-8 text-muted-foreground">No invoices found.</p>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
@@ -119,9 +119,9 @@ export default function InvoiceList() {
               ['Total Remaining', totals.remaining],
               ['Total Discount', totals.discount],
             ].map(([label, val]) => (
-              <div key={label} className="bg-white rounded-xl border p-4 text-center">
-                <p className="text-sm text-gray-500">{label}</p>
-                <p className="text-lg font-bold text-black">{formatPriceLE(val)}</p>
+              <div key={label} className="bg-card rounded-xl border-border p-4 text-center">
+                <p className="text-sm text-muted-foreground">{label}</p>
+                <p className="text-lg font-bold text-foreground">{formatPriceLE(val)}</p>
               </div>
             ))}
           </div>

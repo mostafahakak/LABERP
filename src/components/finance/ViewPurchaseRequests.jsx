@@ -81,11 +81,11 @@ function DeliverDialog({ request, onClose, onDone }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full">
-        <h3 className="font-bold text-black mb-2">Deliver Purchase Request</h3>
-        <p className="text-[#c3a28e] font-semibold mb-4">Total: {formatPriceLE(total)}</p>
-        <select value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full px-3 py-2 border rounded-md text-black mb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-card rounded-xl p-6 max-w-md w-full">
+        <h3 className="font-bold text-foreground mb-2">Deliver Purchase Request</h3>
+        <p className="text-primary font-semibold mb-4">Total: {formatPriceLE(total)}</p>
+        <select value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full px-3 py-2 border rounded-md text-foreground mb-3">
           <option value="">Payment Method / DR Account</option>
           {accounts.map((a) => (
             <option key={`${a.sourceCollection}-${a.id}`} value={a.name}>
@@ -93,17 +93,17 @@ function DeliverDialog({ request, onClose, onDone }) {
             </option>
           ))}
         </select>
-        <label className="flex items-center gap-2 text-black mb-2">
+        <label className="flex items-center gap-2 text-foreground mb-2">
           <input type="checkbox" checked={isFullPayment} onChange={(e) => setIsFullPayment(e.target.checked)} />
           Full Payment
         </label>
         {!isFullPayment && (
-          <input type="number" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} placeholder="Paid Amount" className="w-full px-3 py-2 border rounded-md text-black mb-2" />
+          <input type="number" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} placeholder="Paid Amount" className="w-full px-3 py-2 border rounded-md text-foreground mb-2" />
         )}
-        {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+        {error && <p className="text-destructive text-sm mb-2">{error}</p>}
         <div className="flex gap-2 justify-end">
           <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md">Cancel</button>
-          <button type="button" onClick={confirm} disabled={loading} className="px-4 py-2 bg-[#c3a28e] text-white rounded-md">
+          <button type="button" onClick={confirm} disabled={loading} className="px-4 py-2 bg-primary text-white rounded-md">
             {loading ? 'Processing...' : 'Confirm Delivery'}
           </button>
         </div>
@@ -141,26 +141,26 @@ export default function ViewPurchaseRequests() {
     if (status === 'Requested') return 'text-orange-600 bg-orange-50';
     if (status === 'Ordered') return 'text-blue-600 bg-blue-50';
     if (status === 'Delivered') return 'text-green-600 bg-green-50';
-    return 'text-gray-600 bg-gray-50';
+    return 'text-muted-foreground bg-muted';
   };
 
   return (
     <>
       <Header title={isAdmin ? 'All Purchase Requests' : 'My Purchase Requests'} />
       {requests.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">No requests found.</p>
+        <p className="text-muted-foreground text-center py-8">No requests found.</p>
       ) : (
         <div className="space-y-4">
           {requests.map((r) => (
             <PageCard key={r.id} title={`Request #${r.id.substring(0, 8)}`} action={
               <span className={`text-xs font-semibold px-2 py-1 rounded ${statusColor(r.status)}`}>{r.status}</span>
             }>
-              <p className="text-sm text-black">Supplier: {r.supplierName}</p>
-              {r.total > 0 && <p className="text-sm text-gray-600">Estimated: {formatPriceLE(r.total)}</p>}
-              <p className="text-sm text-gray-700 mt-1">{r.note || 'No details'}</p>
-              <p className="text-xs text-gray-500 mt-2">{r.createdByName} · {r.date} {r.time}</p>
+              <p className="text-sm text-foreground">Supplier: {r.supplierName}</p>
+              {r.total > 0 && <p className="text-sm text-muted-foreground">Estimated: {formatPriceLE(r.total)}</p>}
+              <p className="text-sm text-foreground/80 mt-1">{r.note || 'No details'}</p>
+              <p className="text-xs text-muted-foreground mt-2">{r.createdByName} · {r.date} {r.time}</p>
               {(r.items || []).length > 0 && (
-                <ul className="mt-2 text-sm text-gray-600 list-disc pl-5">
+                <ul className="mt-2 text-sm text-muted-foreground list-disc pl-5">
                   {r.items.map((i) => (
                     <li key={i.itemId}>{i.name} x{i.quantity}</li>
                   ))}
@@ -171,7 +171,7 @@ export default function ViewPurchaseRequests() {
                   <button type="button" onClick={() => markOrdered(r.id)} className="px-3 py-1.5 border rounded-md text-sm">Mark as Ordered</button>
                 )}
                 {(r.status === 'Ordered' || (r.status === 'Requested' && isAdmin)) && (
-                  <button type="button" onClick={() => setDeliverRequest(r)} className="px-3 py-1.5 bg-[#c3a28e] text-white rounded-md text-sm">Deliver</button>
+                  <button type="button" onClick={() => setDeliverRequest(r)} className="px-3 py-1.5 bg-primary text-white rounded-md text-sm">Deliver</button>
                 )}
               </div>
             </PageCard>
