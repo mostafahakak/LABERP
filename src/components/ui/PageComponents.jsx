@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { ACCENT_COLOR } from '@/lib/utils';
 
 export function PageCard({ title, icon, children, action }) {
@@ -67,15 +69,28 @@ export function ResponsiveRow({ children, width }) {
 }
 
 export function Snackbar({ message, isError, onClose }) {
-  if (!message) return null;
-  return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-lg text-white shadow-lg" style={{ backgroundColor: isError ? ACCENT_COLOR : '#16a34a' }}>
-      <div className="flex items-center gap-3">
-        <span>{message}</span>
-        <button type="button" onClick={onClose} className="text-white/80 hover:text-white">✕</button>
-      </div>
-    </div>
-  );
+  const lastShownMessageRef = useRef('');
+
+  useEffect(() => {
+    if (!message || lastShownMessageRef.current === message) return;
+
+    lastShownMessageRef.current = message;
+    if (isError) {
+      toast.error(message);
+    } else {
+      toast.success(message);
+    }
+
+    if (onClose) onClose();
+  }, [isError, message, onClose]);
+
+  useEffect(() => {
+    if (!message) {
+      lastShownMessageRef.current = '';
+    }
+  }, [message]);
+
+  return null;
 }
 
 export function LoadingOverlay({ show }) {
