@@ -1,10 +1,10 @@
 import "./globals.css";
 import Providers from "@/components/Providers";
 import AppToaster from "@/components/ui/AppToaster";
-import { Geist } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 
 export const metadata = {
   title: {
@@ -36,7 +36,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", jakarta.variable)}>
       <body>
         <Providers>
           {children}

@@ -40,41 +40,41 @@
 }
 
 .dark {
-  --background: #0f1117;
-  --foreground: #e8e2dc;
-  --card: #1a1d2b;
-  --card-foreground: #e8e2dc;
-  --popover: #1a1d2b;
-  --popover-foreground: #e8e2dc;
+  --background: #111318;
+  --foreground: #ece7e1;
+  --card: #1a1e28;
+  --card-foreground: #ece7e1;
+  --popover: #1a1e28;
+  --popover-foreground: #ece7e1;
   --primary: #c2a18c;
   --primary-foreground: #1a1a2e;
-  --secondary: #2a3244;
-  --secondary-foreground: #e8e2dc;
-  --muted: #1e2231;
-  --muted-foreground: #8b8697;
+  --secondary: #272d3b;
+  --secondary-foreground: #ece7e1;
+  --muted: #1f2330;
+  --muted-foreground: #9b95a8;
   --accent: #c2a18c;
-  --accent-foreground: #e8e2dc;
+  --accent-foreground: #ece7e1;
   --destructive: #e74c3c;
-  --border: #2a3244;
-  --input: #2a3244;
+  --border: #2a2f3d;
+  --input: #2a2f3d;
   --ring: #c2a18c;
   --chart-1: #c2a18c;
   --chart-2: #5a6a82;
   --chart-3: #8b7355;
   --chart-4: #6b7fa0;
   --chart-5: #d4b896;
-  --sidebar: #131620;
-  --sidebar-foreground: #d4cdc5;
+  --sidebar: #141720;
+  --sidebar-foreground: #dbd5cd;
   --sidebar-primary: #c2a18c;
-  --sidebar-primary-foreground: #131620;
-  --sidebar-accent: #1e2231;
-  --sidebar-accent-foreground: #e8e2dc;
-  --sidebar-border: #2a3244;
+  --sidebar-primary-foreground: #141720;
+  --sidebar-accent: #1f2530;
+  --sidebar-accent-foreground: #ece7e1;
+  --sidebar-border: #2a2f3d;
   --sidebar-ring: #c2a18c;
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans), 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 input, select, textarea, button {

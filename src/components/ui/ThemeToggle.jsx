@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MoonIcon, SunIcon } from 'lucide-react';
 
 export default function ThemeToggle({ className }) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -17,11 +17,11 @@ export default function ThemeToggle({ className }) {
     <Button
       variant="ghost"
       size="icon-sm"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
       className={className}
       aria-label="Toggle theme"
     >
-      {theme === 'dark' ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
+      {resolvedTheme === 'dark' ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
     </Button>
   );
 }
