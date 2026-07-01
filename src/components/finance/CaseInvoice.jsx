@@ -111,32 +111,23 @@ export default function CaseInvoice() {
     setCases(filtered);
   }, [clinicName, drFilter, dateFilter, allCases]);
 
-  const fetchOldUnpaidBills = async () => {
-    const hasDoctor = !!drFilter;
-    const hasClinic = !!clinicName;
-
-    if (!hasDoctor && !hasClinic) {
-      setSnack({
-        message: "Choose doctor or clinic first",
-        isError: true,
-      });
+  const fetchOldUnpaidBillsByClinic = async (selectedClinic) => {
+    if (!selectedClinic) {
+      setPreviousInvoices([]);
+      setHasCheckedOldBills(false);
       return;
     }
 
     setHasCheckedOldBills(true);
 
-    const constraints = [
-      where("type", "==", "Invoice"),
-    ];
-
-    if (hasDoctor) {
-      constraints.push(where("drName", "==", drFilter));
-    } else {
-      constraints.push(where("clinicName", "==", clinicName));
-    }
-
     try {
-      const snap = await getDocs(query(collection(db, "Finance"), ...constraints));
+      const snap = await getDocs(
+        query(
+          collection(db, "Finance"),
+          where("type", "==", "Invoice"),
+          where("clinicName", "==", selectedClinic),
+        ),
+      );
       const unpaid = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .filter((inv) => Number(inv.remainingAmount || 0) > 0)
@@ -150,6 +141,10 @@ export default function CaseInvoice() {
       setSnack({ message: e.message, isError: true });
     }
   };
+
+  useEffect(() => {
+    fetchOldUnpaidBillsByClinic(clinicName);
+  }, [clinicName]);
 
   const selectedCases = useMemo(
     () => cases.filter((c) => selectedCaseIds.includes(c.id)),
@@ -343,15 +338,11 @@ export default function CaseInvoice() {
             type="date"
           />
         </div>
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={fetchOldUnpaidBills}
-            className="px-4 py-2 rounded-md border text-foreground hover:bg-muted/60 transition-colors"
-          >
-            Show Old Unpaid Bills
-          </button>
-        </div>
+        {clinicName && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Unpaid old bills are shown automatically for the selected clinic.
+          </p>
+        )}
       </PageCard>
 
       <PageCard title="Invoice Details">
@@ -483,7 +474,7 @@ export default function CaseInvoice() {
         <PageCard title="Previous Bills">
           {previousInvoices.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No unpaid old bills found for the selected {drFilter ? "doctor" : "clinic"}.
+              No unpaid old bills found for the selected clinic.
             </p>
           ) : (
             <div className="space-y-2">

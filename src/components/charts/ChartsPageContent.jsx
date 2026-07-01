@@ -71,7 +71,7 @@ function ChartCard({ title, description, children, className = '' }) {
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="overflow-visible pb-6">{children}</CardContent>
     </Card>
   );
 }
@@ -297,13 +297,28 @@ export default function ChartsPageContent() {
               {phaseTransitions.length > 0 ? (
                 <Chart
                   type="bar"
-                  height={320}
+                  height={360}
                   series={[{ name: 'Transitions', data: phaseTransitions.map(([, v]) => v) }]}
                   options={{
                     ...commonOptions,
+                    chart: { ...commonOptions.chart, parentHeightOffset: 0 },
                     colors: ['#14b8a6'],
                     plotOptions: { bar: { horizontal: true, borderRadius: 6 } },
-                    xaxis: { ...commonOptions.xaxis, categories: phaseTransitions.map(([k]) => k) },
+                    xaxis: {
+                      ...commonOptions.xaxis,
+                      categories: phaseTransitions.map(([k]) => k),
+                      axisBorder: { show: true, color: colors.grid },
+                      axisTicks: { show: true, color: colors.grid },
+                      labels: {
+                        ...commonOptions.xaxis.labels,
+                        show: true,
+                        formatter: (v) => Number(v).toFixed(0),
+                      },
+                    },
+                    grid: {
+                      ...commonOptions.grid,
+                      padding: { bottom: 20 },
+                    },
                   }}
                 />
               ) : <EmptyChart />}
