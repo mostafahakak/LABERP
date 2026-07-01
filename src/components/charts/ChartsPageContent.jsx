@@ -223,7 +223,18 @@ export default function ChartsPageContent() {
                     ...commonOptions,
                     colors: ['#f97316'],
                     plotOptions: { bar: { horizontal: true, borderRadius: 5 } },
-                    xaxis: { ...commonOptions.xaxis, categories: remainingByClinic.map(([k]) => k) },
+                    xaxis: {
+                      ...commonOptions.xaxis,
+                      categories: remainingByClinic.map(([k]) => k),
+                      position: 'top',
+                      labels: {
+                        ...commonOptions.xaxis.labels,
+                        show: true,
+                        formatter: (v) => Number(v).toFixed(0),
+                      },
+                      axisBorder: { show: true, color: colors.grid },
+                      axisTicks: { show: true, color: colors.grid },
+                    },
                     tooltip: { theme: colors.mode, y: { formatter: (v) => formatPriceLE(v) } },
                   }}
                 />
@@ -307,6 +318,7 @@ export default function ChartsPageContent() {
                     xaxis: {
                       ...commonOptions.xaxis,
                       categories: phaseTransitions.map(([k]) => k),
+                      position: 'top',
                       axisBorder: { show: true, color: colors.grid },
                       axisTicks: { show: true, color: colors.grid },
                       labels: {
@@ -378,7 +390,18 @@ export default function ChartsPageContent() {
                     ...commonOptions,
                     colors: ['#f59e0b'],
                     plotOptions: { bar: { horizontal: true, borderRadius: 6 } },
-                    xaxis: { ...commonOptions.xaxis, categories: topUsedItems.map(([k]) => k) },
+                    xaxis: {
+                      ...commonOptions.xaxis,
+                      categories: topUsedItems.map(([k]) => k),
+                      position: 'top',
+                      labels: {
+                        ...commonOptions.xaxis.labels,
+                        show: true,
+                        formatter: (v) => Number(v).toFixed(0),
+                      },
+                      axisBorder: { show: true, color: colors.grid },
+                      axisTicks: { show: true, color: colors.grid },
+                    },
                     tooltip: { theme: colors.mode, y: { formatter: (v) => Number(v).toFixed(2) } },
                   }}
                 />
