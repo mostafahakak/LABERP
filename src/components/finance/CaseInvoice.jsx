@@ -30,7 +30,7 @@ export default function CaseInvoice() {
   const [allCases, setAllCases] = useState([]);
   const [clinics, setClinics] = useState([]);
   const [banks, setBanks] = useState([]);
-  const [doctors, setDoctors] = useState([]);
+  const [allDoctors, setAllDoctors] = useState([]);
   const [previousInvoices, setPreviousInvoices] = useState([]);
   const [selectedCaseIds, setSelectedCaseIds] = useState([]);
   const [clinicName, setClinicName] = useState("");
@@ -65,14 +65,37 @@ export default function CaseInvoice() {
       setCases(allC);
       setClinics(clinicsSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
       setBanks(banksSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setDoctors(
+      setAllDoctors(
         drsSnap.docs
-          .map((d) => d.data().name)
-          .filter(Boolean)
-          .sort(),
+          .map((d) => ({
+            name: d.data().name || "",
+            clinic: d.data().clinic || "",
+          }))
+          .filter((d) => d.name),
       );
     });
   }, []);
+
+  const doctorOptions = useMemo(() => {
+    const normalize = (v) => String(v || "").trim().toLowerCase();
+    const selectedClinic = normalize(clinicName);
+
+    const list = allDoctors
+      .filter((d) => {
+        if (!selectedClinic) return true;
+        return normalize(d.clinic) === selectedClinic;
+      })
+      .map((d) => d.name)
+      .filter(Boolean);
+
+    return [...new Set(list)].sort((a, b) => a.localeCompare(b));
+  }, [allDoctors, clinicName]);
+
+  useEffect(() => {
+    if (drFilter && !doctorOptions.includes(drFilter)) {
+      setDrFilter("");
+    }
+  }, [clinicName, doctorOptions, drFilter]);
 
   useEffect(() => {
     let filtered = allCases;
@@ -123,11 +146,14 @@ export default function CaseInvoice() {
   const subtotal = invoiceItems.reduce((s, i) => s + i.price * i.quantity, 0);
   const discountVal = parseFloat(discount) || 0;
   const total = Math.max(0, subtotal - discountVal);
+  const showPaidAmountInput =
+    paymentPlan === "Partial Payment" || paymentPlan === "Installments";
   const paidVal = parseFloat(paidAmount) || 0;
-  const remaining = Math.max(0, total - paidVal);
+  const effectivePaidAmount = showPaidAmountInput ? paidVal : total;
+  const remaining = Math.max(0, total - effectivePaidAmount);
   const invoiceStatus = remaining <= 0 ? "Paid" : "Remaining";
-  const netAmountToBank = calcNetAmountToBank(bankName, paidVal);
-  const cardFee = calcCardFee(bankName, paidVal);
+  const netAmountToBank = calcNetAmountToBank(bankName, effectivePaidAmount);
+  const cardFee = calcCardFee(bankName, effectivePaidAmount);
 
   const toggleCase = (id) => {
     setSelectedCaseIds((prev) =>
@@ -173,7 +199,7 @@ export default function CaseInvoice() {
         drName: invoiceItems[0]?.drName || "",
         caseId: invoiceItems[0]?.caseId || "",
         caseIds: invoiceItems.map((i) => i.caseId),
-        paidAmount: paidVal,
+        paidAmount: effectivePaidAmount,
         remainingAmount: remaining,
         total,
         paymentPlan,
@@ -200,7 +226,7 @@ export default function CaseInvoice() {
         bankID: bankId,
         Date: invoiceDate,
         Time: invoiceTime,
-        paidAmount: paidVal,
+        paidAmount: effectivePaidAmount,
         netAmountToBank,
         cardFee,
       });
@@ -219,7 +245,7 @@ export default function CaseInvoice() {
         cName: "Invoice",
         Time: formatTime(now),
         Date: formatDate(now),
-        amount: paidVal,
+        amount: effectivePaidAmount,
         netAmountToBank,
         cardFee,
       });
@@ -279,7 +305,7 @@ export default function CaseInvoice() {
             label="Doctor Name"
             value={drFilter}
             onChange={setDrFilter}
-            options={doctors}
+            options={doctorOptions}
             placeholder="All"
           />
           <TextField
@@ -322,12 +348,14 @@ export default function CaseInvoice() {
             onChange={(e) => setDiscount(e.target.value)}
             type="number"
           />
-          <TextField
-            label="Paid Amount"
-            value={paidAmount}
-            onChange={(e) => setPaidAmount(e.target.value)}
-            type="number"
-          />
+          {showPaidAmountInput && (
+            <TextField
+              label="Paid Amount"
+              value={paidAmount}
+              onChange={(e) => setPaidAmount(e.target.value)}
+              type="number"
+            />
+          )}
           <TextField
             label="Notes"
             value={note}
@@ -387,7 +415,7 @@ export default function CaseInvoice() {
           </div>
           <div className="flex justify-between">
             <span>Paid:</span>
-            <strong>{formatPriceLE(paidVal)}</strong>
+            <strong>{formatPriceLE(effectivePaidAmount)}</strong>
           </div>
           <div className="flex justify-between">
             <span>Remaining:</span>
