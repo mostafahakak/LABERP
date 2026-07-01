@@ -14,7 +14,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { formatDate, isDelayed, shortId, formatPriceLE } from "@/lib/utils";
+import { formatDate, isDelayed, isOverdue, shortId, formatPriceLE } from "@/lib/utils";
 import Header from "@/components/layout/Header";
 import { SelectField, Snackbar } from "@/components/ui/PageComponents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -234,6 +234,7 @@ export default function ViewCasesForm() {
 function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
   const [balance, setBalance] = useState(null);
   const delayed = isDelayed(caseData);
+  const overdue = isOverdue(caseData);
   const isFinalized =
     caseData.status === "Finalized" ||
     caseData.status === "Ready to be delivered" ||
@@ -254,9 +255,24 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
   }, [caseData.clinicName]);
 
   return (
-    <Card className={`relative overflow-hidden ${delayed ? "border-destructive/60" : ""}`}>
-      {delayed && (
-        <div className="absolute inset-0 bg-destructive/5 animate-pulse pointer-events-none" />
+    <Card className={`relative overflow-hidden transition-all ${
+      overdue
+        ? "border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] ring-2 ring-red-500/20"
+        : delayed
+          ? "border-2 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.2)] ring-1 ring-amber-500/20"
+          : ""
+    }`}>
+      {overdue && (
+        <div className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 flex items-center gap-2">
+          <span className="inline-block w-2 h-2 bg-white rounded-full animate-pulse" />
+          ⚠️ OVERDUE — This case has passed its due date!
+        </div>
+      )}
+      {delayed && !overdue && (
+        <div className="bg-amber-500 text-white text-xs font-bold px-3 py-1.5 flex items-center gap-2">
+          <span className="inline-block w-2 h-2 bg-white rounded-full animate-pulse" />
+          ⏰ DUE TOMORROW — Action required!
+        </div>
       )}
       <CardContent className="pt-5">
         <div className="flex flex-wrap justify-between gap-3 mb-3">
@@ -284,7 +300,9 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
           </div>
           <div className="flex gap-2 items-start">
             <Badge variant="secondary">{caseData.caseType}</Badge>
-            <Badge variant={delayed ? 'destructive' : 'default'}>{caseData.status}</Badge>
+            <Badge variant={overdue ? 'destructive' : delayed ? 'outline' : 'default'}
+              className={overdue ? 'animate-pulse bg-red-600' : delayed ? 'border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-950' : ''}
+            >{caseData.status}</Badge>
           </div>
         </div>
 

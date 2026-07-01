@@ -117,8 +117,15 @@ const TOOTH_PATHS = [
   "M3892.57 4097.54C3873.53 4173.77 3881.85 4223.73 3963.13 4250.83C3985.59 4258.31 4017.51 4253.27 4041.01 4253.27C4069.43 4253.27 4092.75 4268.84 4117.91 4268.84C4182.16 4268.84 4225.9 4315.56 4290.18 4315.56C4358.14 4315.56 4344.18 4174.61 4344.18 4134.31C4344.18 4085.34 4345.92 3996.54 4313.04 3957.4C4281.54 3919.91 4179.14 3897.19 4133.47 3881.97C4085.69 3866.04 3996.18 3900.82 3954.87 3926.25C3887.68 3967.61 3892.57 4029.25 3892.57 4097.54Z",
 ];
 
-export default function DentalChart({ selectedTeeth = [], onToothClick }) {
+// Export tooth ID sets for jaw selection
+export const UPPER_TOOTH_IDS = ALL_TEETH.filter((t) => t.label.startsWith("1") || t.label.startsWith("2")).map((t) => t.id);
+export const LOWER_TOOTH_IDS = ALL_TEETH.filter((t) => t.label.startsWith("3") || t.label.startsWith("4")).map((t) => t.id);
+export const getToothById = (id) => ALL_TEETH.find((t) => t.id === id);
+export { ALL_TEETH };
+
+export default function DentalChart({ selectedTeeth = [], onToothClick, onJawClick }) {
   const [hoveredTooth, setHoveredTooth] = useState(null);
+  const [hoveredJaw, setHoveredJaw] = useState(null);
 
   const handleToothClick = useCallback(
     (tooth) => {
@@ -144,8 +151,48 @@ export default function DentalChart({ selectedTeeth = [], onToothClick }) {
     return "#A6A6A5";
   };
 
+  const upperSelected = ALL_TEETH
+    .filter((t) => t.label.startsWith("1") || t.label.startsWith("2"))
+    .every((t) => selectedTeeth.some((s) => s.id === t.id));
+  const lowerSelected = ALL_TEETH
+    .filter((t) => t.label.startsWith("3") || t.label.startsWith("4"))
+    .every((t) => selectedTeeth.some((s) => s.id === t.id));
+
   return (
     <div className="w-full flex flex-col items-center">
+      {/* Jaw selection buttons */}
+      <div className="flex gap-3 mb-4 w-full max-w-[500px]">
+        <button
+          type="button"
+          onClick={() => onJawClick && onJawClick("upper")}
+          onMouseEnter={() => setHoveredJaw("upper")}
+          onMouseLeave={() => setHoveredJaw(null)}
+          className={`flex-1 py-3 px-4 rounded-xl border-2 font-semibold text-sm transition-all duration-200 ${
+            upperSelected
+              ? "bg-blue-500 border-blue-500 text-white"
+              : hoveredJaw === "upper"
+                ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950 dark:border-blue-700 dark:text-blue-300"
+                : "bg-card border-border text-foreground hover:border-blue-300"
+          }`}
+        >
+          🦷 Upper Jaw (Maxillary)
+        </button>
+        <button
+          type="button"
+          onClick={() => onJawClick && onJawClick("lower")}
+          onMouseEnter={() => setHoveredJaw("lower")}
+          onMouseLeave={() => setHoveredJaw(null)}
+          className={`flex-1 py-3 px-4 rounded-xl border-2 font-semibold text-sm transition-all duration-200 ${
+            lowerSelected
+              ? "bg-blue-500 border-blue-500 text-white"
+              : hoveredJaw === "lower"
+                ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950 dark:border-blue-700 dark:text-blue-300"
+                : "bg-card border-border text-foreground hover:border-blue-300"
+          }`}
+        >
+          🦷 Lower Jaw (Mandibular)
+        </button>
+      </div>
       <svg
         viewBox="0 0 5334 6667"
         fill="none"

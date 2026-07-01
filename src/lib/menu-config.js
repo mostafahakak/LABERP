@@ -53,6 +53,8 @@ export function getSuperAdminMenu() {
         { title: 'HR', href: '/dashboard/hr/employees', icon: UserCheck },
         { title: 'Clients', href: '/dashboard/hr/clients', icon: Building2 },
         { title: 'Suppliers', href: '/dashboard/hr/suppliers', icon: Truck },
+        { title: 'Utilities', href: '/dashboard/settings/utilities', icon: Wrench },
+        { title: 'Manage Delivery Company', href: '/dashboard/workflow/delivery', icon: Truck },
       ],
     },
     {
@@ -110,9 +112,7 @@ export function getSuperAdminMenu() {
       href: '/dashboard/settings',
       children: [
         { title: 'Settings', href: '/dashboard/settings', icon: Settings },
-        { title: 'Utilities', href: '/dashboard/settings/utilities', icon: Wrench },
         { title: 'Invoice items', href: '/dashboard/settings/invoice-items', icon: ListChecks },
-        { title: 'Manage Delivery Company', href: '/dashboard/workflow/delivery', icon: Truck },
       ],
     },
     {
@@ -142,6 +142,8 @@ export function getHrAdminMenu() {
         { title: 'HR', href: '/dashboard/hr/employees', icon: UserCheck },
         { title: 'Clients', href: '/dashboard/hr/clients', icon: Building2 },
         { title: 'Suppliers', href: '/dashboard/hr/suppliers', icon: Truck },
+        { title: 'Utilities', href: '/dashboard/settings/utilities', icon: Wrench },
+        { title: 'Manage Delivery Company', href: '/dashboard/workflow/delivery', icon: Truck },
       ],
     },
     {
@@ -155,7 +157,6 @@ export function getHrAdminMenu() {
         { title: 'Manage Types', href: '/dashboard/workflow/types', icon: Tags },
         { title: 'Manage Clinic', href: '/dashboard/workflow/clinics', icon: Hospital },
         { title: 'Manage Dr', href: '/dashboard/workflow/doctors', icon: Stethoscope },
-        { title: 'Manage Delivery Company', href: '/dashboard/workflow/delivery', icon: Truck },
       ],
     },
     {
@@ -199,7 +200,6 @@ export function getHrAdminMenu() {
       href: '/dashboard/settings',
       children: [
         { title: 'Settings', href: '/dashboard/settings', icon: Settings },
-        { title: 'Utilities', href: '/dashboard/settings/utilities', icon: Wrench },
       ],
     },
     {

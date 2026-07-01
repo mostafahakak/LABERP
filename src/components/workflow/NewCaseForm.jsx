@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { addDoc, collection, getDocs } from "firebase/firestore";
@@ -19,7 +19,7 @@ import {
   Snackbar,
   LoadingOverlay,
 } from "@/components/ui/PageComponents";
-import DentalChart from "@/components/workflow/DentalChart";
+import DentalChart, { UPPER_TOOTH_IDS, LOWER_TOOTH_IDS, ALL_TEETH } from "@/components/workflow/DentalChart";
 
 export default function NewCaseForm() {
   const { user } = useAuth();
@@ -44,19 +44,19 @@ export default function NewCaseForm() {
   const [caseCode, setCaseCode] = useState("");
 
   const [clinics, setClinics] = useState([]);
+  const [clinicDocs, setClinicDocs] = useState([]);
   const [allDoctors, setAllDoctors] = useState([]);
   const [drNames, setDrNames] = useState([]);
   const [deliveryCompanies, setDeliveryCompanies] = useState([]);
   const [users, setUsers] = useState([]);
-  const [types, setTypes] = useState([]);
+  const [allTypes, setAllTypes] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [snack, setSnack] = useState({ message: "", isError: false });
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [typePickerIndex, setTypePickerIndex] = useState(null);
-  const [selectedTeeth, setSelectedTeeth] = useState([]);
-  const [toothDialogOpen, setToothDialogOpen] = useState(false);
-  const [activeTooth, setActiveTooth] = useState(null);
+  // pickerContext: { mode: 'tooth', tooth } | { mode: 'jaw', jaw: 'upper'|'lower' } | null
+  const [pickerContext, setPickerContext] = useState(null);
 
   useEffect(() => {
     const onResize = () => setWidth(window.innerWidth);
@@ -66,9 +66,11 @@ export default function NewCaseForm() {
 
   useEffect(() => {
     getDocs(collection(db, "Clinics")).then((snap) => {
+      const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setClinicDocs(docs);
       setClinics(
-        snap.docs
-          .map((d) => d.data().name)
+        docs
+          .map((d) => d.name)
           .filter(Boolean)
           .sort(),
       );
@@ -100,7 +102,7 @@ export default function NewCaseForm() {
       );
     });
     getDocs(collection(db, "Types")).then((snap) => {
-      setTypes(
+      setAllTypes(
         snap.docs
           .map((d) => ({
             name: d.data().name || "",
@@ -111,6 +113,16 @@ export default function NewCaseForm() {
       );
     });
   }, []);
+
+  // Derive effective types: use clinic-specific prices when a clinic is selected
+  const types = allTypes.map((t) => {
+    if (!selectedClinic) return t;
+    const clinicDoc = clinicDocs.find((c) => c.name === selectedClinic);
+    if (clinicDoc?.customPrices && clinicDoc.customPrices[t.name] !== undefined) {
+      return { ...t, price: clinicDoc.customPrices[t.name] };
+    }
+    return t;
+  });
 
   useEffect(() => {
     if (selectedClinic) {
@@ -171,6 +183,13 @@ export default function NewCaseForm() {
     updateTotalPrice(newList);
   };
 
+  // Derive selectedTeeth from selectedTypesList entries that have toothId
+  const selectedTeeth = selectedTypesList
+    .filter((e) => e.toothId)
+    .map((e) => ALL_TEETH.find((t) => t.id === e.toothId))
+    .filter(Boolean)
+    .filter((t, i, arr) => arr.findIndex((x) => x.id === t.id) === i);
+
   const resetForm = () => {
     setSelectedCaseType(null);
     setSelectedClinic(null);
@@ -186,36 +205,56 @@ export default function NewCaseForm() {
     setDueDate("");
     setTeethCount("");
     setCaseCode("");
-    setSelectedTeeth([]);
-    setActiveTooth(null);
+    setPickerContext(null);
   };
 
   const handleToothClick = (tooth) => {
-    setActiveTooth(tooth);
-    setToothDialogOpen(true);
+    setPickerContext({ mode: "tooth", tooth });
+    setTypePickerIndex(null);
+    setShowTypePicker(true);
   };
 
-  const toggleToothSelection = (tooth) => {
-    setSelectedTeeth((prev) => {
-      const exists = prev.some((t) => t.id === tooth.id);
-      if (exists) {
-        return prev.filter((t) => t.id !== tooth.id);
-      }
-      return [...prev, tooth];
-    });
+  const handleJawClick = (jaw) => {
+    setPickerContext({ mode: "jaw", jaw });
+    setTypePickerIndex(null);
+    setShowTypePicker(true);
   };
 
-  const handleToothDialogConfirm = () => {
-    if (activeTooth) {
-      toggleToothSelection(activeTooth);
-      setTeethCount(String(
-        selectedTeeth.some((t) => t.id === activeTooth.id)
-          ? selectedTeeth.length - 1
-          : selectedTeeth.length + 1
-      ));
+  const addTypeForContext = (type) => {
+    let newEntries = [];
+    if (pickerContext?.mode === "tooth") {
+      newEntries = [{
+        name: type.name,
+        price: type.price,
+        toothId: pickerContext.tooth.id,
+        toothLabel: pickerContext.tooth.label,
+      }];
+    } else if (pickerContext?.mode === "jaw") {
+      const jawLabel = pickerContext.jaw === "upper" ? "Upper Jaw" : "Lower Jaw";
+      const toothIds = pickerContext.jaw === "upper" ? UPPER_TOOTH_IDS : LOWER_TOOTH_IDS;
+      // Add one entry per tooth in the jaw
+      newEntries = toothIds.map((tid) => {
+        const t = ALL_TEETH.find((x) => x.id === tid);
+        return {
+          name: type.name,
+          price: type.price,
+          toothId: tid,
+          toothLabel: t ? t.label : tid,
+          jawLabel,
+        };
+      });
+    } else {
+      // Fallback: no tooth/jaw context (manual add from list)
+      newEntries = [{ name: type.name, price: type.price }];
     }
-    setToothDialogOpen(false);
-    setActiveTooth(null);
+    const newList = [...selectedTypesList, ...newEntries];
+    setSelectedTypesList(newList);
+    updateTotalPrice(newList);
+    setTeethCount(String(
+      newList.filter((e) => e.toothId)
+        .map((e) => e.toothId)
+        .filter((v, i, a) => a.indexOf(v) === i).length
+    ));
   };
 
   const submitCase = async (e) => {
@@ -286,7 +325,7 @@ export default function NewCaseForm() {
   return (
     <>
       <Header title="New Case" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
-      <PageCard title="New Case" icon="💼">
+      <PageCard title="New Case" icon="??">
         <form onSubmit={submitCase}>
           <ResponsiveRow width={width}>
             <SelectField
@@ -311,17 +350,23 @@ export default function NewCaseForm() {
                 </div>
                 <div className="border rounded-xl p-3 bg-muted">
                   {selectedTypesList.length === 0 ? (
-                    <p className="text-muted-foreground py-3">No types added yet</p>
+                    <p className="text-muted-foreground py-3">No types added yet — click a tooth or jaw to add items</p>
                   ) : (
                     selectedTypesList.map((entry, index) => (
-                      <div key={index} className="flex flex-wrap items-center gap-3 py-2">
+                      <div key={index} className="flex flex-wrap items-center gap-2 py-2 border-b border-border/40 last:border-b-0">
+                        {entry.toothLabel && (
+                          <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white text-xs font-bold">
+                            {entry.toothLabel}
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => {
+                            setPickerContext(null);
                             setTypePickerIndex(index);
                             setShowTypePicker(true);
                           }}
-                          className="flex-1 text-left px-3 py-3 bg-card border rounded-lg text-foreground"
+                          className="flex-1 text-left px-3 py-2.5 bg-card border rounded-lg text-foreground text-sm"
                         >
                           {entry.name || "Select type"}
                         </button>
@@ -331,12 +376,12 @@ export default function NewCaseForm() {
                           onChange={(e) =>
                             onEntryPriceChanged(index, e.target.value)
                           }
-                          className="w-28 px-2 py-2 border rounded-md text-foreground"
+                          className="w-24 px-2 py-2 border rounded-md text-foreground text-sm"
                         />
                         <button
                           type="button"
                           onClick={() => removeTypeRow(index)}
-                          className="text-red-500 text-xl"
+                          className="text-red-500 text-xl leading-none"
                         >
                           ×
                         </button>
@@ -380,6 +425,7 @@ export default function NewCaseForm() {
                       <DentalChart
                         selectedTeeth={selectedTeeth}
                         onToothClick={handleToothClick}
+                        onJawClick={handleJawClick}
                       />
                     </div>
                   </div>
@@ -454,7 +500,13 @@ export default function NewCaseForm() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-card rounded-xl max-w-md w-full max-h-[70vh] overflow-y-auto p-4">
             <h3 className="font-bold text-foreground mb-3">
-              {typePickerIndex !== null ? "Change Type" : "Select Type"}
+              {typePickerIndex !== null
+                ? "Change Type"
+                : pickerContext?.mode === "tooth"
+                  ? `Select Type for Tooth #${pickerContext.tooth.label}`
+                  : pickerContext?.mode === "jaw"
+                    ? `Select Type for ${pickerContext.jaw === "upper" ? "Upper Jaw" : "Lower Jaw"}`
+                    : "Select Type"}
             </h3>
             {types.length === 0 ? (
               <p className="text-foreground">
@@ -466,10 +518,13 @@ export default function NewCaseForm() {
                   key={type.name}
                   type="button"
                   onClick={() => {
-                    if (typePickerIndex !== null)
+                    if (typePickerIndex !== null) {
                       changeTypeEntry(typePickerIndex, type);
-                    else addTypeEntry(type);
+                    } else {
+                      addTypeForContext(type);
+                    }
                     setShowTypePicker(false);
+                    setPickerContext(null);
                   }}
                   className="w-full flex justify-between px-4 py-3 hover:bg-muted text-foreground border-b"
                 >
@@ -482,148 +537,14 @@ export default function NewCaseForm() {
             )}
             <button
               type="button"
-              onClick={() => setShowTypePicker(false)}
+              onClick={() => {
+                setShowTypePicker(false);
+                setPickerContext(null);
+              }}
               className="mt-4 w-full py-2 border rounded-md"
             >
               Cancel
             </button>
-          </div>
-        </div>
-      )}
-
-      {toothDialogOpen && activeTooth && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-card rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6">
-            <h3 className="font-bold text-foreground text-lg mb-4">
-              Tooth #{activeTooth.label}
-            </h3>
-
-            <div className="border rounded-xl p-4 bg-muted/30 mb-4">
-              <div className="flex items-center justify-center">
-                <svg
-                  viewBox="0 0 5334 6667"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-full max-w-[300px] h-auto"
-                  style={{ maxHeight: "350px" }}
-                >
-                  <g clipPath="url(#tooth-detail-clip)">
-                    <path
-                      d="M5333.32 6666.67H0V0.00976562H5333.32V6666.67Z"
-                      fill="transparent"
-                    />
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M1120.73 3147.65C1120.73 3204.61 1133.44 3235.63 1151.87 3287.8C1171.67 3343.84 1158.44 3388.55 1148.79 3446.47C1131.63 3549.44 1164 3705.64 1105.16 3793.89C1050.9 3875.27 1035.78 4031 1054.4 4124.08C1064.91 4176.61 1107.03 4212.17 1123.16 4260.57C1143.78 4322.43 1120.73 4376.12 1120.73 4440.14C1120.73 4494.21 1136.3 4547.91 1136.3 4602.21C1136.3 4677.41 1160.53 4694.28 1198.59 4751.59C1213.71 4774.35 1216.24 4805.61 1229.74 4829.44C1242.2 4851.44 1266.12 4868.73 1276.45 4891.73C1298.92 4941.79 1288.99 5004.19 1302.12 5056.68C1314.43 5105.96 1321.54 5154.84 1359.17 5192.46C1397.47 5230.76 1448.24 5282.52 1465.75 5335.05C1482.59 5385.57 1516.51 5425.04 1533.39 5475.69C1550.59 5527.29 1609.43 5564.09 1642.4 5608.05C1675.27 5651.88 1708.36 5695.31 1738.75 5740.91C1751.45 5759.96 1760.48 5781.93 1770.72 5802.41C1782.72 5826.4 1824.29 5844.45 1844.55 5864.71C1884.05 5904.21 1939.88 5915.39 1985.47 5945.77C2031.11 5976.19 2078.03 5953.11 2124.64 5968.65C2171.12 5984.15 2210.85 5973.89 2257.49 5981.79C2305.17 5989.86 2360.11 6010.8 2405.92 6026.07C2496.91 6056.4 2589.69 6059.65 2685.73 6059.65C2779.06 6059.65 2874.94 6028.51 2973.82 6028.51C3076.32 6028.51 3149.07 6006.42 3246.34 5974C3265.19 5967.72 3295.59 5961.13 3304.87 5942.56C3321.12 5910.05 3334.62 5922.39 3363.12 5903.92C3415.63 5869.91 3458.81 5819.36 3511.55 5784.21C3551.71 5757.44 3600.2 5744.7 3635.92 5708.99C3680.84 5664.07 3731.38 5629.11 3776.08 5584.41C3791.11 5569.39 3805.83 5534.64 3822.81 5526.16C3846.07 5514.51 3873.6 5501.36 3892.59 5483.48C3936.18 5442.37 3948.08 5388.08 3973.66 5336.85C3999.29 5285.59 3993.72 5238.01 4017.17 5187.6C4043.14 5131.67 4082.57 5100.4 4102.79 5039.67C4116.67 4998.12 4109.23 4925.79 4126.16 4891.73C4135.43 4873.13 4166.7 4868.99 4172.88 4860.59C4193.2 4833 4184.16 4817.76 4188.47 4782.72C4201.55 4675.32 4238.43 4558.23 4286.51 4462.07C4312.29 4410.44 4335.97 4359.36 4357.44 4305.76C4380.55 4247.96 4359.73 4216.39 4359.73 4159.69C4359.73 4045.25 4369.26 3928.84 4344.17 3817.25C4319.27 3706.59 4276.98 3605.77 4254.79 3494.85C4234.23 3392.12 4274.5 3263.24 4306.84 3166.17C4322.63 3118.84 4310 3069.73 4297.46 3023.07C4282.62 2967.88 4282.7 2935.41 4305.54 2878.31C4349.36 2768.74 4392.56 2658.87 4359.73 2540.32C4329.8 2432.13 4238.85 2343.32 4255.66 2225.56C4272.48 2107.84 4250.36 1986.57 4206.32 1876.48C4166.77 1777.64 4093.67 1688.33 4048.29 1590.44C4023.73 1537.43 4001.5 1496.55 3990.06 1439.31C3979.31 1385.55 3913.53 1357.36 3895.03 1301.84C3879.7 1255.89 3869.02 1208.34 3853.66 1162.2C3838.17 1115.83 3776.99 1150.22 3754.87 1083.83C3727.93 1003.06 3617.71 897.661 3549.41 846.409C3459.02 778.646 3383.5 705.695 3285.4 646.854C3182.04 584.811 3062.02 555.715 2947.85 517.657C2747.39 450.847 2471.39 510.221 2288.64 601.59C2189.07 651.393 2088.12 698.564 1992.64 755.841C1894.55 814.682 1819.01 887.632 1728.63 955.434C1640.95 1021.18 1580.11 1109.23 1517.51 1196.9C1483.68 1244.26 1451.11 1286.7 1428.27 1340.01C1403.45 1397.9 1417.73 1446.87 1399.31 1502.16C1353.35 1640.05 1251.47 1752.66 1216.75 1891.54C1199.05 1962.32 1203.15 2043.93 1180.58 2111.61C1156.8 2182.96 1098.3 2235.36 1074.01 2306.75C1032.47 2428.89 995.687 2583.79 1014.15 2713.1C1035.29 2861.04 1095.91 2998.72 1120.73 3147.65Z"
-                      fill="#F9B4C1"
-                      opacity={0.3}
-                    />
-                    {/* Highlight the selected tooth */}
-                    {(() => {
-                      const toothIndex = activeTooth.pathIndex;
-                      const TOOTH_PATHS_DETAIL = [
-                        "M1323.17 2851.77C1458.84 2824.64 1576.15 2738.36 1554.32 2585.59C1540.79 2490.87 1535.23 2484.41 1447.75 2462.46C1391.96 2448.49 1337.84 2430.88 1284.53 2404.22C1179.33 2351.62 1020.21 2479.43 1077.25 2593.53C1106.65 2652.33 1102.7 2731.29 1136.3 2781.7C1176.89 2842.58 1257.08 2842.32 1323.17 2851.77Z",
-                        "M1665.76 2042.05C1637.68 2038.68 1604.04 2062.98 1580.6 2055.17C1542.62 2042.5 1503.7 2048.19 1471.11 2026.46C1434.97 2002.38 1402.29 1996.59 1370.76 1965.05C1342.01 1936.3 1313.26 1907.56 1284.52 1878.82C1210.78 1805.06 1263 1759.56 1292.02 1683.88C1320.57 1609.41 1306.73 1558.2 1385.45 1512.57C1535.12 1425.89 1677.49 1539.9 1782.25 1644.65C1881.66 1744.07 1753.79 1983.34 1665.76 2042.05Z",
-                        "M1541.17 2042.04C1466.28 2023.33 1403.24 2013.1 1346.81 1956.67C1291.46 1901.33 1192.87 1933.81 1156.74 1988.01C1141.51 2010.87 1153.52 2052.65 1144.08 2080.98C1133.53 2112.64 1124.14 2144.22 1109.19 2174.09C1071.29 2249.9 1124.26 2283.17 1190.31 2327.2C1259.37 2373.24 1297.6 2417.62 1378.16 2444.46C1437.04 2464.11 1538.04 2434.46 1579.82 2392.69C1633.64 2338.86 1641.14 2271.59 1663.32 2205.05C1676.1 2166.7 1570.74 2061.74 1541.17 2042.04Z",
-                        "M1743.62 1606.01C1724.56 1530.78 1478.9 1490.18 1478.9 1473.35C1478.9 1353.72 1502.19 1245.26 1627.31 1203.56C1669.55 1189.48 1731.01 1259.2 1766.98 1271.2C1815.7 1287.43 1898.88 1334.94 1914.91 1388C1927.64 1430.1 1907.59 1522.95 1883.76 1559.27C1849.51 1611.56 1797.74 1606.01 1743.62 1606.01Z",
-                        "M1992.78 1232.26C1947.2 1300.63 1861.53 1342.01 1783.04 1289.7C1761.59 1275.39 1744.48 1263.68 1720.25 1255.63C1691.18 1245.93 1702.47 1228.92 1681.32 1216.68C1654.36 1201.11 1610.01 1187.05 1587.89 1216.68C1587.89 1141.56 1574.19 1091.71 1634.62 1045.41C1681.44 1009.51 1716.95 936.391 1782.55 936.391C1839.79 936.391 1929.06 1012.82 1969.12 1052.9C1997.75 1081.51 2014.08 1076.98 2023.92 1123.28C2033.76 1169.57 2017.01 1195.91 1992.78 1232.26Z",
-                        "M2023.92 1107.68C2036.35 1064.89 1930.91 1040.19 1899.33 1014.26C1850.92 974.512 1834.51 936.401 1766.97 936.401C1712.45 936.401 1790.44 811.592 1801.87 788.747C1831.89 728.72 1893.06 716.128 1946.05 687.228C2084.27 611.934 2134.04 753.979 2164.07 874.108C2178.87 933.318 2203.48 982.164 2175.6 1037.92C2145.19 1098.73 2088.44 1111.43 2023.92 1107.68Z",
-                        "M2413.23 765.114C2412.94 789.338 2393.56 883.915 2374 893.711C2325.9 917.782 2266.52 901.988 2220 878.714C2207.56 872.487 2156.34 855.364 2148.5 842.948C2140.04 829.584 2146.7 790.856 2140.71 772.898C2126.72 730.943 2062.83 690.811 2070.63 640.504C2080.04 579.946 2255.95 477.926 2319.79 484.798C2436.8 497.404 2413.23 684.661 2413.23 765.114Z",
-                        "M2413.23 749.536C2413.23 693.863 2427.51 622.367 2402.25 571.892C2394.5 556.338 2364.9 517.567 2374.29 508.173C2399.29 483.148 2404.91 464.398 2437.07 442.953C2484.03 411.652 2529.83 406.954 2584.51 406.954C2643.2 406.954 2685.56 391.015 2713.13 446.148C2759.27 538.435 2758.68 695.134 2693.52 780.683C2652.04 835.123 2607.91 842.978 2545.1 842.978C2469.56 842.978 2463.87 791.078 2413.23 749.536Z",
-                        "M2927.11 889.673C2872.67 862.445 2814.27 839.25 2786.95 780.685C2764.97 733.564 2767.35 675.307 2755.81 624.96C2748 590.858 2721.13 487.438 2740.24 453.682C2759.09 420.31 2837.81 406.945 2872.11 406.945C2981.7 406.945 3097.89 454.565 3082.82 578.223C3069.25 689.631 3021.74 826.577 2927.11 889.673Z",
-                        "M3191.83 889.69C3152.72 889.69 3105.27 903.426 3086.87 866.62C3065.28 823.44 3067.26 760.869 3067.26 713.136C3067.26 652.235 3073.52 596.647 3082.16 536.202C3086.8 503.721 3050.21 508.882 3090.32 488.847C3104.5 481.752 3133.43 500.382 3152.9 500.382C3258.49 500.382 3337.51 569.175 3361.51 665.174C3375.15 719.738 3349.75 758.137 3316.4 796.234C3279.03 838.959 3225.75 852.277 3191.83 889.69Z",
-                        "M3378.69 671.681C3352.85 700.043 3332.05 764.95 3313.17 802.728C3282.76 863.524 3285.26 909.41 3285.26 976.634C3285.26 1040.57 3344.51 1045.58 3394.26 1060.97C3454.02 1079.47 3484.08 1073.08 3534.41 1029.84C3583.31 987.844 3596.45 936.913 3623.81 882.207C3631.97 865.878 3608.81 836.059 3600.74 819.916C3592.07 802.578 3617.01 773.806 3612.27 749.554C3598.75 680.238 3395.5 575.835 3378.69 671.681Z",
-                        "M3534.43 1528.14C3604.08 1632.59 3688.6 1641.65 3799.14 1590.43C3907.17 1540.37 3981.8 1473.67 3954.88 1341.27C3946.56 1300.37 3913.05 1216.69 3869.22 1216.69C3805.99 1216.69 3765.67 1239.02 3713.01 1274.09C3610.53 1342.44 3534.43 1393.79 3534.43 1528.14Z",
-                        "M3440.99 1185.55C3451.78 1222.95 3474.4 1295.71 3511.35 1314.18C3531.92 1324.47 3558.15 1339.01 3581.12 1341.29C3617.22 1344.87 3613.15 1334.9 3627.86 1325.7C3701.92 1279.31 3803.94 1228.7 3814.72 1123.28C3818.97 1081.74 3811.84 991.454 3768.01 967.54C3748.17 956.724 3634.74 942.607 3612.27 951.983C3585.54 963.115 3601.49 976.179 3581.12 998.689C3561 1020.95 3520.19 1039.32 3495 1056.1C3446.05 1088.76 3437.41 1123.92 3440.99 1185.55Z",
-                        "M4157.32 1730.57C4165.44 1803.57 4105.09 1896.83 4040.82 1928.99C4004.55 1947.1 3984.8 1988.12 3947.37 2006.84C3930.29 2015.38 3865.45 2057.59 3854.15 2057.59C3766.39 2057.59 3720.67 2042.95 3674.58 1964.14C3632.55 1892.36 3612.3 1835.74 3612.3 1753.43C3612.3 1656.26 3696.6 1641.68 3759.93 1610.03C3824.87 1577.55 3879.25 1557.03 3931.51 1504.77C3951.45 1484.81 3969.36 1434.15 4009.65 1454.31C4038.86 1468.92 4079.44 1480.31 4079.44 1519.86C4079.44 1561.01 4073.43 1584.42 4103.1 1614.08C4135.33 1646.28 4143.06 1687.75 4157.32 1730.57Z",
-                        "M4141.72 2415.77C4087.8 2415.77 4023.04 2405.45 3970.43 2415.77C3904.32 2428.71 3842.29 2511.65 3783.57 2423.56C3748.85 2371.51 3721.28 2296.42 3721.28 2236.68C3721.28 2211.9 3710 2156.79 3721.28 2135.45C3732.16 2114.88 3792.91 2084.15 3814.72 2073.18C3872.39 2044.1 3931.66 1997.36 3986.02 1979.74C4074.22 1951.12 4138.35 1926.26 4185.2 2019.99C4218.06 2085.66 4263.08 2408.85 4141.72 2415.77Z",
-                        "M4141.74 2836.21C4275.76 2852.29 4303.59 2623.83 4288.01 2530.39C4264.73 2390.61 4099.45 2415.75 3993.52 2415.75C3930.21 2415.75 3875.13 2464.36 3831.17 2508.32C3779.9 2559.59 3848.18 2646.61 3877.01 2696.04C3885.88 2711.27 3902.43 2726.21 3908.16 2742.77C3912.76 2756.15 3901.98 2776.88 3908.16 2789.5C3926.75 2827.44 3936.62 2820.63 3977.73 2820.63C4008.94 2820.63 4040.17 2820.63 4071.38 2820.63C4099.61 2820.63 4111.99 2843.57 4141.74 2836.21Z",
-                        "M1183.01 4222.15C1287.92 4248.37 1422.78 4240.99 1525.6 4206.57C1691.72 4150.94 1593.9 4013.16 1530.46 3917.99C1486.31 3851.77 1470.3 3832.84 1391.81 3832.84C1330.07 3832.84 1278.17 3876.46 1229.73 3910.69C1117.87 3989.79 1056.65 4118.44 1183.01 4222.15Z",
-                        "M1665.75 4377.87C1649.3 4312.08 1643.36 4249.87 1579.82 4218.1C1537.79 4197.09 1461.02 4222.15 1409.29 4222.15C1248.97 4222.15 1159.75 4343.06 1221.66 4497.81C1240.37 4544.6 1206.31 4636.05 1245.3 4673.73C1292 4718.86 1388.77 4673.73 1439.66 4673.73C1458.8 4673.73 1503.9 4633.14 1518.11 4618.95C1545.68 4591.34 1576.65 4585.92 1610.95 4568.77C1696.86 4525.8 1679.5 4460.3 1665.75 4377.87Z",
-                        "M1728.04 4704.87C1696.37 4641.52 1628.32 4577.2 1548.96 4603.65C1512.12 4615.93 1483.09 4638.37 1455.81 4665.65C1425.91 4695.56 1391.67 4683.09 1362.39 4712.36C1334.99 4739.76 1298.98 4741.16 1276.45 4774.95C1250.12 4814.43 1243.6 4839.89 1258.44 4884.44C1268.83 4915.6 1283.94 4945.35 1294.46 4976.89C1307.11 5014.87 1301.43 5053.79 1323.17 5086.39C1364.59 5148.51 1436.25 5196.25 1510.03 5156.47C1549.99 5134.92 1564.88 5111.6 1612.68 5099.65C1649.27 5090.51 1686.16 5083.97 1719.97 5067.07C1780.29 5036.91 1805.91 4967.04 1805.91 4899.52C1805.91 4813.03 1765.32 4779.41 1728.04 4704.87Z",
-                        "M1868.19 5125.32C1787.16 5071.29 1666.49 5052.16 1580.11 5109.75C1539.07 5137.11 1469.12 5150.76 1447.75 5203.17C1432.92 5239.52 1447.75 5311.76 1447.75 5351.6C1447.75 5451.69 1976.99 5383.47 1868.19 5125.32Z",
-                        "M1946.05 5405.61C1911.24 5382.4 1871.97 5343.33 1829.55 5343.33C1798.31 5343.33 1733.69 5363.87 1706 5377.71C1613.01 5424.2 1548 5512.69 1598.85 5614.41C1658.16 5733 1755.77 5703.77 1845.32 5644.07C1941.48 5579.95 1968.79 5519.29 1946.05 5405.61Z",
-                        "M2117.35 5748.2C2121.33 5700.32 2103.51 5659.96 2088.64 5615.36C2069.63 5558.32 2008.53 5616.47 1977.2 5623.63C1931.08 5634.16 1889.13 5614.85 1845.32 5644.07C1778.52 5688.6 1774.57 5715.96 1787.24 5791.97C1800.03 5868.64 1812.6 6026.83 1936.96 5995.73C1998.31 5980.4 2046 5968.75 2075.24 5910.28C2099.89 5860.97 2105.44 5801.8 2117.35 5748.2Z",
-                        "M2288.64 5763.77C2172.31 5736.44 1952.23 6055.88 2117.35 6106.36C2329.93 6171.36 2374.95 5893.22 2288.64 5763.77Z",
-                        "M2506.67 5794.92C2400.05 5814.48 2402.75 5958.57 2350.93 6036.29C2310.9 6096.34 2284.64 6102.37 2343.44 6161.16C2376.75 6194.47 2435.32 6215.37 2483.03 6215.37C2529.73 6215.37 2573.66 6226.24 2607.59 6192.29C2653.63 6146.25 2666.7 6122.04 2646.81 6059.65C2630.69 6009.06 2614.73 5961.55 2604.12 5908.53C2591.27 5844.17 2562.03 5822.6 2506.67 5794.92Z",
-                        "M2802.52 5826.07C2710.89 5846.09 2746.32 6011.59 2709.1 6067.44C2695.31 6088.11 2676.03 6172.57 2700.81 6189.09C2744.74 6218.37 2773.95 6215.37 2825.59 6215.37C2916.19 6215.37 2988.88 6153.59 2973.8 6059.66C2956.66 5952.59 2890.54 5878.87 2802.52 5826.07Z",
-                        "M3067.25 5779.34C3024.55 5822.07 3020.54 5828.28 3020.54 5888.36C3020.54 5932.48 3020.54 5976.6 3020.54 6020.72C3020.54 6061.07 3007.41 6115.52 3051.69 6137.5C3084.27 6153.68 3151.04 6128.24 3182.73 6120.32C3289.92 6093.52 3329.22 6039.93 3264.84 5943.35C3224.81 5883.31 3149.28 5764.71 3067.25 5779.34Z",
-                        "M3285.27 5592.48C3232.09 5698.82 3244.05 5821.55 3296.8 5927C3339.5 6012.39 3477.9 6022.73 3546.59 5954.05C3588.32 5912.31 3643.42 5868.39 3643.42 5804.14C3643.42 5737.57 3585.73 5731.94 3534.41 5701.48C3474.55 5665.98 3350.6 5504.84 3285.27 5592.48Z",
-                        "M3612.28 5732.63C3648.62 5725.36 3733.21 5717.92 3755 5681.6C3773.41 5650.92 3832.02 5571.01 3814.72 5530.19C3807.08 5512.2 3734.25 5492.62 3705.71 5467.91C3660.4 5428.68 3636.42 5390.04 3572.85 5390.04C3516.85 5390.04 3480.09 5384.74 3432.69 5416.32C3378.62 5452.37 3378.69 5501.16 3378.69 5558.39C3378.69 5620.03 3550 5744.44 3612.28 5732.63Z",
-                        "M3674.56 5436.76C3723.21 5485.39 3752.27 5522.44 3823.94 5504.53C3882.03 5490 3906.95 5426.6 3923.71 5374.47C3970.68 5228.39 3872.46 5205.8 3768 5140.89C3664.91 5076.84 3534.95 5092.01 3501.65 5225.23C3490.74 5268.89 3464.14 5360.84 3518.85 5390.04C3538.61 5400.59 3579.73 5389.57 3604.5 5397.83C3630.78 5406.59 3655.71 5415.67 3674.56 5436.76Z",
-                        "M3705.71 5094.17C3768.28 5156.73 3809.32 5172.72 3892.59 5187.6C3979.68 5203.17 4014.75 5178.44 4079.44 5109.74C4137.01 5048.65 4163.08 4992.92 4157.31 4907.3C4153.07 4844.64 4113.89 4753.79 4056.58 4715.57C3956.51 4648.87 3739.68 4559.08 3663.03 4712.36C3628.42 4781.57 3627.86 4826.76 3627.86 4908.76C3627.86 4963.7 3618.59 5098.38 3705.71 5094.17Z",
-                        "M3861.42 4284.42C3799.58 4366.87 3726.29 4627 3900.35 4627C3966.71 4627 4029.48 4701.63 4074.57 4746.72C4118.23 4790.39 4237.76 4798.35 4251.61 4715.27C4264.23 4639.42 4275.87 4567.18 4299.86 4495.14C4331.54 4400.16 4286.6 4382.56 4227.37 4323.35C4182.81 4278.79 3862.35 4185.43 3861.42 4284.42Z",
-                        "M3892.57 4097.54C3873.53 4173.77 3881.85 4223.73 3963.13 4250.83C3985.59 4258.31 4017.51 4253.27 4041.01 4253.27C4069.43 4253.27 4092.75 4268.84 4117.91 4268.84C4182.16 4268.84 4225.9 4315.56 4290.18 4315.56C4358.14 4315.56 4344.18 4174.61 4344.18 4134.31C4344.18 4085.34 4345.92 3996.54 4313.04 3957.4C4281.54 3919.91 4179.14 3897.19 4133.47 3881.97C4085.69 3866.04 3996.18 3900.82 3954.87 3926.25C3887.68 3967.61 3892.57 4029.25 3892.57 4097.54Z",
-                      ];
-                      return (
-                        <path
-                          d={TOOTH_PATHS_DETAIL[toothIndex]}
-                          fill="#4f8cff"
-                          stroke="#2563eb"
-                          strokeWidth={10}
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          style={{
-                            filter: "drop-shadow(0 0 12px rgba(37, 99, 235, 0.6))",
-                          }}
-                        />
-                      );
-                    })()}
-                  </g>
-                  <defs>
-                    <clipPath id="tooth-detail-clip">
-                      <rect width="5333.33" height="6666.67" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Tooth Number:</span>
-                <span className="font-semibold text-foreground">
-                  {activeTooth.label}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Status:</span>
-                <span
-                  className={`font-semibold ${
-                    selectedTeeth.some((t) => t.id === activeTooth.id)
-                      ? "text-blue-500"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {selectedTeeth.some((t) => t.id === activeTooth.id)
-                    ? "Selected"
-                    : "Not Selected"}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                type="button"
-                onClick={handleToothDialogConfirm}
-                className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg font-semibold"
-              >
-                {selectedTeeth.some((t) => t.id === activeTooth.id)
-                  ? "Remove Tooth"
-                  : "Select Tooth"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setToothDialogOpen(false);
-                  setActiveTooth(null);
-                }}
-                className="flex-1 py-2.5 border rounded-lg text-foreground"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         </div>
       )}

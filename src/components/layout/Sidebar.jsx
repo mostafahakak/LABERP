@@ -65,7 +65,7 @@ export default function AppSidebar() {
               render={<Link href="/dashboard" />}
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-white overflow-hidden">
                 <Image
                   src="/logo.png"
                   alt="360 Lab"

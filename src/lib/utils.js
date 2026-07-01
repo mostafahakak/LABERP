@@ -49,11 +49,25 @@ export function isDelayed(data) {
   const dueRaw = data.dueDate || data.caseRequestDate;
   const due = parseDueDate(dueRaw);
   if (!due) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
   const dueDay = new Date(due);
   dueDay.setHours(0, 0, 0, 0);
-  return dueDay <= today;
+  // Alert 1 day before the due date
+  const alertDay = new Date(dueDay);
+  alertDay.setDate(alertDay.getDate() - 1);
+  return now >= alertDay;
+}
+
+export function isOverdue(data) {
+  const dueRaw = data.dueDate || data.caseRequestDate;
+  const due = parseDueDate(dueRaw);
+  if (!due) return false;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const dueDay = new Date(due);
+  dueDay.setHours(0, 0, 0, 0);
+  return now > dueDay;
 }
 
 export function shortId(id) {

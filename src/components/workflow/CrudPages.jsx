@@ -58,6 +58,71 @@ function CrudDialog({ title, fields, onSave, onClose }) {
   );
 }
 
+function ClinicDialog({ title, initialValues, types, onSave, onClose }) {
+  const [name, setName] = useState(initialValues.name || '');
+  const [address, setAddress] = useState(initialValues.address || '');
+  const [phone, setPhone] = useState(initialValues.phone || '');
+  const [customPrices, setCustomPrices] = useState(() => {
+    const map = {};
+    types.forEach((t) => {
+      map[t.name] = initialValues.customPrices?.[t.name] ?? t.price;
+    });
+    return map;
+  });
+
+  const handlePriceChange = (typeName, value) => {
+    setCustomPrices((prev) => ({ ...prev, [typeName]: parseFloat(value) || 0 }));
+  };
+
+  const handleSave = () => {
+    onSave({ name, address, phone, customPrices });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-card rounded-xl p-6 max-w-lg w-full max-h-[85vh] overflow-y-auto">
+        <h3 className="font-bold text-foreground mb-4">{title}</h3>
+        <div className="space-y-3">
+          <TextField label="Clinic Name" value={name} onChange={(e) => setName(e.target.value)} />
+          <TextField label="Address" value={address} onChange={(e) => setAddress(e.target.value)} required={false} />
+          <TextField label="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} required={false} />
+        </div>
+
+        {types.length > 0 && (
+          <div className="mt-5">
+            <h4 className="font-semibold text-foreground mb-2">Item Prices for this Clinic</h4>
+            <p className="text-xs text-muted-foreground mb-3">Set custom prices per item. These will be used when creating cases for this clinic.</p>
+            <div className="border rounded-xl overflow-hidden">
+              <div className="grid grid-cols-[1fr_auto] gap-0 text-sm">
+                <div className="px-3 py-2 bg-muted font-semibold text-muted-foreground">Item</div>
+                <div className="px-3 py-2 bg-muted font-semibold text-muted-foreground text-right">Price (LE)</div>
+                {types.map((type) => (
+                  <div key={type.name} className="contents">
+                    <div className="px-3 py-2.5 border-t flex items-center text-foreground">{type.name}</div>
+                    <div className="px-3 py-1.5 border-t flex items-center justify-end">
+                      <input
+                        type="number"
+                        value={customPrices[type.name] ?? type.price}
+                        onChange={(e) => handlePriceChange(type.name, e.target.value)}
+                        className="w-24 px-2 py-1.5 border rounded-md text-foreground text-sm text-right bg-background"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2 justify-end mt-6">
+          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-foreground">Cancel</button>
+          <button type="button" onClick={handleSave} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function useCollection(collectionName, orderFields = ['name']) {
   const [items, setItems] = useState([]);
   useEffect(() => {
@@ -138,26 +203,36 @@ export function ManageTypesForm() {
 
 export function ManageClinicsForm() {
   const items = useCollection('Clinics');
+  const [types, setTypes] = useState([]);
   const [dialog, setDialog] = useState(null);
   const [snack, setSnack] = useState({ message: '', isError: false });
+
+  useEffect(() => {
+    getDocs(collection(db, 'Types')).then((snap) => {
+      setTypes(
+        snap.docs
+          .map((d) => ({ id: d.id, name: d.data().name || '', price: d.data().price || 0 }))
+          .filter((t) => t.name)
+          .sort((a, b) => a.name.localeCompare(b.name))
+      );
+    });
+  }, []);
 
   const save = async (values) => {
     const name = values.name?.trim();
     if (!name) return;
     try {
+      const data = {
+        name,
+        address: values.address?.trim() || '',
+        phone: values.phone?.trim() || '',
+        customPrices: values.customPrices || {},
+      };
       if (dialog.mode === 'add') {
-        await addDoc(collection(db, 'Clinics'), {
-          name,
-          address: values.address?.trim() || '',
-          phone: values.phone?.trim() || '',
-          balance: 0,
-        });
+        data.balance = 0;
+        await addDoc(collection(db, 'Clinics'), data);
       } else {
-        await updateDoc(doc(db, 'Clinics', dialog.id), {
-          name,
-          address: values.address?.trim() || '',
-          phone: values.phone?.trim() || '',
-        });
+        await updateDoc(doc(db, 'Clinics', dialog.id), data);
       }
       setDialog(null);
       setSnack({ message: 'Saved successfully', isError: false });
@@ -190,13 +265,15 @@ export function ManageClinicsForm() {
         </div>
       </PageCard>
       {dialog && (
-        <CrudDialog
+        <ClinicDialog
           title={dialog.mode === 'add' ? 'Add Clinic' : 'Edit Clinic'}
-          fields={[
-            { key: 'name', label: 'Clinic Name', value: dialog.item?.name },
-            { key: 'address', label: 'Address', value: dialog.item?.address, required: false },
-            { key: 'phone', label: 'Phone Number', value: dialog.item?.phone, required: false },
-          ]}
+          initialValues={{
+            name: dialog.item?.name || '',
+            address: dialog.item?.address || '',
+            phone: dialog.item?.phone || '',
+            customPrices: dialog.item?.customPrices || {},
+          }}
+          types={types}
           onSave={save}
           onClose={() => setDialog(null)}
         />

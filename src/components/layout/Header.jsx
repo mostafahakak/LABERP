@@ -11,6 +11,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 export default function Header({ title, breadcrumbs = [] }) {
   return (
@@ -40,6 +41,9 @@ export default function Header({ title, breadcrumbs = [] }) {
           )}
         </BreadcrumbList>
       </Breadcrumb>
+      <div className="ml-auto">
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
