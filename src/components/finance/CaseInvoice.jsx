@@ -32,6 +32,7 @@ export default function CaseInvoice() {
   const [banks, setBanks] = useState([]);
   const [allDoctors, setAllDoctors] = useState([]);
   const [previousInvoices, setPreviousInvoices] = useState([]);
+  const [hasCheckedOldBills, setHasCheckedOldBills] = useState(false);
   const [selectedCaseIds, setSelectedCaseIds] = useState([]);
   const [clinicName, setClinicName] = useState("");
   const [drFilter, setDrFilter] = useState("");
@@ -109,21 +110,45 @@ export default function CaseInvoice() {
     setCases(filtered);
   }, [clinicName, drFilter, dateFilter, allCases]);
 
-  useEffect(() => {
-    if (!clinicName) {
-      setPreviousInvoices([]);
+  const fetchOldUnpaidBills = async () => {
+    const hasDoctor = !!drFilter;
+    const hasClinic = !!clinicName;
+
+    if (!hasDoctor && !hasClinic) {
+      setSnack({
+        message: "Choose doctor or clinic first",
+        isError: true,
+      });
       return;
     }
-    getDocs(
-      query(
-        collection(db, "Finance"),
-        where("clinicName", "==", clinicName),
-        where("type", "==", "Invoice"),
-      ),
-    ).then((snap) =>
-      setPreviousInvoices(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
-    );
-  }, [clinicName]);
+
+    setHasCheckedOldBills(true);
+
+    const constraints = [
+      where("type", "==", "Invoice"),
+    ];
+
+    if (hasDoctor) {
+      constraints.push(where("drName", "==", drFilter));
+    } else {
+      constraints.push(where("clinicName", "==", clinicName));
+    }
+
+    try {
+      const snap = await getDocs(query(collection(db, "Finance"), ...constraints));
+      const unpaid = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter((inv) => Number(inv.remainingAmount || 0) > 0)
+        .sort((a, b) => {
+          const aDate = `${a.Date || ""} ${a.Time || ""}`;
+          const bDate = `${b.Date || ""} ${b.Time || ""}`;
+          return bDate.localeCompare(aDate);
+        });
+      setPreviousInvoices(unpaid);
+    } catch (e) {
+      setSnack({ message: e.message, isError: true });
+    }
+  };
 
   const selectedCases = useMemo(
     () => cases.filter((c) => selectedCaseIds.includes(c.id)),
@@ -315,6 +340,15 @@ export default function CaseInvoice() {
             type="date"
           />
         </div>
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={fetchOldUnpaidBills}
+            className="px-4 py-2 rounded-md border text-foreground hover:bg-muted/60 transition-colors"
+          >
+            Show Old Unpaid Bills
+          </button>
+        </div>
       </PageCard>
 
       <PageCard title="Invoice Details">
@@ -432,31 +466,36 @@ export default function CaseInvoice() {
         </button>
       </PageCard>
 
-      {previousInvoices.length > 0 && (
+      {(hasCheckedOldBills || previousInvoices.length > 0) && (
         <PageCard title="Previous Bills">
-          <div className="space-y-2">
-            {previousInvoices.map((inv) => (
-              <div
-                key={inv.id}
-                className="flex justify-between items-center border rounded-lg p-3 text-sm text-foreground"
-              >
-                <div>
-                  <p className="font-medium">{inv.Date}</p>
-                  <p className="text-muted-foreground">
-                    {inv.paymentPlan} · {inv.status}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold">{formatPriceLE(inv.total)}</p>
-                  {inv.remainingAmount > 0 && (
-                    <p className="text-destructive text-xs">
-                      Remaining: {formatPriceLE(inv.remainingAmount)}
+          {previousInvoices.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              No unpaid old bills found for the selected {drFilter ? "doctor" : "clinic"}.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {previousInvoices.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex justify-between items-center border rounded-lg p-3 text-sm text-foreground"
+                >
+                  <div>
+                    <p className="font-medium">{inv.Date}</p>
+                    <p className="text-muted-foreground">
+                      {inv.drName ? `${inv.drName} · ` : ""}
+                      {inv.paymentPlan} · {inv.status}
                     </p>
-                  )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">{formatPriceLE(inv.total)}</p>
+                    <p className="text-destructive text-xs">
+                      Remaining: {formatPriceLE(inv.remainingAmount || 0)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </PageCard>
       )}
 
