@@ -40,6 +40,7 @@ export default function CaseInvoice() {
   const [paymentPlan, setPaymentPlan] = useState("Full Payment");
   const [bankName, setBankName] = useState("");
   const [bankId, setBankId] = useState("");
+  const [previousBill, setPreviousBill] = useState("0");
   const [discount, setDiscount] = useState("0");
   const [paidAmount, setPaidAmount] = useState("0");
   const [installmentMonths, setInstallmentMonths] = useState("0");
@@ -169,8 +170,9 @@ export default function CaseInvoice() {
   );
 
   const subtotal = invoiceItems.reduce((s, i) => s + i.price * i.quantity, 0);
+  const previousBillVal = parseFloat(previousBill) || 0;
   const discountVal = parseFloat(discount) || 0;
-  const total = Math.max(0, subtotal - discountVal);
+  const total = Math.max(0, subtotal + previousBillVal - discountVal);
   const showPaidAmountInput =
     paymentPlan === "Partial Payment" || paymentPlan === "Installments";
   const paidVal = parseFloat(paidAmount) || 0;
@@ -227,6 +229,7 @@ export default function CaseInvoice() {
         paidAmount: effectivePaidAmount,
         remainingAmount: remaining,
         total,
+        previousBillAmount: previousBillVal,
         paymentPlan,
         installmentMonths: parseInt(installmentMonths, 10) || 0,
         discount: discountVal,
@@ -382,6 +385,12 @@ export default function CaseInvoice() {
             onChange={(e) => setDiscount(e.target.value)}
             type="number"
           />
+          <TextField
+            label="Previous Bill"
+            value={previousBill}
+            onChange={(e) => setPreviousBill(e.target.value)}
+            type="number"
+          />
           {showPaidAmountInput && (
             <TextField
               label="Paid Amount"
@@ -438,6 +447,10 @@ export default function CaseInvoice() {
           <div className="flex justify-between">
             <span>Subtotal:</span>
             <strong>{formatPriceLE(subtotal)}</strong>
+          </div>
+          <div className="flex justify-between">
+            <span>Previous Bill:</span>
+            <strong>{formatPriceLE(previousBillVal)}</strong>
           </div>
           <div className="flex justify-between">
             <span>Discount:</span>
