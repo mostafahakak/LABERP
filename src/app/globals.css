@@ -134,4 +134,28 @@ input, select, textarea, button {
   html {
     @apply font-sans;
   }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+    will-change: transform;
+  }
+
+  button:not(:disabled):hover,
+  [role='button']:not([aria-disabled='true']):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  button:not(:disabled):active,
+  [role='button']:not([aria-disabled='true']):active {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    transition: none;
+  }
 }
