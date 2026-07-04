@@ -68,9 +68,16 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
   const handlePrint = useCallback(() => {
     const content = printRef.current;
     if (!content || !invoice) return;
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const timeStr = `${pad(now.getHours())} : ${pad(now.getMinutes())}`;
+    const dr = (invoice.drName || '').replace(/[^a-zA-Z0-9\u0600-\u06FF ]/g, '').trim();
+    const clinic = (invoice.clinicName || invoice.name || '').replace(/[^a-zA-Z0-9\u0600-\u06FF ]/g, '').trim();
+    const fileName = `Invoice_${clinic}_ Dr:${dr} _ ${dateStr} _ ${timeStr}`;
     const win = window.open('', '_blank');
     if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>Invoice — ${invoice.clinicName || invoice.name}</title>
+    win.document.write(`<!DOCTYPE html><html><head><title>${fileName}</title>
 <style>
   @page { size: A4; margin: 20mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
