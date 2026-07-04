@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   collection,
@@ -38,10 +38,6 @@ import { Filter, X, CheckCircle2, Eye, Settings2, Trash2 } from "lucide-react";
 
 export default function ViewCasesForm() {
   const [allCases, setAllCases] = useState([]);
-  const [clinics, setClinics] = useState([]);
-  const [types, setTypes] = useState([]);
-  const [drNames, setDrNames] = useState([]);
-  const [statuses, setStatuses] = useState([]);
 
   const [selectedClinic, setSelectedClinic] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
@@ -50,11 +46,9 @@ export default function ViewCasesForm() {
   const [selectedDate, setSelectedDate] = useState("");
   const [dueFilter, setDueFilter] = useState("All");
 
-  const [cases, setCases] = useState([]);
   const [manageCase, setManageCase] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [snack, setSnack] = useState({ message: "", isError: false });
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const withAllOption = (arr) => ["All", ...arr.filter(Boolean)];
   const toList = (val) => String(val || "")
@@ -69,6 +63,7 @@ export default function ViewCasesForm() {
     return match ? `P${match[0]}` : phase;
   };
   const statusLabel = (status) => `${status} (${getPhaseShort(status)})`;
+  const isAll = (v) => v === null || v === "" || v === "All";
 
   useEffect(() => {
     const constraints = [
@@ -86,56 +81,66 @@ export default function ViewCasesForm() {
     );
 
     return () => unsub();
-  }, [refreshKey]);
+  }, []);
 
-  useEffect(() => {
-    const isAll = (v) => v === null || v === "" || v === "All";
-    const clinicScoped = isAll(selectedClinic)
-      ? allCases
-      : allCases.filter((c) => c.clinicName === selectedClinic);
-
+  const clinicOptions = useMemo(() => {
     const clinicSet = new Set();
-    const typeSet = new Set();
-    const drSet = new Set();
-    const statusSet = new Set();
-
     allCases.forEach((c) => {
       if (c.clinicName) clinicSet.add(c.clinicName);
     });
+    return [...clinicSet].sort();
+  }, [allCases]);
 
-    clinicScoped.forEach((c) => {
+  const clinicScopedCases = useMemo(() => {
+    if (isAll(selectedClinic)) return allCases;
+    return allCases.filter((c) => c.clinicName === selectedClinic);
+  }, [allCases, selectedClinic]);
+
+  const typeOptions = useMemo(() => {
+    const typeSet = new Set();
+    clinicScopedCases.forEach((c) => {
       toList(c.type).forEach((t) => typeSet.add(t));
+    });
+    return [...typeSet].sort();
+  }, [clinicScopedCases]);
+
+  const drOptions = useMemo(() => {
+    const drSet = new Set();
+    clinicScopedCases.forEach((c) => {
       if (c.drName) drSet.add(c.drName);
+    });
+    return [...drSet].sort();
+  }, [clinicScopedCases]);
+
+  const statusOptions = useMemo(() => {
+    const statusSet = new Set();
+    clinicScopedCases.forEach((c) => {
       if (c.status) statusSet.add(c.status);
     });
+    return [...statusSet].sort();
+  }, [clinicScopedCases]);
 
-    const nextClinics = [...clinicSet].sort();
-    const nextTypes = [...typeSet].sort();
-    const nextDrs = [...drSet].sort();
-    const nextStatuses = [...statusSet].sort();
+  const selectedTypeSafe = !isAll(selectedType) && !typeOptions.includes(selectedType)
+    ? null
+    : selectedType;
+  const selectedDrNameSafe = !isAll(selectedDrName) && !drOptions.includes(selectedDrName)
+    ? null
+    : selectedDrName;
+  const selectedStatusSafe = !isAll(selectedStatus) && !statusOptions.includes(selectedStatus)
+    ? null
+    : selectedStatus;
 
-    setClinics(nextClinics);
-    setTypes(nextTypes);
-    setDrNames(nextDrs);
-    setStatuses(nextStatuses);
-
-    if (!isAll(selectedType) && !nextTypes.includes(selectedType)) setSelectedType(null);
-    if (!isAll(selectedDrName) && !nextDrs.includes(selectedDrName)) setSelectedDrName(null);
-    if (!isAll(selectedStatus) && !nextStatuses.includes(selectedStatus)) setSelectedStatus(null);
-  }, [allCases, selectedClinic, selectedType, selectedDrName, selectedStatus]);
-
-  useEffect(() => {
-    const isAll = (v) => v === null || v === "" || v === "All";
+  const cases = useMemo(() => {
     let docs = [...allCases];
     if (!isAll(selectedClinic)) docs = docs.filter((c) => c.clinicName === selectedClinic);
-    if (!isAll(selectedType)) docs = docs.filter((c) => toList(c.type).includes(selectedType));
-    if (!isAll(selectedDrName)) docs = docs.filter((c) => c.drName === selectedDrName);
-    if (!isAll(selectedStatus)) docs = docs.filter((c) => c.status === selectedStatus);
+    if (!isAll(selectedTypeSafe)) docs = docs.filter((c) => toList(c.type).includes(selectedTypeSafe));
+    if (!isAll(selectedDrNameSafe)) docs = docs.filter((c) => c.drName === selectedDrNameSafe);
+    if (!isAll(selectedStatusSafe)) docs = docs.filter((c) => c.status === selectedStatusSafe);
     if (selectedDate) docs = docs.filter((c) => c.caseRequestDate === selectedDate);
     if (dueFilter === "Delayed") docs = docs.filter((c) => isDelayed(c));
     if (dueFilter === "Overdue") docs = docs.filter((c) => isOverdue(c));
-    setCases(docs);
-  }, [allCases, selectedClinic, selectedType, selectedDrName, selectedStatus, selectedDate, dueFilter]);
+    return docs;
+  }, [allCases, selectedClinic, selectedTypeSafe, selectedDrNameSafe, selectedStatusSafe, selectedDate, dueFilter]);
 
   const clearFilters = () => {
     setSelectedClinic(null);
@@ -151,7 +156,6 @@ export default function ViewCasesForm() {
       await deleteCase(caseId);
       setSnack({ message: "Case deleted", isError: false });
       setDeleteConfirm(null);
-      setRefreshKey((k) => k + 1);
     } catch (e) {
       setSnack({ message: e.message, isError: true });
     }
@@ -180,14 +184,14 @@ export default function ViewCasesForm() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <SelectField label="Clinic Name" value={selectedClinic} onChange={(v) => setSelectedClinic(v === "All" ? null : v)} options={withAllOption(clinics)} placeholder="All" />
-            <SelectField label="Type" value={selectedType} onChange={(v) => setSelectedType(v === "All" ? null : v)} options={withAllOption(types)} placeholder="All" />
-            <SelectField label="Dr Name" value={selectedDrName} onChange={(v) => setSelectedDrName(v === "All" ? null : v)} options={withAllOption(drNames)} placeholder="All" />
+            <SelectField label="Clinic Name" value={selectedClinic} onChange={(v) => setSelectedClinic(v === "All" ? null : v)} options={withAllOption(clinicOptions)} placeholder="All" />
+            <SelectField label="Type" value={selectedTypeSafe} onChange={(v) => setSelectedType(v === "All" ? null : v)} options={withAllOption(typeOptions)} placeholder="All" />
+            <SelectField label="Dr Name" value={selectedDrNameSafe} onChange={(v) => setSelectedDrName(v === "All" ? null : v)} options={withAllOption(drOptions)} placeholder="All" />
             <SelectField
               label="Status"
-              value={selectedStatus}
+              value={selectedStatusSafe}
               onChange={(v) => setSelectedStatus(v === "All" ? null : v)}
-              options={withAllOption(statuses).map((s) => (
+              options={withAllOption(statusOptions).map((s) => (
                 s === "All"
                   ? { label: "All", value: "All" }
                   : { label: statusLabel(s), value: s }
@@ -229,7 +233,6 @@ export default function ViewCasesForm() {
           caseId={manageCase.id}
           caseData={manageCase}
           onClose={() => setManageCase(null)}
-          onSuccess={() => setRefreshKey((k) => k + 1)}
         />
       )}
 
