@@ -38,6 +38,8 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
   const [payAmount, setPayAmount] = useState('');
   const [payBankId, setPayBankId] = useState('');
   const [showPay, setShowPay] = useState(false);
+  const [showDeletePreview, setShowDeletePreview] = useState(false);
+  const [deleteImpact, setDeleteImpact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [snack, setSnack] = useState({ message: '', isError: false });
@@ -243,33 +245,302 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
   };
 
   const deleteInvoice = async () => {
-    if (!confirm('Delete this invoice? This will reverse balances.')) return;
     setProcessing(true);
     try {
       const batch = writeBatch(db);
-      const paidTotal = Number(invoice.paidAmount) || 0;
-      const bankId = invoice.bankId;
-      const netPaid = payments.reduce((s, p) => s + (Number(p.netAmountToBank) || Number(p.paidAmount) || 0), 0);
 
-      if (bankId && netPaid > 0) {
-        batch.update(doc(db, 'Banks', bankId), {
-          balance: increment(isIncome ? -netPaid : netPaid),
-        });
+      const [
+        paymentsSnap,
+        itemsSnap,
+        notifSnap,
+        logsSnap,
+        inventorySnap,
+      ] = await Promise.all([
+        getDocs(collection(db, 'Finance', invoiceId, 'Payments')),
+        getDocs(collection(db, 'Finance', invoiceId, 'Items')),
+        getDocs(query(collection(db, 'Notifications'), where('docID', '==', invoiceId))),
+        getDocs(query(collection(db, 'Logs'), where('actionID', '==', invoiceId))),
+        getDocs(query(collection(db, 'Inventory'), where('docID', '==', invoiceId))),
+      ]);
+
+      for (const paymentDoc of paymentsSnap.docs) {
+        const payment = paymentDoc.data();
+        const net = Number(payment.netAmountToBank) || Number(payment.paidAmount) || 0;
+        const paymentAccountId = payment.bankId || payment.bankID;
+
+        if (paymentAccountId && net > 0) {
+          const bankRef = doc(db, 'Banks', paymentAccountId);
+          const bankSnap = await getDoc(bankRef);
+          if (bankSnap.exists()) {
+            batch.update(bankRef, { balance: increment(isIncome ? -net : net) });
+          } else {
+            const userRef = doc(db, 'Users', paymentAccountId);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+              batch.update(userRef, { balance: increment(isIncome ? -net : net) });
+            }
+          }
+        }
+
+        batch.delete(paymentDoc.ref);
       }
+
+      const remainingNow = Number(invoice.remainingAmount) || 0;
       if (invoice.userID) {
         const col = isIncome ? 'Clients' : 'Suppliers';
-        batch.update(doc(db, col, invoice.userID), {
-          balance: increment(isIncome ? -(Number(invoice.remainingAmount) || 0) : 0),
+        const counterpartyRef = doc(db, col, invoice.userID);
+        const counterpartySnap = await getDoc(counterpartyRef);
+        if (counterpartySnap.exists()) {
+          batch.update(counterpartyRef, { balance: increment(-remainingNow) });
+        }
+      }
+
+      if (isIncome && invoice.clinicName && remainingNow > 0) {
+        const clinicSnap = await getDocs(query(collection(db, 'Clinics'), where('name', '==', invoice.clinicName)));
+        clinicSnap.docs.forEach((d) => {
+          batch.update(d.ref, { balance: increment(-remainingNow) });
         });
       }
-      if (invoice.DrUID && invoice.drAmount) {
-        batch.update(doc(db, 'Users', invoice.DrUID), { balance: increment(-invoice.drAmount) });
+
+      if (invoice.DrUID && Number(invoice.drAmount || 0) > 0) {
+        const drRef = doc(db, 'Users', invoice.DrUID);
+        const drSnap = await getDoc(drRef);
+        if (drSnap.exists()) {
+          batch.update(drRef, { balance: increment(-Number(invoice.drAmount) || 0) });
+        }
       }
+
+      if (invoice.type === 'Purchase Invoice') {
+        for (const itemDoc of itemsSnap.docs) {
+          const item = itemDoc.data();
+          const qty = Number(item.quantity) || 0;
+          const itemId = item.itemId || itemDoc.id;
+          if (!itemId || qty <= 0) continue;
+          const stockRef = doc(db, 'Items', itemId);
+          const stockSnap = await getDoc(stockRef);
+          if (stockSnap.exists()) {
+            batch.update(stockRef, { quantity: increment(-qty) });
+          }
+        }
+      }
+
+      const caseIds = Array.isArray(invoice.caseIds)
+        ? invoice.caseIds.filter(Boolean)
+        : [invoice.caseId].filter(Boolean);
+      for (const caseId of caseIds) {
+        const caseRef = doc(db, 'Cases', caseId);
+        const caseSnap = await getDoc(caseRef);
+        if (caseSnap.exists()) {
+          batch.update(caseRef, { status: 'Pending delivery' });
+        }
+      }
+
+      itemsSnap.docs.forEach((d) => batch.delete(d.ref));
+      notifSnap.docs.forEach((d) => batch.delete(d.ref));
+      logsSnap.docs.forEach((d) => batch.delete(d.ref));
+      inventorySnap.docs.forEach((d) => batch.delete(d.ref));
+
+      const directLogRef = doc(db, 'Logs', invoiceId);
+      const directLogSnap = await getDoc(directLogRef);
+      if (directLogSnap.exists()) batch.delete(directLogRef);
+
       batch.delete(doc(db, 'Finance', invoiceId));
-      batch.delete(doc(db, 'Logs', invoiceId));
+
       await batch.commit();
-      setSnack({ message: 'Invoice deleted', isError: false });
+
+      const [
+        financeAfter,
+        paymentsAfter,
+        itemsAfter,
+        notifAfter,
+        logsAfter,
+        inventoryAfter,
+        directLogAfter,
+      ] = await Promise.all([
+        getDoc(doc(db, 'Finance', invoiceId)),
+        getDocs(collection(db, 'Finance', invoiceId, 'Payments')),
+        getDocs(collection(db, 'Finance', invoiceId, 'Items')),
+        getDocs(query(collection(db, 'Notifications'), where('docID', '==', invoiceId))),
+        getDocs(query(collection(db, 'Logs'), where('actionID', '==', invoiceId))),
+        getDocs(query(collection(db, 'Inventory'), where('docID', '==', invoiceId))),
+        getDoc(doc(db, 'Logs', invoiceId)),
+      ]);
+
+      const checks = {
+        financeDeleted: !financeAfter.exists(),
+        paymentsDeleted: paymentsAfter.size === 0,
+        itemsDeleted: itemsAfter.size === 0,
+        notificationsDeleted: notifAfter.size === 0,
+        logsDeleted: logsAfter.size === 0,
+        inventoryDeleted: inventoryAfter.size === 0,
+        directLogDeleted: !directLogAfter.exists(),
+      };
+
+      const allTrue = Object.values(checks).every(Boolean);
+      if (!allTrue) {
+        const failed = Object.entries(checks)
+          .filter(([, ok]) => !ok)
+          .map(([k]) => k)
+          .join(', ');
+        setSnack({ message: `Delete completed with verification warning: ${failed}`, isError: true });
+        return;
+      }
+
+      setSnack({ message: 'Invoice deleted and verified', isError: false });
       router.push('/dashboard/finance/invoices');
+    } catch (e) {
+      setSnack({ message: e.message, isError: true });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const openDeletePreview = async () => {
+    setProcessing(true);
+    try {
+      const [
+        paymentsSnap,
+        itemsSnap,
+        notifSnap,
+        logsSnap,
+        inventorySnap,
+      ] = await Promise.all([
+        getDocs(collection(db, 'Finance', invoiceId, 'Payments')),
+        getDocs(collection(db, 'Finance', invoiceId, 'Items')),
+        getDocs(query(collection(db, 'Notifications'), where('docID', '==', invoiceId))),
+        getDocs(query(collection(db, 'Logs'), where('actionID', '==', invoiceId))),
+        getDocs(query(collection(db, 'Inventory'), where('docID', '==', invoiceId))),
+      ]);
+
+      const caseIds = Array.isArray(invoice?.caseIds)
+        ? invoice.caseIds.filter(Boolean)
+        : [invoice?.caseId].filter(Boolean);
+
+      const netByAccount = {};
+      let totalPaidNet = 0;
+      for (const paymentDoc of paymentsSnap.docs) {
+        const payment = paymentDoc.data();
+        const accountId = payment.bankId || payment.bankID;
+        const net = Number(payment.netAmountToBank) || Number(payment.paidAmount) || 0;
+        totalPaidNet += net;
+        if (accountId) netByAccount[accountId] = (netByAccount[accountId] || 0) + net;
+      }
+
+      const stockImpact = invoice?.type === 'Purchase Invoice'
+        ? itemsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.quantity) || 0), 0)
+        : 0;
+
+      const accountDetails = [];
+      for (const [accountId, amount] of Object.entries(netByAccount)) {
+        const bankRef = doc(db, 'Banks', accountId);
+        const bankSnap = await getDoc(bankRef);
+        if (bankSnap.exists()) {
+          accountDetails.push({
+            id: accountId,
+            name: bankSnap.data()?.name || 'Bank',
+            type: 'Bank',
+            amount,
+            canRollback: true,
+          });
+          continue;
+        }
+
+        const userRef = doc(db, 'Users', accountId);
+        const userSnap = await getDoc(userRef);
+        accountDetails.push({
+          id: accountId,
+          name: userSnap.exists() ? (userSnap.data()?.name || 'User') : 'Missing account',
+          type: 'User',
+          amount,
+          canRollback: userSnap.exists(),
+        });
+      }
+
+      let counterpartyCheck = { canRollback: true, label: isIncome ? 'Client' : 'Supplier', name: '—' };
+      if (invoice?.userID) {
+        const col = isIncome ? 'Clients' : 'Suppliers';
+        const counterpartyRef = doc(db, col, invoice.userID);
+        const counterpartySnap = await getDoc(counterpartyRef);
+        counterpartyCheck = {
+          canRollback: counterpartySnap.exists(),
+          label: isIncome ? 'Client' : 'Supplier',
+          name: counterpartySnap.exists() ? (counterpartySnap.data()?.name || invoice?.name || '—') : 'Missing record',
+        };
+      }
+
+      const clinicChecks = [];
+      if (isIncome && invoice?.clinicName && Number(invoice?.remainingAmount || 0) > 0) {
+        const clinicSnap = await getDocs(query(collection(db, 'Clinics'), where('name', '==', invoice.clinicName)));
+        if (clinicSnap.empty) {
+          clinicChecks.push({ name: invoice.clinicName, canRollback: false });
+        } else {
+          clinicSnap.docs.forEach((d) => {
+            clinicChecks.push({ name: d.data()?.name || invoice.clinicName, canRollback: true });
+          });
+        }
+      }
+
+      let doctorCheck = { canRollback: true, name: invoice?.drName || '—' };
+      if (invoice?.DrUID && Number(invoice?.drAmount || 0) > 0) {
+        const drSnap = await getDoc(doc(db, 'Users', invoice.DrUID));
+        doctorCheck = {
+          canRollback: drSnap.exists(),
+          name: drSnap.exists() ? (drSnap.data()?.name || invoice?.drName || 'Doctor') : 'Missing doctor record',
+        };
+      }
+
+      const caseChecks = [];
+      for (const caseId of caseIds) {
+        const caseSnap = await getDoc(doc(db, 'Cases', caseId));
+        caseChecks.push({ caseId, canRollback: caseSnap.exists() });
+      }
+
+      const itemRollbackChecks = [];
+      if (invoice?.type === 'Purchase Invoice') {
+        for (const itemDoc of itemsSnap.docs) {
+          const data = itemDoc.data();
+          const itemId = data.itemId || itemDoc.id;
+          const qty = Number(data.quantity) || 0;
+          const stockSnap = await getDoc(doc(db, 'Items', itemId));
+          itemRollbackChecks.push({
+            itemId,
+            itemName: data.name || itemId,
+            qty,
+            canRollback: stockSnap.exists(),
+          });
+        }
+      }
+
+      const allChecksTrue = [
+        ...accountDetails.map((a) => a.canRollback),
+        counterpartyCheck.canRollback,
+        ...clinicChecks.map((c) => c.canRollback),
+        doctorCheck.canRollback,
+        ...caseChecks.map((c) => c.canRollback),
+        ...itemRollbackChecks.map((i) => i.canRollback),
+      ].every(Boolean);
+
+      setDeleteImpact({
+        paymentsCount: paymentsSnap.size,
+        itemsCount: itemsSnap.size,
+        notificationsCount: notifSnap.size,
+        logsCount: logsSnap.size,
+        inventoryCount: inventorySnap.size,
+        caseCount: caseIds.length,
+        remainingNow: Number(invoice?.remainingAmount) || 0,
+        doctorAmount: Number(invoice?.drAmount) || 0,
+        totalPaidNet,
+        uniqueAccounts: Object.keys(netByAccount).length,
+        stockImpact,
+        accountDetails,
+        counterpartyCheck,
+        clinicChecks,
+        doctorCheck,
+        caseChecks,
+        itemRollbackChecks,
+        allChecksTrue,
+      });
+      setShowDeletePreview(true);
     } catch (e) {
       setSnack({ message: e.message, isError: true });
     } finally {
@@ -338,7 +609,7 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
             <button type="button" onClick={() => setShowPay(true)} className="px-4 py-2 bg-green-600 text-white rounded-md text-sm">Pay Remaining</button>
           )}
           <button type="button" onClick={handlePrint} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">Print Invoice</button>
-          <button type="button" onClick={deleteInvoice} className="px-4 py-2 bg-red-600 text-white rounded-md text-sm">Delete Invoice</button>
+          <button type="button" onClick={openDeletePreview} className="px-4 py-2 bg-red-600 text-white rounded-md text-sm">Delete Invoice</button>
         </div>
       </PageCard>
 
@@ -386,6 +657,98 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
             <div className="flex gap-2 justify-end mt-4">
               <button type="button" onClick={() => setShowPay(false)} className="px-4 py-2 border rounded-md">Cancel</button>
               <button type="button" onClick={payRemaining} disabled={processing} className="px-4 py-2 bg-green-600 text-white rounded-md">Pay</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeletePreview && deleteImpact && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl p-6 max-w-lg w-full border border-border/70">
+            <h3 className="font-bold text-foreground mb-2">Delete Invoice Preview</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              This action will rollback all linked relations and cannot be undone.
+            </p>
+
+            <div className="grid grid-cols-2 gap-2 text-sm mb-4">
+              <div className="border rounded-md p-2"><span className="text-muted-foreground">Payments</span><p className="font-semibold">{deleteImpact.paymentsCount}</p></div>
+              <div className="border rounded-md p-2"><span className="text-muted-foreground">Items</span><p className="font-semibold">{deleteImpact.itemsCount}</p></div>
+              <div className="border rounded-md p-2"><span className="text-muted-foreground">Notifications</span><p className="font-semibold">{deleteImpact.notificationsCount}</p></div>
+              <div className="border rounded-md p-2"><span className="text-muted-foreground">Logs</span><p className="font-semibold">{deleteImpact.logsCount}</p></div>
+              <div className="border rounded-md p-2"><span className="text-muted-foreground">Inventory Rows</span><p className="font-semibold">{deleteImpact.inventoryCount}</p></div>
+              <div className="border rounded-md p-2"><span className="text-muted-foreground">Cases Reset</span><p className="font-semibold">{deleteImpact.caseCount}</p></div>
+            </div>
+
+            <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+              <li>Bank/User accounts rollback across {deleteImpact.uniqueAccounts} account(s), total {formatPriceLE(deleteImpact.totalPaidNet)}.</li>
+              <li>Client/Supplier and Clinic balance rollback by remaining amount {formatPriceLE(deleteImpact.remainingNow)}.</li>
+              <li>Doctor balance rollback amount {formatPriceLE(deleteImpact.doctorAmount)}.</li>
+              {invoice?.type === 'Purchase Invoice' && (
+                <li>Stock rollback total quantity: {deleteImpact.stockImpact}.</li>
+              )}
+            </ul>
+
+            <div className="border rounded-md p-3 mb-4 bg-background/30">
+              <p className="text-sm font-semibold text-foreground mb-2">Rollback Readiness</p>
+              <p className={`text-xs mb-2 ${deleteImpact.allChecksTrue ? 'text-emerald-600' : 'text-destructive'}`}>
+                Ready: {deleteImpact.allChecksTrue ? 'TRUE' : 'FALSE'}
+              </p>
+              <div className="space-y-1 text-xs text-muted-foreground max-h-40 overflow-auto">
+                {deleteImpact.accountDetails.map((a) => (
+                  <p key={a.id}>
+                    {a.canRollback ? 'TRUE' : 'FALSE'} - {a.type}: {a.name} ({formatPriceLE(a.amount)})
+                  </p>
+                ))}
+                <p>
+                  {deleteImpact.counterpartyCheck.canRollback ? 'TRUE' : 'FALSE'} - {deleteImpact.counterpartyCheck.label}: {deleteImpact.counterpartyCheck.name}
+                </p>
+                {deleteImpact.clinicChecks.map((c, idx) => (
+                  <p key={`${c.name}-${idx}`}>
+                    {c.canRollback ? 'TRUE' : 'FALSE'} - Clinic: {c.name}
+                  </p>
+                ))}
+                <p>
+                  {deleteImpact.doctorCheck.canRollback ? 'TRUE' : 'FALSE'} - Doctor: {deleteImpact.doctorCheck.name}
+                </p>
+                {deleteImpact.caseChecks.map((c) => (
+                  <p key={c.caseId}>
+                    {c.canRollback ? 'TRUE' : 'FALSE'} - Case: {c.caseId}
+                  </p>
+                ))}
+                {deleteImpact.itemRollbackChecks.map((i) => (
+                  <p key={i.itemId}>
+                    {i.canRollback ? 'TRUE' : 'FALSE'} - Item: {i.itemName} (qty {i.qty})
+                  </p>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end mt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeletePreview(false);
+                  setDeleteImpact(null);
+                }}
+                className="px-4 py-2 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!deleteImpact.allChecksTrue) {
+                    setSnack({ message: 'Some rollback checks are FALSE. Please review before deleting.', isError: true });
+                    return;
+                  }
+                  setShowDeletePreview(false);
+                  await deleteInvoice();
+                }}
+                disabled={processing}
+                className="px-4 py-2 bg-red-600 text-white rounded-md"
+              >
+                Confirm Delete
+              </button>
             </div>
           </div>
         </div>

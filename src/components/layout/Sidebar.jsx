@@ -63,9 +63,9 @@ export default function AppSidebar() {
             <SidebarMenuButton
               size="lg"
               render={<Link href="/dashboard" />}
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="data-[slot=sidebar-menu-button]:p-1.5! group-data-[collapsible=icon]:justify-center"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-white overflow-hidden">
+              <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-full bg-white overflow-hidden">
                 <Image
                   src="/logo.png"
                   alt="360 Lab"
@@ -74,7 +74,7 @@ export default function AppSidebar() {
                   className="size-8 object-contain"
                 />
               </div>
-              <div className="hidden md:grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 min-w-0 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-semibold">360 Lab ERP</span>
                 <span className="truncate text-xs text-sidebar-foreground/50 capitalize">
                   {user?.type || 'Staff'}
@@ -104,7 +104,7 @@ export default function AppSidebar() {
                     >
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[open]/collapsible:rotate-90" />
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
                     </SidebarMenuButton>
                     <CollapsibleContent>
                       <SidebarMenuSub>
@@ -147,14 +147,14 @@ export default function AppSidebar() {
               <SidebarMenuButton
                 size="lg"
                 render={<DropdownMenuTrigger />}
-                className="data-[slot=sidebar-menu-button]:!p-1.5"
+                className="data-[slot=sidebar-menu-button]:p-1.5! group-data-[collapsible=icon]:justify-center"
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid flex-1 min-w-0 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                   <span className="truncate font-semibold">
                     {user?.name || 'User'}
                   </span>
@@ -162,7 +162,7 @@ export default function AppSidebar() {
                     {user?.email || ''}
                   </span>
                 </div>
-                <ChevronsUpDown className="ml-auto size-4" />
+                <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
               </SidebarMenuButton>
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
