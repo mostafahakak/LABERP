@@ -60,6 +60,13 @@ export function TextField({ label, value, onChange, type = 'text', readOnly = fa
 }
 
 export function SelectField({ label, value, onChange, options, className = '', placeholder = 'Select...' }) {
+  const normalizedOptions = (options || []).map((opt) => {
+    if (typeof opt === 'string') {
+      return { label: opt, value: opt };
+    }
+    return { label: opt.label, value: opt.value };
+  });
+
   return (
     <div className={cn('space-y-1.5', className)}>
       {label && <Label className="text-muted-foreground">{label}</Label>}
@@ -68,9 +75,9 @@ export function SelectField({ label, value, onChange, options, className = '', p
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          {options.map((opt) => (
-            <SelectItem key={opt} value={opt}>
-              {opt}
+          {normalizedOptions.map((opt) => (
+            <SelectItem key={String(opt.value)} value={opt.value}>
+              {opt.label}
             </SelectItem>
           ))}
         </SelectContent>

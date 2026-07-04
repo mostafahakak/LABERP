@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   collection,
-  getDocs,
   onSnapshot,
   query,
   where,
@@ -15,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { formatDate, isDelayed, isOverdue, shortId, formatPriceLE } from "@/lib/utils";
+import { getPhaseInfo } from "@/lib/phase-utils";
 import Header from "@/components/layout/Header";
 import { SelectField, Snackbar } from "@/components/ui/PageComponents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,7 @@ import ManageCaseDialog, { deleteCase } from "./ManageCaseDialog";
 import { Filter, X, CheckCircle2, Eye, Settings2, Trash2 } from "lucide-react";
 
 export default function ViewCasesForm() {
+  const [allCases, setAllCases] = useState([]);
   const [clinics, setClinics] = useState([]);
   const [types, setTypes] = useState([]);
   const [drNames, setDrNames] = useState([]);
@@ -55,75 +56,86 @@ export default function ViewCasesForm() {
   const [snack, setSnack] = useState({ message: "", isError: false });
   const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    getDocs(collection(db, "Cases")).then((snap) => {
-      const clinicSet = new Set();
-      const statusSet = new Set();
-      snap.docs.forEach((d) => {
-        const data = d.data();
-        if (data.clinicName) clinicSet.add(data.clinicName);
-        if (data.status) statusSet.add(data.status);
-      });
-      setClinics([...clinicSet].sort());
-      setStatuses([...statusSet].sort());
-    });
-    getDocs(collection(db, "Types")).then((snap) => {
-      setTypes(
-        snap.docs
-          .map((d) => d.data().name)
-          .filter(Boolean)
-          .sort(),
-      );
-    });
-    getDocs(collection(db, "Drs")).then((snap) => {
-      setDrNames(
-        snap.docs
-          .map((d) => d.data().name)
-          .filter(Boolean)
-          .sort(),
-      );
-    });
-  }, []);
+  const withAllOption = (arr) => ["All", ...arr.filter(Boolean)];
+  const toList = (val) => String(val || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const getPhaseText = (caseData) => caseData?.phase || getPhaseInfo(caseData).currentPhase;
+  const getPhaseShort = (status) => {
+    const phase = getPhaseInfo({ status }).currentPhase || "";
+    const match = String(phase).match(/\d+/);
+    return match ? `P${match[0]}` : phase;
+  };
+  const statusLabel = (status) => `${status} (${getPhaseShort(status)})`;
 
   useEffect(() => {
-    let q = query(
-      collection(db, "Cases"),
-      orderBy("createdDate", "desc"),
-      orderBy("createdTime", "desc"),
-    );
     const constraints = [
       orderBy("createdDate", "desc"),
       orderBy("createdTime", "desc"),
     ];
-    const wheres = [];
-    if (selectedClinic) wheres.push(where("clinicName", "==", selectedClinic));
-    if (selectedType) wheres.push(where("type", "==", selectedType));
-    if (selectedDrName) wheres.push(where("drName", "==", selectedDrName));
-    if (selectedStatus) wheres.push(where("status", "==", selectedStatus));
-    if (selectedDate) wheres.push(where("caseRequestDate", "==", selectedDate));
-
-    q = query(collection(db, "Cases"), ...wheres, ...constraints);
-
+    const q = query(collection(db, "Cases"), ...constraints);
     const unsub = onSnapshot(
       q,
       (snap) => {
-        let docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        if (dueFilter === "Delayed") docs = docs.filter((c) => isDelayed(c));
-        setCases(docs);
+        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setAllCases(docs);
       },
       (err) => setSnack({ message: err.message, isError: true }),
     );
 
     return () => unsub();
-  }, [
-    selectedClinic,
-    selectedType,
-    selectedDrName,
-    selectedStatus,
-    selectedDate,
-    dueFilter,
-    refreshKey,
-  ]);
+  }, [refreshKey]);
+
+  useEffect(() => {
+    const isAll = (v) => v === null || v === "" || v === "All";
+    const clinicScoped = isAll(selectedClinic)
+      ? allCases
+      : allCases.filter((c) => c.clinicName === selectedClinic);
+
+    const clinicSet = new Set();
+    const typeSet = new Set();
+    const drSet = new Set();
+    const statusSet = new Set();
+
+    allCases.forEach((c) => {
+      if (c.clinicName) clinicSet.add(c.clinicName);
+    });
+
+    clinicScoped.forEach((c) => {
+      toList(c.type).forEach((t) => typeSet.add(t));
+      if (c.drName) drSet.add(c.drName);
+      if (c.status) statusSet.add(c.status);
+    });
+
+    const nextClinics = [...clinicSet].sort();
+    const nextTypes = [...typeSet].sort();
+    const nextDrs = [...drSet].sort();
+    const nextStatuses = [...statusSet].sort();
+
+    setClinics(nextClinics);
+    setTypes(nextTypes);
+    setDrNames(nextDrs);
+    setStatuses(nextStatuses);
+
+    if (!isAll(selectedType) && !nextTypes.includes(selectedType)) setSelectedType(null);
+    if (!isAll(selectedDrName) && !nextDrs.includes(selectedDrName)) setSelectedDrName(null);
+    if (!isAll(selectedStatus) && !nextStatuses.includes(selectedStatus)) setSelectedStatus(null);
+  }, [allCases, selectedClinic, selectedType, selectedDrName, selectedStatus]);
+
+  useEffect(() => {
+    const isAll = (v) => v === null || v === "" || v === "All";
+    let docs = [...allCases];
+    if (!isAll(selectedClinic)) docs = docs.filter((c) => c.clinicName === selectedClinic);
+    if (!isAll(selectedType)) docs = docs.filter((c) => toList(c.type).includes(selectedType));
+    if (!isAll(selectedDrName)) docs = docs.filter((c) => c.drName === selectedDrName);
+    if (!isAll(selectedStatus)) docs = docs.filter((c) => c.status === selectedStatus);
+    if (selectedDate) docs = docs.filter((c) => c.caseRequestDate === selectedDate);
+    if (dueFilter === "Delayed") docs = docs.filter((c) => isDelayed(c));
+    if (dueFilter === "Overdue") docs = docs.filter((c) => isOverdue(c));
+    setCases(docs);
+  }, [allCases, selectedClinic, selectedType, selectedDrName, selectedStatus, selectedDate, dueFilter]);
 
   const clearFilters = () => {
     setSelectedClinic(null);
@@ -168,11 +180,21 @@ export default function ViewCasesForm() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <SelectField label="Clinic Name" value={selectedClinic} onChange={setSelectedClinic} options={clinics} placeholder="All" />
-            <SelectField label="Type" value={selectedType} onChange={setSelectedType} options={types} placeholder="All" />
-            <SelectField label="Dr Name" value={selectedDrName} onChange={setSelectedDrName} options={drNames} placeholder="All" />
-            <SelectField label="Status" value={selectedStatus} onChange={setSelectedStatus} options={statuses} placeholder="All" />
-            <SelectField label="Due Status" value={dueFilter} onChange={setDueFilter} options={["All", "Delayed"]} placeholder="All" />
+            <SelectField label="Clinic Name" value={selectedClinic} onChange={(v) => setSelectedClinic(v === "All" ? null : v)} options={withAllOption(clinics)} placeholder="All" />
+            <SelectField label="Type" value={selectedType} onChange={(v) => setSelectedType(v === "All" ? null : v)} options={withAllOption(types)} placeholder="All" />
+            <SelectField label="Dr Name" value={selectedDrName} onChange={(v) => setSelectedDrName(v === "All" ? null : v)} options={withAllOption(drNames)} placeholder="All" />
+            <SelectField
+              label="Status"
+              value={selectedStatus}
+              onChange={(v) => setSelectedStatus(v === "All" ? null : v)}
+              options={withAllOption(statuses).map((s) => (
+                s === "All"
+                  ? { label: "All", value: "All" }
+                  : { label: statusLabel(s), value: s }
+              ))}
+              placeholder="All"
+            />
+            <SelectField label="Due Status" value={dueFilter} onChange={setDueFilter} options={["All", "Delayed", "Overdue"]} placeholder="All" />
             <div className="space-y-1.5">
               <Label>Date Arrival</Label>
               <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
@@ -235,6 +257,16 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
   const [balance, setBalance] = useState(null);
   const delayed = isDelayed(caseData);
   const overdue = isOverdue(caseData);
+  const phase = caseData.phase || getPhaseInfo(caseData).currentPhase;
+  const phaseColors = {
+    "Phase 1": "bg-orange-500/15 text-orange-600 dark:text-orange-300",
+    "Phase 2": "bg-blue-500/15 text-blue-600 dark:text-blue-300",
+    "Phase 3": "bg-violet-500/15 text-violet-600 dark:text-violet-300",
+    "Phase 4": "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
+    "Phase 5": "bg-cyan-500/15 text-cyan-600 dark:text-cyan-300",
+    "Phase 6": "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+    "Phase 7": "bg-rose-500/15 text-rose-600 dark:text-rose-300",
+  };
   const isFinalized =
     caseData.status === "Finalized" ||
     caseData.status === "Ready to be delivered" ||
@@ -300,6 +332,7 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
           </div>
           <div className="flex gap-2 items-start">
             <Badge variant="secondary">{caseData.caseType}</Badge>
+            <Badge className={phaseColors[phase] || "bg-muted text-foreground"}>{phase}</Badge>
             <Badge variant={overdue ? 'destructive' : delayed ? 'outline' : 'default'}
               className={overdue ? 'animate-pulse bg-red-600' : delayed ? 'border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-950' : ''}
             >{caseData.status}</Badge>

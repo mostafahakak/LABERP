@@ -259,25 +259,28 @@ export default function NewCaseForm() {
 
   const submitCase = async (e) => {
     e.preventDefault();
-    if (!selectedCaseType) {
-      setSnack({ message: "Please select case type", isError: true });
-      return;
-    }
+    const missingFields = [];
+
+    if (!selectedCaseType) missingFields.push("Case Type");
+    if (!selectedClinic) missingFields.push("Clinic Name");
+    if (!selectedDrName) missingFields.push("Dr Name");
+    if (!patientName.trim()) missingFields.push("Patient Name");
+    if (!shade.trim()) missingFields.push("Shade");
+    if (!caseRequestDate) missingFields.push("Arrival Date");
+    if (!dueDate) missingFields.push("Due Date");
+    if (selectedTypesList.length === 0) missingFields.push("At least one Type selection");
+
     if (selectedCaseType === "Physical") {
-      if (!selectedClinic || !selectedDrName || !selectedDeliveryCompany) {
-        setSnack({ message: "Please fill all required fields", isError: true });
-        return;
-      }
-    } else if (!selectedClinic || !selectedDrName || !selectedUser) {
-      setSnack({ message: "Please fill all required fields", isError: true });
-      return;
+      if (!selectedDeliveryCompany) missingFields.push("Delivery Company");
+    } else if (selectedCaseType === "Digital") {
+      if (!selectedUser) missingFields.push("Assign to User");
     }
-    if (!patientName || !shade || !caseRequestDate || !dueDate) {
-      setSnack({ message: "Please fill all required fields", isError: true });
-      return;
-    }
-    if (selectedTypesList.length === 0) {
-      setSnack({ message: "Please add at least one type", isError: true });
+
+    if (missingFields.length > 0) {
+      setSnack({
+        message: `Missing required fields: ${missingFields.join(", ")}. Notes is optional.`,
+        isError: true,
+      });
       return;
     }
 
