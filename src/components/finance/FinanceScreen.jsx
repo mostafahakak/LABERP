@@ -38,7 +38,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, TrendingDown, Filter, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, Filter, X, Sparkles, CalendarRange, ShieldCheck } from 'lucide-react';
 
 function LogsTab({ logType, allTypesLabel }) {
   const { user } = useAuth();
@@ -61,7 +61,6 @@ function LogsTab({ logType, allTypesLabel }) {
   }, [user?.type]);
 
   useEffect(() => {
-    setLoading(true);
     const constraints = [where('type', '==', logType), orderBy('Date', 'desc'), orderBy('Time', 'desc'), limit(100)];
     if (nameFilter && nameFilter !== allTypesLabel) constraints.unshift(where('name', '==', nameFilter));
     if (startDate) constraints.unshift(where('Date', '>=', startDate));
@@ -104,13 +103,15 @@ function LogsTab({ logType, allTypesLabel }) {
 
   return (
     <div className="space-y-5">
-      {/* Filters */}
-      <Card>
+      <Card className="border-primary/20 bg-gradient-to-b from-card to-card/90 shadow-lg shadow-primary/5">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Filter className="size-4" />
-            {isExpense ? 'Filter Expenses' : 'Filter Income'}
+          <CardTitle className="flex items-center gap-2 text-base tracking-wide">
+            <span className="rounded-lg border border-primary/25 bg-primary/10 p-1.5">
+              <Filter className="size-4 text-primary" />
+            </span>
+            {isExpense ? 'Filter Expenses' : 'Filter Income'} Stream
           </CardTitle>
+          <CardDescription>Focus records by date and administrator scope.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -136,18 +137,18 @@ function LogsTab({ logType, allTypesLabel }) {
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { setStartDate(''); setEndDate(''); setNameFilter(allTypesLabel); setAdminFilterId('All Admins'); }} className="mt-4 gap-1.5">
+          <Button variant="outline" size="sm" onClick={() => { setStartDate(''); setEndDate(''); setNameFilter(allTypesLabel); setAdminFilterId('All Admins'); }} className="mt-4 gap-1.5 border-primary/30 hover:bg-primary/10">
             <X className="size-3.5" /> Clear Filters
           </Button>
         </CardContent>
       </Card>
 
-      {/* Summary chips */}
       <div className="flex flex-wrap gap-2">
         <Button
           variant={nameFilter === allTypesLabel ? 'default' : 'outline'}
           size="sm"
           onClick={() => setNameFilter(allTypesLabel)}
+          className={nameFilter === allTypesLabel ? 'shadow-md shadow-primary/20' : 'hover:border-primary/30 hover:bg-primary/10'}
         >
           {allTypesLabel}
         </Button>
@@ -157,15 +158,15 @@ function LogsTab({ logType, allTypesLabel }) {
             variant={nameFilter === name ? 'default' : 'outline'}
             size="sm"
             onClick={() => setNameFilter(name)}
+            className={nameFilter === name ? 'shadow-md shadow-primary/20' : 'hover:border-primary/30 hover:bg-primary/10'}
           >
             {name}: {Math.round(total)} LE
           </Button>
         ))}
       </div>
 
-      {/* Total banner */}
       {!loading && logs.length > 0 && (
-        <Card className="border-primary/30">
+        <Card className="border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
           <CardContent className="flex items-center justify-between py-4">
             <div className="flex items-center gap-2">
               {isExpense ? <TrendingDown className="size-5 text-destructive" /> : <TrendingUp className="size-5 text-emerald-500" />}
@@ -178,9 +179,8 @@ function LogsTab({ logType, allTypesLabel }) {
         </Card>
       )}
 
-      {/* Data Table */}
       {loading ? (
-        <Card>
+        <Card className="border-border/70 bg-card/90">
           <CardContent className="py-6 space-y-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center gap-4">
@@ -192,15 +192,15 @@ function LogsTab({ logType, allTypesLabel }) {
           </CardContent>
         </Card>
       ) : error ? (
-        <Card><CardContent className="py-8 text-center text-destructive">{error}</CardContent></Card>
+        <Card className="border-destructive/40"><CardContent className="py-8 text-center text-destructive">{error}</CardContent></Card>
       ) : logs.length === 0 ? (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">No records found.</CardContent></Card>
+        <Card className="border-dashed border-border/80 bg-muted/20"><CardContent className="py-10 text-center text-muted-foreground">No records found.</CardContent></Card>
       ) : (
-        <Card>
+        <Card className="overflow-hidden border-border/70 bg-card/90 shadow-lg shadow-black/5">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-muted/35 hover:bg-muted/35">
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead className="hidden sm:table-cell">Date</TableHead>
@@ -211,7 +211,7 @@ function LogsTab({ logType, allTypesLabel }) {
               <TableBody>
                 {logs.map((d) => {
                   const row = (
-                    <TableRow key={d.id} className={!isExpense && d.actionID ? 'cursor-pointer hover:bg-muted/50' : ''}>
+                    <TableRow key={d.id} className={!isExpense && d.actionID ? 'cursor-pointer hover:bg-primary/5' : 'hover:bg-muted/30'}>
                       <TableCell>
                         <div>
                           <p className="font-medium">{d.name}</p>
@@ -282,9 +282,15 @@ function NetProfitTab() {
 
   return (
     <div className="space-y-5">
-      <Card>
+      <Card className="border-primary/20 bg-gradient-to-b from-card to-card/90 shadow-lg shadow-primary/5">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Select Time Range</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <span className="rounded-lg border border-primary/25 bg-primary/10 p-1.5">
+              <CalendarRange className="size-4 text-primary" />
+            </span>
+            Select Time Range
+          </CardTitle>
+          <CardDescription>Compute income, expenses, and net profit over any period.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -305,15 +311,15 @@ function NetProfitTab() {
 
       {summary && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card>
+          <Card className="border-emerald-500/25 bg-emerald-500/5">
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Income</CardTitle></CardHeader>
             <CardContent><p className="text-2xl font-bold text-emerald-600">+{formatPriceLE(summary.totalIncome)}</p></CardContent>
           </Card>
-          <Card>
+          <Card className="border-destructive/25 bg-destructive/5">
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Expenses</CardTitle></CardHeader>
             <CardContent><p className="text-2xl font-bold text-destructive">-{formatPriceLE(summary.totalExpenses)}</p></CardContent>
           </Card>
-          <Card className="border-primary/30">
+          <Card className="border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
             <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Net Profit</CardTitle></CardHeader>
             <CardContent><p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>{formatPriceLE(netProfit)}</p></CardContent>
           </Card>
@@ -321,7 +327,7 @@ function NetProfitTab() {
       )}
 
       {!summary && !loading && (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">Select a time range and calculate net profit.</CardContent></Card>
+        <Card className="border-dashed border-border/80 bg-muted/20"><CardContent className="py-12 text-center text-muted-foreground">Select a time range and calculate net profit.</CardContent></Card>
       )}
       <Snackbar message={snack} isError onClose={() => setSnack('')} />
     </div>
@@ -332,11 +338,33 @@ export default function FinanceScreen() {
   return (
     <>
       <Header title="Finance Dashboard" />
+      <div className="relative mb-4 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/12 via-primary/5 to-transparent p-5">
+        <div className="absolute -right-12 -top-10 h-24 w-24 rounded-full bg-primary/20 blur-2xl" />
+        <div className="relative flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Financial Intelligence</p>
+            <h2 className="text-2xl font-semibold text-foreground">Cash Flow Command Center</h2>
+            <p className="text-sm text-muted-foreground">Analyze expenses, income activity, and net performance in one place.</p>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground">
+            <ShieldCheck className="size-4 text-primary" />
+            Live ledger data
+          </div>
+        </div>
+      </div>
+
       <Tabs defaultValue="expenses" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
-          <TabsTrigger value="income">Income</TabsTrigger>
-          <TabsTrigger value="profit">Net Profit</TabsTrigger>
+        <TabsList className="h-auto rounded-xl border border-border/70 bg-muted/30 p-1">
+          <TabsTrigger value="expenses" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Expenses
+          </TabsTrigger>
+          <TabsTrigger value="income" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            Income
+          </TabsTrigger>
+          <TabsTrigger value="profit" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Sparkles className="mr-1.5 size-4" />
+            Net Profit
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="expenses"><LogsTab logType="Expense" allTypesLabel="All Expense Types" /></TabsContent>
         <TabsContent value="income"><LogsTab logType="Income" allTypesLabel="All Income Types" /></TabsContent>

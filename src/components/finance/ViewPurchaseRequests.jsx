@@ -5,6 +5,7 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -28,6 +29,226 @@ import {
 
 const PR_STATUSES = ["Hold", "Ordered", "Pending", "Delivered", "Expired"];
 
+function EditRequestDialog({ request, onClose, onDone }) {
+  const [catalogItems, setCatalogItems] = useState([]);
+  const [status, setStatus] = useState(request.status || "Hold");
+  const [note, setNote] = useState(request.note || "");
+  const [items, setItems] = useState(
+    (request.items || []).map((i) => ({
+      itemId: i.itemId || i.id || i.name,
+      name: i.name || "Item",
+      price: Math.max(0, Number(i.price) || 0),
+      quantity: Math.max(1, Number(i.quantity) || 1),
+    })),
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getDocs(collection(db, "Items"))
+      .then((snap) => {
+        setCatalogItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      })
+      .catch((e) => setError(e.message));
+  }, []);
+
+  const total = items.reduce(
+    (s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 0),
+    0,
+  );
+
+  const addCatalogItem = (item) => {
+    setItems((prev) => {
+      const idx = prev.findIndex((x) => x.itemId === item.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = { ...next[idx], quantity: next[idx].quantity + 1 };
+        return next;
+      }
+      return [
+        ...prev,
+        {
+          itemId: item.id,
+          name: item.name,
+          price: Math.max(0, Number(item.price) || 0),
+          quantity: 1,
+        },
+      ];
+    });
+  };
+
+  const updateItemQty = (itemId, value) => {
+    const qty = Math.max(1, Number(value) || 1);
+    setItems((prev) =>
+      prev.map((i) => (i.itemId === itemId ? { ...i, quantity: qty } : i)),
+    );
+  };
+
+  const updateItemPrice = (itemId, value) => {
+    const price = Math.max(0, Number(value) || 0);
+    setItems((prev) =>
+      prev.map((i) => (i.itemId === itemId ? { ...i, price } : i)),
+    );
+  };
+
+  const removeItem = (itemId) => {
+    setItems((prev) => prev.filter((i) => i.itemId !== itemId));
+  };
+
+  const save = async () => {
+    if (items.length === 0) {
+      setError("Add at least one item");
+      return;
+    }
+    setLoading(true);
+    try {
+      await updateDoc(doc(db, "PurchaseRequests", request.id), {
+        status,
+        note: note.trim(),
+        items: items.map((i) => ({
+          itemId: i.itemId,
+          name: i.name,
+          price: Number(i.price) || 0,
+          quantity: Number(i.quantity) || 0,
+        })),
+        total,
+      });
+      onDone("Purchase request updated");
+      onClose();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-card rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <h3 className="font-bold text-foreground mb-3">Edit Purchase Request</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <div>
+            <label className="text-sm text-muted-foreground">Status</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full mt-1 px-3 py-2 border rounded-md text-foreground"
+            >
+              {PR_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-sm text-muted-foreground">Note</label>
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="w-full mt-1 px-3 py-2 border rounded-md text-foreground"
+              placeholder="Request note"
+            />
+          </div>
+        </div>
+
+        <p className="text-sm font-medium text-foreground mb-2">Add More Items</p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {catalogItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => addCatalogItem(item)}
+              className="px-3 py-1.5 bg-muted rounded-lg text-sm text-foreground"
+            >
+              {item.name} - {formatPriceLE(item.price)}
+            </button>
+          ))}
+        </div>
+
+        <div className="space-y-2">
+          {items.map((i) => (
+            <div
+              key={i.itemId}
+              className="border rounded-lg p-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+            >
+              <div className="min-w-0">
+                <p className="font-medium text-foreground truncate">{i.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  Line Total: {formatPriceLE((Number(i.price) || 0) * (Number(i.quantity) || 0))}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => updateItemQty(i.itemId, i.quantity - 1)}
+                  className="h-8 w-8 rounded border"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  value={i.quantity}
+                  onChange={(e) => updateItemQty(i.itemId, e.target.value)}
+                  className="h-8 w-20 rounded border px-2"
+                />
+                <button
+                  type="button"
+                  onClick={() => updateItemQty(i.itemId, i.quantity + 1)}
+                  className="h-8 w-8 rounded border"
+                >
+                  +
+                </button>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={i.price}
+                  onChange={(e) => updateItemPrice(i.itemId, e.target.value)}
+                  className="h-8 w-28 rounded border px-2"
+                />
+                <span className="text-xs text-muted-foreground">LE</span>
+                <button
+                  type="button"
+                  onClick={() => removeItem(i.itemId)}
+                  className="h-8 px-2 rounded border border-red-300 text-red-600 text-sm"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-sm mt-3">
+          Total: <strong>{formatPriceLE(total)}</strong>
+        </p>
+
+        {error && <p className="text-destructive text-sm mt-2">{error}</p>}
+        <div className="flex gap-2 justify-end mt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 border rounded-md"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={loading}
+            className="px-4 py-2 bg-primary text-white rounded-md"
+          >
+            {loading ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DeliverDialog({ request, onClose, onDone }) {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState([]);
@@ -48,8 +269,7 @@ function DeliverDialog({ request, onClose, onDone }) {
 
   useEffect(() => {
     fetchBanksAndDRAccounts().then(setAccounts);
-    if (isFullPayment) setPaidAmount(total.toFixed(2));
-  }, [isFullPayment, total]);
+  }, []);
 
   const confirm = async () => {
     if (!bankName) {
@@ -169,6 +389,7 @@ export default function ViewPurchaseRequests() {
   const [requests, setRequests] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [deliverRequest, setDeliverRequest] = useState(null);
+  const [editRequest, setEditRequest] = useState(null);
   const [snack, setSnack] = useState({ message: "", isError: false });
 
   useEffect(() => {
@@ -266,6 +487,15 @@ export default function ViewPurchaseRequests() {
                 </ul>
               )}
               <div className="flex gap-2 flex-wrap justify-end mt-3">
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setEditRequest(r)}
+                    className="px-3 py-1.5 border rounded-md text-sm"
+                  >
+                    Edit Request
+                  </button>
+                )}
                 {r.status === "Hold" && (
                   <button
                     type="button"
@@ -329,6 +559,13 @@ export default function ViewPurchaseRequests() {
         <DeliverDialog
           request={deliverRequest}
           onClose={() => setDeliverRequest(null)}
+          onDone={(m) => setSnack({ message: m, isError: false })}
+        />
+      )}
+      {editRequest && (
+        <EditRequestDialog
+          request={editRequest}
+          onClose={() => setEditRequest(null)}
           onDone={(m) => setSnack({ message: m, isError: false })}
         />
       )}

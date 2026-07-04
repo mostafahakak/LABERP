@@ -31,94 +31,174 @@ import {
   Briefcase,
   Syringe,
   Hospital,
-} from 'lucide-react';
+} from "lucide-react";
 
 export function getSuperAdminMenu() {
   return [
     {
-      title: 'Dashboard',
+      title: "Dashboard",
       icon: LayoutDashboard,
-      href: '/dashboard',
+      href: "/dashboard",
       children: [
-        { title: 'Home', href: '/dashboard', icon: Home },
-        { title: 'Summery', href: '/dashboard/summary', icon: BarChart3 },
-        { title: 'Charts', href: '/dashboard/charts', icon: Activity },
+        { title: "Home", href: "/dashboard", icon: Home },
+        { title: "Summery", href: "/dashboard/summary", icon: BarChart3 },
+        { title: "Charts", href: "/dashboard/charts", icon: Activity },
       ],
     },
     {
-      title: 'HR',
+      title: "HR",
       icon: Users,
-      href: '/dashboard/hr/employees',
+      href: "/dashboard/hr/employees",
       children: [
-        { title: 'HR', href: '/dashboard/hr/employees', icon: UserCheck },
-        { title: 'Clients', href: '/dashboard/hr/clients', icon: Building2 },
-        { title: 'Suppliers', href: '/dashboard/hr/suppliers', icon: Truck },
-        { title: 'Utilities', href: '/dashboard/settings/utilities', icon: Wrench },
-        { title: 'Manage Delivery Company', href: '/dashboard/workflow/delivery', icon: Truck },
+        { title: "HR", href: "/dashboard/hr/employees", icon: UserCheck },
+        { title: "Clients", href: "/dashboard/hr/clients", icon: Building2 },
+        { title: "Suppliers", href: "/dashboard/hr/suppliers", icon: Truck },
+        {
+          title: "Utilities",
+          href: "/dashboard/settings/utilities",
+          icon: Wrench,
+        },
+        {
+          title: "Manage Delivery Company",
+          href: "/dashboard/workflow/delivery",
+          icon: Truck,
+        },
       ],
     },
     {
-      title: 'Workflow',
+      title: "Workflow",
       icon: BriefcaseMedical,
-      href: '/dashboard/workflow/new-case',
+      href: "/dashboard/workflow/new-case",
       children: [
-        { title: 'New cases', href: '/dashboard/workflow/new-case', icon: FilePlus },
-        { title: 'View cases', href: '/dashboard/workflow/view-cases', icon: Eye },
-        { title: 'Actions', href: '/dashboard/workflow/actions', icon: ListChecks },
-        { title: 'Manage Types', href: '/dashboard/workflow/types', icon: Tags },
-        { title: 'Manage Clinic', href: '/dashboard/workflow/clinics', icon: Hospital },
-        { title: 'Manage Dr', href: '/dashboard/workflow/doctors', icon: Stethoscope },
+        {
+          title: "New cases",
+          href: "/dashboard/workflow/new-case",
+          icon: FilePlus,
+        },
+        {
+          title: "View cases",
+          href: "/dashboard/workflow/view-cases",
+          icon: Eye,
+        },
+        {
+          title: "Actions",
+          href: "/dashboard/workflow/actions",
+          icon: ListChecks,
+        },
+        {
+          title: "Manage Types",
+          href: "/dashboard/workflow/types",
+          icon: Tags,
+        },
+        {
+          title: "Manage Clinic",
+          href: "/dashboard/workflow/clinics",
+          icon: Hospital,
+        },
+        {
+          title: "Manage Dr",
+          href: "/dashboard/workflow/doctors",
+          icon: Stethoscope,
+        },
       ],
     },
     {
-      title: 'Finance',
+      title: "Finance",
       icon: DollarSign,
-      href: '/dashboard/finance',
+      href: "/dashboard/finance",
       children: [
-        { title: 'Dashboard', href: '/dashboard/finance', icon: BarChart3 },
-        { title: 'View Invoices', href: '/dashboard/finance/invoices', icon: FileText },
-        { title: 'View Expenses', href: '/dashboard/finance/expenses', icon: Receipt },
-        { title: 'Banks', href: '/dashboard/finance/banks', icon: Banknote },
+        { title: "Dashboard", href: "/dashboard/finance", icon: BarChart3 },
+        {
+          title: "View Invoices",
+          href: "/dashboard/finance/invoices",
+          icon: FileText,
+        },
+        {
+          title: "View Expenses",
+          href: "/dashboard/finance/expenses",
+          icon: Receipt,
+        },
+        { title: "Banks", href: "/dashboard/finance/banks", icon: Banknote },
       ],
     },
     {
-      title: 'Payments',
+      title: "Payments",
       icon: CreditCard,
-      href: '/dashboard/payments/create-invoice',
+      href: "/dashboard/payments/create-invoice",
       children: [
-        { title: 'Create New Invoice', href: '/dashboard/payments/create-invoice', icon: FilePlus },
-        { title: 'Invoice', href: '/dashboard/payments/case-invoice', icon: FileText },
-        { title: 'Pay Expense', href: '/dashboard/payments/pay-expense', icon: Banknote },
-        { title: 'Create Purchase Invoice', href: '/dashboard/payments/purchase-invoice', icon: ShoppingCart },
-        { title: 'Create Purchase Request', href: '/dashboard/payments/purchase-request', icon: ClipboardList },
-        { title: 'View Purchase Requests', href: '/dashboard/payments/purchase-requests', icon: Eye },
+        //  { title: 'Create New Invoice', href: '/dashboard/payments/create-invoice', icon: FilePlus },
+        {
+          title: "Invoice",
+          href: "/dashboard/payments/case-invoice",
+          icon: FileText,
+        },
+        {
+          title: "Pay Expense",
+          href: "/dashboard/payments/pay-expense",
+          icon: Banknote,
+        },
+        {
+          title: "Create Purchase Invoice",
+          href: "/dashboard/payments/purchase-invoice",
+          icon: ShoppingCart,
+        },
+        {
+          title: "Create Purchase Request",
+          href: "/dashboard/payments/purchase-request",
+          icon: ClipboardList,
+        },
+        {
+          title: "View Purchase Requests",
+          href: "/dashboard/payments/purchase-requests",
+          icon: Eye,
+        },
       ],
     },
     {
-      title: 'Inventory',
+      title: "Inventory",
       icon: Package,
-      href: '/dashboard/inventory/items',
+      href: "/dashboard/inventory/items",
       children: [
-        { title: 'Items', href: '/dashboard/inventory/items', icon: Boxes },
-        { title: 'Categories', href: '/dashboard/inventory/categories', icon: Tags },
-        { title: 'Transactions', href: '/dashboard/inventory/transactions', icon: ArrowLeftRight },
-        { title: 'Upload File', href: '/dashboard/inventory/upload', icon: Upload },
-        { title: 'Inventory Usage', href: '/dashboard/inventory/usage', icon: Activity },
+        { title: "Items", href: "/dashboard/inventory/items", icon: Boxes },
+        {
+          title: "Categories",
+          href: "/dashboard/inventory/categories",
+          icon: Tags,
+        },
+        {
+          title: "Transactions",
+          href: "/dashboard/inventory/transactions",
+          icon: ArrowLeftRight,
+        },
+        {
+          title: "Upload File",
+          href: "/dashboard/inventory/upload",
+          icon: Upload,
+        },
+        {
+          title: "Inventory Usage",
+          href: "/dashboard/inventory/usage",
+          icon: Activity,
+        },
       ],
     },
     {
-      title: 'Settings',
+      title: "Settings",
       icon: Settings,
-      href: '/dashboard/settings',
+      href: "/dashboard/settings",
       children: [
-        { title: 'Settings', href: '/dashboard/settings', icon: Settings },
-        { title: 'Invoice items', href: '/dashboard/settings/invoice-items', icon: ListChecks },
+        { title: "Settings", href: "/dashboard/settings", icon: Settings },
+        {
+          title: "Invoice items",
+          href: "/dashboard/settings/invoice-items",
+          icon: ListChecks,
+        },
       ],
     },
     {
-      title: 'Notifications',
+      title: "Notifications",
       icon: Bell,
-      href: '/dashboard/notifications',
+      href: "/dashboard/notifications",
     },
   ];
 }
@@ -126,92 +206,164 @@ export function getSuperAdminMenu() {
 export function getHrAdminMenu() {
   return [
     {
-      title: 'Dashboard',
+      title: "Dashboard",
       icon: LayoutDashboard,
-      href: '/dashboard',
+      href: "/dashboard",
       children: [
-        { title: 'Home', href: '/dashboard', icon: Home },
-        { title: 'Charts', href: '/dashboard/charts', icon: Activity },
+        { title: "Home", href: "/dashboard", icon: Home },
+        { title: "Charts", href: "/dashboard/charts", icon: Activity },
       ],
     },
     {
-      title: 'HR',
+      title: "HR",
       icon: Users,
-      href: '/dashboard/hr/employees',
+      href: "/dashboard/hr/employees",
       children: [
-        { title: 'HR', href: '/dashboard/hr/employees', icon: UserCheck },
-        { title: 'Clients', href: '/dashboard/hr/clients', icon: Building2 },
-        { title: 'Suppliers', href: '/dashboard/hr/suppliers', icon: Truck },
-        { title: 'Utilities', href: '/dashboard/settings/utilities', icon: Wrench },
-        { title: 'Manage Delivery Company', href: '/dashboard/workflow/delivery', icon: Truck },
+        { title: "HR", href: "/dashboard/hr/employees", icon: UserCheck },
+        { title: "Clients", href: "/dashboard/hr/clients", icon: Building2 },
+        { title: "Suppliers", href: "/dashboard/hr/suppliers", icon: Truck },
+        {
+          title: "Utilities",
+          href: "/dashboard/settings/utilities",
+          icon: Wrench,
+        },
+        {
+          title: "Manage Delivery Company",
+          href: "/dashboard/workflow/delivery",
+          icon: Truck,
+        },
       ],
     },
     {
-      title: 'Workflow',
+      title: "Workflow",
       icon: BriefcaseMedical,
-      href: '/dashboard/workflow/new-case',
+      href: "/dashboard/workflow/new-case",
       children: [
-        { title: 'New cases', href: '/dashboard/workflow/new-case', icon: FilePlus },
-        { title: 'View cases', href: '/dashboard/workflow/view-cases', icon: Eye },
-        { title: 'Actions', href: '/dashboard/workflow/actions', icon: ListChecks },
-        { title: 'Manage Types', href: '/dashboard/workflow/types', icon: Tags },
-        { title: 'Manage Clinic', href: '/dashboard/workflow/clinics', icon: Hospital },
-        { title: 'Manage Dr', href: '/dashboard/workflow/doctors', icon: Stethoscope },
+        {
+          title: "New cases",
+          href: "/dashboard/workflow/new-case",
+          icon: FilePlus,
+        },
+        {
+          title: "View cases",
+          href: "/dashboard/workflow/view-cases",
+          icon: Eye,
+        },
+        {
+          title: "Actions",
+          href: "/dashboard/workflow/actions",
+          icon: ListChecks,
+        },
+        {
+          title: "Manage Types",
+          href: "/dashboard/workflow/types",
+          icon: Tags,
+        },
+        {
+          title: "Manage Clinic",
+          href: "/dashboard/workflow/clinics",
+          icon: Hospital,
+        },
+        {
+          title: "Manage Dr",
+          href: "/dashboard/workflow/doctors",
+          icon: Stethoscope,
+        },
       ],
     },
     {
-      title: 'Finance',
+      title: "Finance",
       icon: DollarSign,
-      href: '/dashboard/finance',
+      href: "/dashboard/finance",
       children: [
-        { title: 'Dashboard', href: '/dashboard/finance', icon: BarChart3 },
-        { title: 'View Invoices', href: '/dashboard/finance/invoices', icon: FileText },
-        { title: 'View Expenses', href: '/dashboard/finance/expenses', icon: Receipt },
-        { title: 'Banks', href: '/dashboard/finance/banks', icon: Banknote },
+        { title: "Dashboard", href: "/dashboard/finance", icon: BarChart3 },
+        {
+          title: "View Invoices",
+          href: "/dashboard/finance/invoices",
+          icon: FileText,
+        },
+        {
+          title: "View Expenses",
+          href: "/dashboard/finance/expenses",
+          icon: Receipt,
+        },
+        { title: "Banks", href: "/dashboard/finance/banks", icon: Banknote },
       ],
     },
     {
-      title: 'Payments',
+      title: "Payments",
       icon: CreditCard,
-      href: '/dashboard/payments/create-invoice',
+      href: "/dashboard/payments/create-invoice",
       children: [
-        { title: 'Create New Invoice', href: '/dashboard/payments/create-invoice', icon: FilePlus },
-        { title: 'Pay Expense', href: '/dashboard/payments/pay-expense', icon: Banknote },
-        { title: 'Create Purchase Invoice', href: '/dashboard/payments/purchase-invoice', icon: ShoppingCart },
-        { title: 'Create Purchase Request', href: '/dashboard/payments/purchase-request', icon: ClipboardList },
-        { title: 'View Purchase Requests', href: '/dashboard/payments/purchase-requests', icon: Eye },
+        // { title: 'Create New Invoice', href: '/dashboard/payments/create-invoice', icon: FilePlus },
+        {
+          title: "Pay Expense",
+          href: "/dashboard/payments/pay-expense",
+          icon: Banknote,
+        },
+        {
+          title: "Create Purchase Invoice",
+          href: "/dashboard/payments/purchase-invoice",
+          icon: ShoppingCart,
+        },
+        {
+          title: "Create Purchase Request",
+          href: "/dashboard/payments/purchase-request",
+          icon: ClipboardList,
+        },
+        {
+          title: "View Purchase Requests",
+          href: "/dashboard/payments/purchase-requests",
+          icon: Eye,
+        },
       ],
     },
     {
-      title: 'Inventory',
+      title: "Inventory",
       icon: Package,
-      href: '/dashboard/inventory/items',
+      href: "/dashboard/inventory/items",
       children: [
-        { title: 'Items', href: '/dashboard/inventory/items', icon: Boxes },
-        { title: 'Categories', href: '/dashboard/inventory/categories', icon: Tags },
-        { title: 'Transactions', href: '/dashboard/inventory/transactions', icon: ArrowLeftRight },
-        { title: 'Upload File', href: '/dashboard/inventory/upload', icon: Upload },
-        { title: 'Inventory Usage', href: '/dashboard/inventory/usage', icon: Activity },
+        { title: "Items", href: "/dashboard/inventory/items", icon: Boxes },
+        {
+          title: "Categories",
+          href: "/dashboard/inventory/categories",
+          icon: Tags,
+        },
+        {
+          title: "Transactions",
+          href: "/dashboard/inventory/transactions",
+          icon: ArrowLeftRight,
+        },
+        {
+          title: "Upload File",
+          href: "/dashboard/inventory/upload",
+          icon: Upload,
+        },
+        {
+          title: "Inventory Usage",
+          href: "/dashboard/inventory/usage",
+          icon: Activity,
+        },
       ],
     },
     {
-      title: 'Settings',
+      title: "Settings",
       icon: Settings,
-      href: '/dashboard/settings',
+      href: "/dashboard/settings",
       children: [
-        { title: 'Settings', href: '/dashboard/settings', icon: Settings },
+        { title: "Settings", href: "/dashboard/settings", icon: Settings },
       ],
     },
     {
-      title: 'Notifications',
+      title: "Notifications",
       icon: Bell,
-      href: '/dashboard/notifications',
+      href: "/dashboard/notifications",
     },
   ];
 }
 
 export function getMenuForUserType(type) {
-  if (type === 'HR' || type === 'Sales') {
+  if (type === "HR" || type === "Sales") {
     return getHrAdminMenu();
   }
   return getSuperAdminMenu();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   addDoc,
@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth-context';
+import Image from 'next/image';
 import { formatDate, formatPriceLE, formatTime } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import { PageCard, TextField, SelectField, Snackbar, LoadingOverlay } from '@/components/ui/PageComponents';
@@ -57,6 +58,51 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
 
   const remaining = Number(invoice?.remainingAmount) || 0;
   const isIncome = type === 'Income';
+
+  const printRef = useRef(null);
+
+  const previousBillVal = Number(invoice?.previousBillAmount) || 0;
+  const currentBill = Number(invoice?.total) || 0;
+  const grandPrintTotal = previousBillVal + currentBill;
+
+  const handlePrint = useCallback(() => {
+    const content = printRef.current;
+    if (!content || !invoice) return;
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>Invoice — ${invoice.clinicName || invoice.name}</title>
+<style>
+  @page { size: A4; margin: 20mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #1a1a2e; }
+  .invoice-page { max-width: 800px; margin: 0 auto; padding: 32px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 3px solid #c2a18c; padding-bottom: 24px; }
+  .header-left { display: flex; flex-direction: column; gap: 6px; }
+  .logo { height: 60px; width: auto; margin-bottom: 8px; }
+  .clinic-name { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+  .doctor-name { font-size: 14px; color: #6b6780; }
+  .header-right { text-align: right; }
+  .header-right .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b6780; }
+  .header-right .value { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .invoice-title { text-align: center; font-size: 28px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #c2a18c; margin-bottom: 28px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+  thead { background: #30394d; color: #fff; }
+  th { padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+  th:last-child { text-align: right; }
+  td { padding: 12px 16px; border-bottom: 1px solid #e4ddd5; font-size: 14px; }
+  td:last-child { text-align: right; }
+  tbody tr:nth-child(even) { background: #faf8f6; }
+  .totals { display: flex; justify-content: flex-end; }
+  .totals-table { min-width: 300px; }
+  .totals-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e4ddd5; font-size: 14px; }
+  .totals-row.grand { border-top: 2px solid #30394d; border-bottom: 2px solid #30394d; font-size: 16px; font-weight: 700; margin-top: 4px; padding: 12px 0; }
+  .totals-label { color: #6b6780; }
+  .totals-value { font-weight: 600; }
+  .footer { margin-top: 48px; text-align: center; font-size: 11px; color: #9b95a8; border-top: 1px solid #e4ddd5; padding-top: 16px; }
+</style></head><body>${content.innerHTML}</body></html>`);
+    win.document.close();
+    setTimeout(() => { win.print(); }, 400);
+  }, [invoice]);
 
   const payRemaining = async () => {
     const inputAmount = parseFloat(payAmount) || 0;
@@ -226,6 +272,7 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
           {remaining > 0 && (
             <button type="button" onClick={() => setShowPay(true)} className="px-4 py-2 bg-green-600 text-white rounded-md text-sm">Pay Remaining</button>
           )}
+          <button type="button" onClick={handlePrint} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm">Print Invoice</button>
           <button type="button" onClick={deleteInvoice} className="px-4 py-2 bg-red-600 text-white rounded-md text-sm">Delete Invoice</button>
         </div>
       </PageCard>
@@ -278,6 +325,79 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
           </div>
         </div>
       )}
+      <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        <div ref={printRef}>
+          <div className="invoice-page">
+            <div className="header">
+              <div className="header-left">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="Logo" className="logo" />
+                <div className="clinic-name">{invoice.clinicName || invoice.name || '—'}</div>
+                <div className="doctor-name">Dr. {invoice.drName || '—'}</div>
+              </div>
+              <div className="header-right">
+                <div className="label">Invoice Date</div>
+                <div className="value">{invoice.Date} {invoice.Time}</div>
+                <div className="label">Status</div>
+                <div className="value">{invoice.status}</div>
+                <div className="label">Payment</div>
+                <div className="value">{invoice.bank || '—'}</div>
+              </div>
+            </div>
+
+            <div className="invoice-title">Invoice</div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style={{ width: '10%' }}>#</th>
+                  <th style={{ width: '40%' }}>Case</th>
+                  <th style={{ width: '15%' }}>Quantity</th>
+                  <th style={{ width: '35%' }}>Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, idx) => (
+                  <tr key={item.id}>
+                    <td>{idx + 1}</td>
+                    <td>{item.patientName || invoice.patientName || invoice.name || '—'}</td>
+                    <td>{item.quantity || 1}</td>
+                    <td>{item.name || '—'}</td>
+                  </tr>
+                ))}
+                {items.length === 0 && (
+                  <tr>
+                    <td>1</td>
+                    <td>{invoice.patientName || invoice.name || '—'}</td>
+                    <td>1</td>
+                    <td>{invoice.type || '—'}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            <div className="totals">
+              <div className="totals-table">
+                <div className="totals-row">
+                  <span className="totals-label">Previous Bill</span>
+                  <span className="totals-value">{formatPriceLE(previousBillVal)}</span>
+                </div>
+                <div className="totals-row">
+                  <span className="totals-label">Current Bill</span>
+                  <span className="totals-value">{formatPriceLE(currentBill)}</span>
+                </div>
+                <div className="totals-row grand">
+                  <span>Total</span>
+                  <span>{formatPriceLE(grandPrintTotal)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="footer">360 Lab ERP &middot; Generated on {new Date().toLocaleDateString()}</div>
+          </div>
+        </div>
+      </div>
+
       <LoadingOverlay show={processing} />
       <Snackbar message={snack.message} isError={snack.isError} onClose={() => setSnack({ message: '', isError: false })} />
     </>

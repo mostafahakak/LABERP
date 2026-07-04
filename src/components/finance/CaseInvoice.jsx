@@ -32,8 +32,10 @@ export default function CaseInvoice() {
   const [banks, setBanks] = useState([]);
   const [allDoctors, setAllDoctors] = useState([]);
   const [previousInvoices, setPreviousInvoices] = useState([]);
+  const [invoiceItemsMap, setInvoiceItemsMap] = useState({});
   const [hasCheckedOldBills, setHasCheckedOldBills] = useState(false);
   const [selectedCaseIds, setSelectedCaseIds] = useState([]);
+  const [casePrices, setCasePrices] = useState({});
   const [clinicName, setClinicName] = useState("");
   const [drFilter, setDrFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
@@ -61,7 +63,8 @@ export default function CaseInvoice() {
       getDocs(collection(db, "Clinics")),
       getDocs(collection(db, "Banks")),
       getDocs(collection(db, "Drs")),
-    ]).then(([casesSnap, clinicsSnap, banksSnap, drsSnap]) => {
+      getDocs(collection(db, "InvoiceItems")),
+    ]).then(([casesSnap, clinicsSnap, banksSnap, drsSnap, itemsSnap]) => {
       const allC = casesSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setAllCases(allC);
       setCases(allC);
@@ -75,6 +78,12 @@ export default function CaseInvoice() {
           }))
           .filter((d) => d.name),
       );
+      const priceMap = {};
+      itemsSnap.docs.forEach((d) => {
+        const data = d.data();
+        if (data.name) priceMap[data.name] = Number(data.price) || 0;
+      });
+      setInvoiceItemsMap(priceMap);
     });
   }, []);
 
@@ -151,17 +160,44 @@ export default function CaseInvoice() {
     [cases, selectedCaseIds],
   );
 
+  const updateCasePrice = (id, value) => {
+    setCasePrices((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const resolveDefaultPrice = (c) => {
+    // 1. Use embedded types array price (most reliable source)
+    if (Array.isArray(c.types) && c.types.length > 0) {
+      const sum = c.types.reduce((s, t) => s + (Number(t.price) || 0), 0);
+      if (sum > 0) return sum;
+    }
+    // 2. Try InvoiceItems lookup by type name
+    const typeName = c.type || c.caseType || '';
+    if (invoiceItemsMap[typeName] !== undefined) return invoiceItemsMap[typeName];
+    // 3. Try matching each comma-separated type against InvoiceItems
+    const typeNames = typeName.split(',').map((s) => s.trim()).filter(Boolean);
+    if (typeNames.length > 0) {
+      const lookupSum = typeNames.reduce((s, name) => s + (invoiceItemsMap[name] || 0), 0);
+      if (lookupSum > 0) return lookupSum;
+    }
+    // 4. Fallback to case price/total field
+    return Number(c.price) || Number(c.total) || 0;
+  };
+
   const invoiceItems = useMemo(
     () =>
-      selectedCases.map((c) => ({
-        item: c.type || c.caseType || "Case",
-        price: Number(c.price) || Number(c.total) || 0,
-        quantity: 1,
-        caseId: c.id,
-        patientName: c.patientName,
-        drName: c.drName,
-      })),
-    [selectedCases],
+      selectedCases.map((c) => {
+        const price = casePrices[c.id] !== undefined ? (Number(casePrices[c.id]) || 0) : resolveDefaultPrice(c);
+        return {
+          item: c.type || c.caseType || "Case",
+          price,
+          quantity: 1,
+          caseId: c.id,
+          patientName: c.patientName,
+          drName: c.drName,
+        };
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedCases, casePrices, invoiceItemsMap],
   );
 
   const subtotal = invoiceItems.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -427,9 +463,17 @@ export default function CaseInvoice() {
                     </p>
                   )}
                 </div>
-                <span className="font-semibold">
-                  {formatPriceLE(c.price || c.total)}
-                </span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <input
+                    type="number"
+                    className="w-24 rounded-md border border-input bg-background px-2 py-1 text-right text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
+                    value={casePrices[c.id] !== undefined ? casePrices[c.id] : resolveDefaultPrice(c)}
+                    onChange={(e) => updateCasePrice(c.id, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    min="0"
+                  />
+                  <span className="text-xs text-muted-foreground">LE</span>
+                </div>
               </label>
             ))}
           </div>

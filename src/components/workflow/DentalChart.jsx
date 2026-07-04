@@ -161,7 +161,7 @@ export default function DentalChart({ selectedTeeth = [], onToothClick, onJawCli
   return (
     <div className="w-full flex flex-col items-center">
       {/* Jaw selection buttons */}
-      <div className="flex gap-3 mb-4 w-full max-w-[500px]">
+      <div className="flex gap-3 mb-4 w-full max-w-125">
         <button
           type="button"
           onClick={() => onJawClick && onJawClick("upper")}
