@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, onSnapshot, orderBy, query, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Header from '@/components/layout/Header';
 import { PageCard } from '@/components/ui/PageComponents';
@@ -66,8 +66,36 @@ export default function NotificationsPageContent() {
       }
       q = query(collection(db, 'Notifications'), orderBy('date', 'desc'), orderBy('time', 'desc'), where('type', 'in', types));
     }
-    return onSnapshot(q, (snap) => {
-      setNotifications(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    return onSnapshot(q, async (snap) => {
+      const incoming = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const visible = [];
+
+      for (const n of incoming) {
+        const isFinanceReminder = (n.type === 'Invoice' || n.type === 'Purchase') && n.docID;
+        if (!isFinanceReminder) {
+          visible.push(n);
+          continue;
+        }
+
+        try {
+          const financeSnap = await getDoc(doc(db, 'Finance', n.docID));
+          const financeData = financeSnap.data() || {};
+          const isSettled = !financeSnap.exists()
+            || Number(financeData.remainingAmount || 0) <= 0
+            || financeData.status === 'Paid';
+
+          if (isSettled) {
+            await deleteDoc(doc(db, 'Notifications', n.id));
+            continue;
+          }
+        } catch {
+          // Keep notification visible when lookup fails to avoid hiding valid reminders.
+        }
+
+        visible.push(n);
+      }
+
+      setNotifications(visible);
     });
   }, [showInvoice, showPurchase, showSalary]);
 
@@ -91,8 +119,8 @@ export default function NotificationsPageContent() {
   return (
     <>
       <Header />
-      <PageCard title="Notifications" icon="🔔" className="border-primary/20 bg-gradient-to-b from-card to-card/90 shadow-xl shadow-primary/5">
-        <section className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-5 mb-6">
+      <PageCard title="Notifications" icon="🔔" className="border-primary/20 bg-linear-to-b from-card to-card/90 shadow-xl shadow-primary/5">
+        <section className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-r from-primary/10 via-primary/5 to-transparent p-5 mb-6">
           <div className="absolute -right-14 -top-10 h-28 w-28 rounded-full bg-primary/20 blur-2xl" />
           <div className="relative flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>

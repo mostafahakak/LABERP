@@ -11,7 +11,9 @@ import {
   getDocs,
   increment,
   onSnapshot,
+  query,
   updateDoc,
+  where,
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -114,6 +116,41 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
     setTimeout(() => { win.print(); }, 400);
   }, [invoice]);
 
+  const syncInvoiceNotification = useCallback(async ({ batch, newRemaining, date, time }) => {
+    const notifSnap = await getDocs(query(collection(db, 'Notifications'), where('docID', '==', invoiceId)));
+    const matchedNotifs = notifSnap.docs;
+
+    if (newRemaining <= 0) {
+      matchedNotifs.forEach((d) => batch.delete(d.ref));
+      return;
+    }
+
+    if (matchedNotifs.length > 0) {
+      matchedNotifs.forEach((d) => {
+        batch.update(d.ref, {
+          amount: newRemaining,
+          status: 'Remaining',
+          date,
+          time,
+        });
+      });
+      return;
+    }
+
+    batch.set(doc(collection(db, 'Notifications')), {
+      name: invoice?.name || invoice?.clinicName || 'Invoice',
+      type: isIncome ? 'Invoice' : 'Purchase',
+      amount: newRemaining,
+      quantity: 0,
+      docID: invoiceId,
+      collectionName: 'Finance',
+      date,
+      time,
+      status: 'Remaining',
+      branch: user?.branch || 'New cairo',
+    });
+  }, [invoice, invoiceId, isIncome, user?.branch]);
+
   const payRemaining = async () => {
     const inputAmount = parseFloat(payAmount) || 0;
     if (inputAmount <= 0 || inputAmount > remaining) {
@@ -163,6 +200,12 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
         status: newRemaining <= 0 ? 'Paid' : 'Remaining',
         bank: bank.name,
         bankId: bank.id,
+      });
+      await syncInvoiceNotification({
+        batch,
+        newRemaining,
+        date: formattedDate,
+        time: logTime,
       });
       batch.set(doc(collection(db, 'Logs')), {
         actionID: invoiceId,
@@ -241,6 +284,10 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
       const batch = writeBatch(db);
       const amt = Number(payment.paidAmount) || 0;
       const net = Number(payment.netAmountToBank) || amt;
+      const newRemaining = remaining + amt;
+      const now = new Date();
+      const formattedDate = formatDate(now);
+      const logTime = formatTime(now);
       if (payment.bankId) {
         batch.update(doc(db, 'Banks', payment.bankId), {
           balance: increment(isIncome ? -net : net),
@@ -251,7 +298,13 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
         paidAmount: increment(-amt),
         remainingAmount: increment(amt),
         total: invoiceTotal,
-        status: 'Remaining',
+        status: newRemaining <= 0 ? 'Paid' : 'Remaining',
+      });
+      await syncInvoiceNotification({
+        batch,
+        newRemaining,
+        date: formattedDate,
+        time: logTime,
       });
       await batch.commit();
       setSnack({ message: 'Payment deleted', isError: false });
