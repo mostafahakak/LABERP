@@ -216,9 +216,13 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
 
 export async function deleteCase(caseId) {
   const trackQuery = query(collection(db, 'CasesTrack'), where('caseUID', '==', caseId));
-  const trackSnap = await getDocs(trackQuery);
+  const [trackSnap, notesSnap] = await Promise.all([
+    getDocs(trackQuery),
+    getDocs(collection(db, 'Cases', caseId, 'Notes')),
+  ]);
   const batch = writeBatch(db);
   trackSnap.docs.forEach((d) => batch.delete(d.ref));
+  notesSnap.docs.forEach((d) => batch.delete(d.ref));
   batch.delete(doc(db, 'Cases', caseId));
   await batch.commit();
 }

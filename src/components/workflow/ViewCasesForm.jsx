@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   collection,
+  getDocs,
   onSnapshot,
   query,
   where,
@@ -48,7 +49,11 @@ export default function ViewCasesForm() {
 
   const [manageCase, setManageCase] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleteDetails, setDeleteDetails] = useState(null);
+  const [deleteDetailsLoading, setDeleteDetailsLoading] = useState(false);
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
+  const [deleteAllDetails, setDeleteAllDetails] = useState(null);
+  const [deleteAllDetailsLoading, setDeleteAllDetailsLoading] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [snack, setSnack] = useState({ message: "", isError: false });
 
@@ -202,6 +207,82 @@ export default function ViewCasesForm() {
     }
   };
 
+  const openDeleteCaseDialog = async (caseData) => {
+    setDeleteConfirm(caseData.id);
+    setDeleteDetails(null);
+    setDeleteDetailsLoading(true);
+    try {
+      const [trackSnap, notesSnap] = await Promise.all([
+        getDocs(query(collection(db, "CasesTrack"), where("caseUID", "==", caseData.id))),
+        getDocs(collection(db, "Cases", caseData.id, "Notes")),
+      ]);
+      setDeleteDetails({
+        clinicName: caseData.clinicName || "—",
+        caseCode: caseData.caseCode || "—",
+        patientName: caseData.patientName || "—",
+        status: caseData.status || "—",
+        phase: caseData.phase || getPhaseInfo(caseData).currentPhase,
+        trackCount: trackSnap.size,
+        notesCount: notesSnap.size,
+      });
+    } catch {
+      setDeleteDetails({
+        clinicName: caseData.clinicName || "—",
+        caseCode: caseData.caseCode || "—",
+        patientName: caseData.patientName || "—",
+        status: caseData.status || "—",
+        phase: caseData.phase || getPhaseInfo(caseData).currentPhase,
+        trackCount: null,
+        notesCount: null,
+      });
+    } finally {
+      setDeleteDetailsLoading(false);
+    }
+  };
+
+  const openDeleteAllDialog = async () => {
+    setDeleteAllConfirm(true);
+    setDeleteAllDetails(null);
+    setDeleteAllDetailsLoading(true);
+    try {
+      const counts = await Promise.all(cases.map(async (c) => {
+        const [trackSnap, notesSnap] = await Promise.all([
+          getDocs(query(collection(db, "CasesTrack"), where("caseUID", "==", c.id))),
+          getDocs(collection(db, "Cases", c.id, "Notes")),
+        ]);
+        return {
+          id: c.id,
+          code: c.caseCode || "—",
+          clinic: c.clinicName || "—",
+          patient: c.patientName || "—",
+          tracks: trackSnap.size,
+          notes: notesSnap.size,
+        };
+      }));
+
+      setDeleteAllDetails({
+        caseCount: cases.length,
+        totalTracks: counts.reduce((s, x) => s + x.tracks, 0),
+        totalNotes: counts.reduce((s, x) => s + x.notes, 0),
+        preview: counts.slice(0, 5),
+      });
+    } catch {
+      setDeleteAllDetails({
+        caseCount: cases.length,
+        totalTracks: null,
+        totalNotes: null,
+        preview: cases.slice(0, 5).map((c) => ({
+          id: c.id,
+          code: c.caseCode || "—",
+          clinic: c.clinicName || "—",
+          patient: c.patientName || "—",
+        })),
+      });
+    } finally {
+      setDeleteAllDetailsLoading(false);
+    }
+  };
+
   const handleDeleteAllCases = async () => {
     if (cases.length === 0) {
       setSnack({ message: "No cases to remove", isError: true });
@@ -276,7 +357,7 @@ export default function ViewCasesForm() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => setDeleteAllConfirm(true)}
+              onClick={openDeleteAllDialog}
               className="gap-1.5 border-destructive/40 text-destructive hover:text-destructive"
               disabled={bulkDeleting}
             >
@@ -293,7 +374,7 @@ export default function ViewCasesForm() {
             key={c.id}
             caseData={c}
             onManage={() => setManageCase(c)}
-            onDelete={() => setDeleteConfirm(c.id)}
+            onDelete={() => openDeleteCaseDialog(c)}
             onFinalize={() => handleFinalize(c.id)}
           />
         ))}
@@ -315,15 +396,32 @@ export default function ViewCasesForm() {
       <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete All Phases</AlertDialogTitle>
+            <AlertDialogTitle>Delete</AlertDialogTitle>
             <AlertDialogDescription>
-              This will delete the case and all phase tracking records (CasesTrack) for this case. This action cannot be undone.
+              This will delete this case, all phase tracking records (CasesTrack), and all case notes. This action cannot be undone.
             </AlertDialogDescription>
+            <div className="mt-3 rounded-md border border-border/70 bg-background/40 p-3 text-sm text-left">
+              {deleteDetailsLoading ? (
+                <p className="text-muted-foreground">Loading delete details...</p>
+              ) : deleteDetails ? (
+                <div className="space-y-1 text-muted-foreground">
+                  <p><span className="text-foreground font-medium">Clinic:</span> {deleteDetails.clinicName}</p>
+                  <p><span className="text-foreground font-medium">Case Code:</span> {deleteDetails.caseCode}</p>
+                  <p><span className="text-foreground font-medium">Patient:</span> {deleteDetails.patientName}</p>
+                  <p><span className="text-foreground font-medium">Status/Phase:</span> {deleteDetails.status} / {deleteDetails.phase}</p>
+                  <p><span className="text-foreground font-medium">Phase records to delete:</span> {deleteDetails.trackCount ?? 'Unknown'}</p>
+                  <p><span className="text-foreground font-medium">Case notes to delete:</span> {deleteDetails.notesCount ?? 'Unknown'}</p>
+                  <p><span className="text-foreground font-medium">Case document:</span> 1</p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No details found.</p>
+              )}
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => handleDelete(deleteConfirm)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete All Phases
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -337,6 +435,23 @@ export default function ViewCasesForm() {
               This will delete all currently filtered cases and all phase tracking records for each one.
               Total selected: {cases.length}. This action cannot be undone.
             </AlertDialogDescription>
+            <div className="mt-3 rounded-md border border-border/70 bg-background/40 p-3 text-sm text-left">
+              {deleteAllDetailsLoading ? (
+                <p className="text-muted-foreground">Loading delete details...</p>
+              ) : deleteAllDetails ? (
+                <div className="space-y-1 text-muted-foreground">
+                  <p><span className="text-foreground font-medium">Cases to delete:</span> {deleteAllDetails.caseCount}</p>
+                  <p><span className="text-foreground font-medium">Total phase records:</span> {deleteAllDetails.totalTracks ?? 'Unknown'}</p>
+                  <p><span className="text-foreground font-medium">Total notes:</span> {deleteAllDetails.totalNotes ?? 'Unknown'}</p>
+                  <p className="text-foreground font-medium mt-2">Preview:</p>
+                  {deleteAllDetails.preview.map((c) => (
+                    <p key={c.id}>- {c.clinic} | {c.code} | {c.patient}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No details found.</p>
+              )}
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
@@ -463,7 +578,7 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
             </Link>
           </Button>
           <Button size="sm" variant="outline" onClick={onDelete} className="gap-1.5 text-destructive hover:text-destructive">
-            <Trash2 className="size-3.5" /> Delete All Phases
+            <Trash2 className="size-3.5" /> Delete
           </Button>
         </div>
       </CardContent>
