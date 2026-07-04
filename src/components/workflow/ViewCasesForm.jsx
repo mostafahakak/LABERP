@@ -48,6 +48,8 @@ export default function ViewCasesForm() {
 
   const [manageCase, setManageCase] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [snack, setSnack] = useState({ message: "", isError: false });
 
   const withAllOption = (arr) => ["All", ...arr.filter(Boolean)];
@@ -57,13 +59,57 @@ export default function ViewCasesForm() {
     .filter(Boolean);
 
   const getPhaseText = (caseData) => caseData?.phase || getPhaseInfo(caseData).currentPhase;
+  const isAll = (v) => v === null || v === "" || v === "All";
+
+  const clinicScopedCases = useMemo(() => {
+    if (isAll(selectedClinic)) return allCases;
+    return allCases.filter((c) => c.clinicName === selectedClinic);
+  }, [allCases, selectedClinic]);
+
+  const statusPhaseMap = useMemo(() => {
+    const phaseCountByStatus = {};
+
+    clinicScopedCases.forEach((c) => {
+      const status = c.status;
+      const phase = c.phase;
+      if (!status || !phase) return;
+      if (!phaseCountByStatus[status]) phaseCountByStatus[status] = {};
+      phaseCountByStatus[status][phase] = (phaseCountByStatus[status][phase] || 0) + 1;
+    });
+
+    const result = {};
+    Object.entries(phaseCountByStatus).forEach(([status, counts]) => {
+      const topPhase = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (topPhase) result[status] = topPhase;
+    });
+    return result;
+  }, [clinicScopedCases]);
+
+  const canonicalPhaseByStatus = {
+    "pending delivery": "Phase 1",
+    "design": "Phase 2",
+    "try in": "Phase 3",
+    "finishing": "Phase 4",
+    "finalized": "Phase 4",
+    "ready to be delivered": "Phase 5",
+    "ready to invoice": "Phase 6",
+    "ready to get invoice": "Phase 6",
+    "done": "Phase 7",
+  };
+
+  const normalizeStatus = (status) => String(status || "").trim().toLowerCase();
+
   const getPhaseShort = (status) => {
-    const phase = getPhaseInfo({ status }).currentPhase || "";
+    const normalized = normalizeStatus(status);
+    const phase =
+      canonicalPhaseByStatus[normalized]
+      || statusPhaseMap[status]
+      || getPhaseInfo({ status }).currentPhase
+      || "";
     const match = String(phase).match(/\d+/);
     return match ? `P${match[0]}` : phase;
   };
   const statusLabel = (status) => `${status} (${getPhaseShort(status)})`;
-  const isAll = (v) => v === null || v === "" || v === "All";
 
   useEffect(() => {
     const constraints = [
@@ -90,11 +136,6 @@ export default function ViewCasesForm() {
     });
     return [...clinicSet].sort();
   }, [allCases]);
-
-  const clinicScopedCases = useMemo(() => {
-    if (isAll(selectedClinic)) return allCases;
-    return allCases.filter((c) => c.clinicName === selectedClinic);
-  }, [allCases, selectedClinic]);
 
   const typeOptions = useMemo(() => {
     const typeSet = new Set();
@@ -161,6 +202,31 @@ export default function ViewCasesForm() {
     }
   };
 
+  const handleDeleteAllCases = async () => {
+    if (cases.length === 0) {
+      setSnack({ message: "No cases to remove", isError: true });
+      setDeleteAllConfirm(false);
+      return;
+    }
+
+    setBulkDeleting(true);
+    try {
+      const count = cases.length;
+      for (const c of cases) {
+        await deleteCase(c.id);
+      }
+      setSnack({
+        message: `${count} case(s) and all phase records deleted`,
+        isError: false,
+      });
+      setDeleteAllConfirm(false);
+    } catch (e) {
+      setSnack({ message: e.message, isError: true });
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   const handleFinalize = async (caseId) => {
     try {
       await updateDoc(doc(db, "Cases", caseId), {
@@ -204,9 +270,19 @@ export default function ViewCasesForm() {
               <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
             </div>
           </div>
-          <Button variant="outline" onClick={clearFilters} className="gap-1.5">
-            <X className="size-3.5" /> Clear Filters
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={clearFilters} className="gap-1.5">
+              <X className="size-3.5" /> Clear Filters
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteAllConfirm(true)}
+              className="gap-1.5 border-destructive/40 text-destructive hover:text-destructive"
+              disabled={bulkDeleting}
+            >
+              <Trash2 className="size-3.5" /> Remove All Cases
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -239,13 +315,37 @@ export default function ViewCasesForm() {
       <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Case</AlertDialogTitle>
-            <AlertDialogDescription>Delete this case and its tracking records? This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>Delete All Phases</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete the case and all phase tracking records (CasesTrack) for this case. This action cannot be undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => handleDelete(deleteConfirm)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              Delete All Phases
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteAllConfirm} onOpenChange={setDeleteAllConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove All Cases</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete all currently filtered cases and all phase tracking records for each one.
+              Total selected: {cases.length}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAllCases}
+              disabled={bulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeleting ? "Removing..." : "Remove All Cases"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -363,7 +463,7 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
             </Link>
           </Button>
           <Button size="sm" variant="outline" onClick={onDelete} className="gap-1.5 text-destructive hover:text-destructive">
-            <Trash2 className="size-3.5" /> Delete
+            <Trash2 className="size-3.5" /> Delete All Phases
           </Button>
         </div>
       </CardContent>
