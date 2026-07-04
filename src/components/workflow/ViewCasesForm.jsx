@@ -35,7 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ManageCaseDialog, { deleteCase } from "./ManageCaseDialog";
-import { Filter, X, CheckCircle2, Eye, Settings2, Trash2 } from "lucide-react";
+import { Filter, X, CheckCircle2, Eye, Settings2, Trash2, Loader2 } from "lucide-react";
 
 export default function ViewCasesForm() {
   const [allCases, setAllCases] = useState([]);
@@ -49,6 +49,7 @@ export default function ViewCasesForm() {
 
   const [manageCase, setManageCase] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [singleDeleting, setSingleDeleting] = useState(false);
   const [deleteDetails, setDeleteDetails] = useState(null);
   const [deleteDetailsLoading, setDeleteDetailsLoading] = useState(false);
   const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
@@ -198,12 +199,15 @@ export default function ViewCasesForm() {
   };
 
   const handleDelete = async (caseId) => {
+    setSingleDeleting(true);
     try {
       await deleteCase(caseId);
       setSnack({ message: "Case deleted", isError: false });
       setDeleteConfirm(null);
     } catch (e) {
       setSnack({ message: e.message, isError: true });
+    } finally {
+      setSingleDeleting(false);
     }
   };
 
@@ -419,9 +423,14 @@ export default function ViewCasesForm() {
             </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleDelete(deleteConfirm)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogCancel disabled={singleDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleDelete(deleteConfirm)}
+              disabled={singleDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {singleDeleting ? <Loader2 className="size-4 animate-spin" /> : null}
+              {singleDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -572,9 +581,15 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
           <Button size="sm" onClick={onManage} className="gap-1.5">
             <Settings2 className="size-3.5" /> Manage
           </Button>
-          <Button size="sm" variant="outline" asChild className="gap-1.5">
-            <Link href={`/dashboard/workflow/cases/${caseData.id}`}>
-              <Eye className="size-3.5" /> View
+          <Button
+            size="sm"
+            variant="outline"
+            asChild
+            className="gap-1.5 min-w-20 border-blue-400/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 hover:text-blue-200 hover:border-blue-300/50"
+          >
+            <Link href={`/dashboard/workflow/cases/${caseData.id}`} className="inline-flex items-center gap-1.5">
+              <Eye className="size-3.5 shrink-0" />
+              <span>View</span>
             </Link>
           </Button>
           <Button size="sm" variant="outline" onClick={onDelete} className="gap-1.5 text-destructive hover:text-destructive">
