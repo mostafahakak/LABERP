@@ -57,12 +57,15 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
   }, [invoiceId]);
 
   const remaining = Number(invoice?.remainingAmount) || 0;
+  const invoiceTotal = Number(invoice?.total) || 0;
   const isIncome = type === 'Income';
 
   const printRef = useRef(null);
 
   const previousBillVal = Number(invoice?.previousBillAmount) || 0;
   const currentBill = Number(invoice?.total) || 0;
+  const paidPrintAmount = Number(invoice?.paidAmount) || 0;
+  const remainingPrintAmount = Number(invoice?.remainingAmount) || 0;
   const grandPrintTotal = previousBillVal + currentBill;
 
   const handlePrint = useCallback(() => {
@@ -156,6 +159,7 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
       batch.update(doc(db, 'Finance', invoiceId), {
         paidAmount: increment(inputAmount),
         remainingAmount: increment(-inputAmount),
+        total: invoiceTotal,
         status: newRemaining <= 0 ? 'Paid' : 'Remaining',
         bank: bank.name,
         bankId: bank.id,
@@ -246,6 +250,7 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
       batch.update(doc(db, 'Finance', invoiceId), {
         paidAmount: increment(-amt),
         remainingAmount: increment(amt),
+        total: invoiceTotal,
         status: 'Remaining',
       });
       await batch.commit();
@@ -349,6 +354,13 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
                 <div className="value">{invoice.status}</div>
                 <div className="label">Payment</div>
                 <div className="value">{invoice.bank || '—'}</div>
+                <div className="label">Plan</div>
+                <div className="value">
+                  {invoice.paymentPlan || '—'}
+                  {invoice.paymentPlan === 'Installments' && Number(invoice.installmentMonths) > 0
+                    ? ` (${invoice.installmentMonths} months)`
+                    : ''}
+                </div>
               </div>
             </div>
 
@@ -396,6 +408,14 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
                 <div className="totals-row grand">
                   <span>Total</span>
                   <span>{formatPriceLE(grandPrintTotal)}</span>
+                </div>
+                <div className="totals-row">
+                  <span className="totals-label">Paid</span>
+                  <span className="totals-value">{formatPriceLE(paidPrintAmount)}</span>
+                </div>
+                <div className="totals-row">
+                  <span className="totals-label">Remaining</span>
+                  <span className="totals-value">{formatPriceLE(remainingPrintAmount)}</span>
                 </div>
               </div>
             </div>
