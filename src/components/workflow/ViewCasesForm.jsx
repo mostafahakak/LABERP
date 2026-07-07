@@ -35,7 +35,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ManageCaseDialog, { deleteCase } from "./ManageCaseDialog";
-import { Filter, X, CheckCircle2, Eye, Settings2, Trash2, Loader2 } from "lucide-react";
+import EditCaseDialog from "./EditCaseDialog";
+import { Filter, X, CheckCircle2, Eye, Settings2, Trash2, Loader2, Pencil } from "lucide-react";
 
 export default function ViewCasesForm() {
   const [allCases, setAllCases] = useState([]);
@@ -48,6 +49,7 @@ export default function ViewCasesForm() {
   const [dueFilter, setDueFilter] = useState("All");
 
   const [manageCase, setManageCase] = useState(null);
+  const [editCase, setEditCase] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [singleDeleting, setSingleDeleting] = useState(false);
   const [deleteDetails, setDeleteDetails] = useState(null);
@@ -378,6 +380,7 @@ export default function ViewCasesForm() {
             key={c.id}
             caseData={c}
             onManage={() => setManageCase(c)}
+            onEdit={() => setEditCase(c)}
             onDelete={() => openDeleteCaseDialog(c)}
             onFinalize={() => handleFinalize(c.id)}
           />
@@ -394,6 +397,15 @@ export default function ViewCasesForm() {
           caseId={manageCase.id}
           caseData={manageCase}
           onClose={() => setManageCase(null)}
+        />
+      )}
+
+      {editCase && (
+        <EditCaseDialog
+          caseId={editCase.id}
+          caseData={editCase}
+          onClose={() => setEditCase(null)}
+          onSuccess={() => setSnack({ message: "Case updated successfully", isError: false })}
         />
       )}
 
@@ -480,7 +492,7 @@ export default function ViewCasesForm() {
   );
 }
 
-function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
+function CaseCard({ caseData, onManage, onEdit, onDelete, onFinalize }) {
   const [balance, setBalance] = useState(null);
   const delayed = isDelayed(caseData);
   const overdue = isOverdue(caseData);
@@ -594,6 +606,9 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
           </Button>
           <Button size="sm" variant="outline" onClick={onDelete} className="gap-1.5 text-destructive hover:text-destructive">
             <Trash2 className="size-3.5" /> Delete
+          </Button>
+          <Button size="sm" variant="outline" onClick={onEdit} className="gap-1.5">
+            <Pencil className="size-3.5" /> Edit
           </Button>
         </div>
       </CardContent>

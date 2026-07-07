@@ -33,6 +33,7 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
 
   const [invoice, setInvoice] = useState(null);
   const [items, setItems] = useState([]);
+  const [caseCodesByCaseId, setCaseCodesByCaseId] = useState({});
   const [payments, setPayments] = useState([]);
   const [banks, setBanks] = useState([]);
   const [payAmount, setPayAmount] = useState('');
@@ -60,6 +61,40 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
     return () => { unsub(); unsubItems(); unsubPayments(); };
   }, [invoiceId]);
 
+  useEffect(() => {
+    const loadCaseCodes = async () => {
+      if (!invoice) {
+        setCaseCodesByCaseId({});
+        return;
+      }
+
+      const caseIdsFromItems = items
+        .map((item) => item.caseId)
+        .filter(Boolean);
+      const caseIdsFromInvoice = Array.isArray(invoice.caseIds)
+        ? invoice.caseIds.filter(Boolean)
+        : [invoice.caseId].filter(Boolean);
+      const uniqueCaseIds = [...new Set([...caseIdsFromItems, ...caseIdsFromInvoice])];
+
+      if (uniqueCaseIds.length === 0) {
+        setCaseCodesByCaseId({});
+        return;
+      }
+
+      const codeMap = {};
+      await Promise.all(uniqueCaseIds.map(async (caseId) => {
+        const caseSnap = await getDoc(doc(db, 'Cases', caseId));
+        if (caseSnap.exists()) {
+          codeMap[caseId] = caseSnap.data()?.caseCode || '—';
+        }
+      }));
+
+      setCaseCodesByCaseId(codeMap);
+    };
+
+    loadCaseCodes();
+  }, [invoice, items]);
+
   const remaining = Number(invoice?.remainingAmount) || 0;
   const invoiceTotal = Number(invoice?.total) || 0;
   const isIncome = type === 'Income';
@@ -71,6 +106,13 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
   const paidPrintAmount = Number(invoice?.paidAmount) || 0;
   const remainingPrintAmount = Number(invoice?.remainingAmount) || 0;
   const grandPrintTotal = previousBillVal + currentBill;
+  const invoiceCaseCode = invoice?.caseCode || '—';
+
+  const getPrintedCaseCode = (item) => {
+    if (item?.caseCode) return item.caseCode;
+    if (item?.caseId && caseCodesByCaseId[item.caseId]) return caseCodesByCaseId[item.caseId];
+    return invoiceCaseCode;
+  };
 
   const handlePrint = useCallback(() => {
     const content = printRef.current;
@@ -794,15 +836,17 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
               <thead>
                 <tr>
                   <th style={{ width: '10%' }}>#</th>
-                  <th style={{ width: '40%' }}>Case</th>
+                  <th style={{ width: '24%' }}>Case Code</th>
+                  <th style={{ width: '26%' }}>Case</th>
                   <th style={{ width: '15%' }}>Quantity</th>
-                  <th style={{ width: '35%' }}>Type</th>
+                  <th style={{ width: '25%' }}>Type</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item, idx) => (
                   <tr key={item.id}>
                     <td>{idx + 1}</td>
+                    <td>{getPrintedCaseCode(item)}</td>
                     <td>{item.patientName || invoice.patientName || invoice.name || '—'}</td>
                     <td>{item.quantity || 1}</td>
                     <td>{item.name || '—'}</td>
@@ -811,6 +855,7 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
                 {items.length === 0 && (
                   <tr>
                     <td>1</td>
+                    <td>{invoiceCaseCode}</td>
                     <td>{invoice.patientName || invoice.name || '—'}</td>
                     <td>1</td>
                     <td>{invoice.type || '—'}</td>
