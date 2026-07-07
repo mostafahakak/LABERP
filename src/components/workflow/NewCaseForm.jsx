@@ -19,7 +19,7 @@ import {
   Snackbar,
   LoadingOverlay,
 } from "@/components/ui/PageComponents";
-import DentalChart, { UPPER_TOOTH_IDS, LOWER_TOOTH_IDS, ALL_TEETH } from "@/components/workflow/DentalChart";
+import DentalChart, { ALL_TEETH } from "@/components/workflow/DentalChart";
 
 export default function NewCaseForm() {
   const { user } = useAuth();
@@ -190,6 +190,11 @@ export default function NewCaseForm() {
     .filter(Boolean)
     .filter((t, i, arr) => arr.findIndex((x) => x.id === t.id) === i);
 
+  const selectedJaws = selectedTypesList
+    .filter((e) => e.jaw)
+    .map((e) => e.jaw)
+    .filter((jaw, i, arr) => arr.indexOf(jaw) === i);
+
   const resetForm = () => {
     setSelectedCaseType(null);
     setSelectedClinic(null);
@@ -231,18 +236,12 @@ export default function NewCaseForm() {
       }];
     } else if (pickerContext?.mode === "jaw") {
       const jawLabel = pickerContext.jaw === "upper" ? "Upper Jaw" : "Lower Jaw";
-      const toothIds = pickerContext.jaw === "upper" ? UPPER_TOOTH_IDS : LOWER_TOOTH_IDS;
-      // Add one entry per tooth in the jaw
-      newEntries = toothIds.map((tid) => {
-        const t = ALL_TEETH.find((x) => x.id === tid);
-        return {
-          name: type.name,
-          price: type.price,
-          toothId: tid,
-          toothLabel: t ? t.label : tid,
-          jawLabel,
-        };
-      });
+      newEntries = [{
+        name: type.name,
+        price: type.price,
+        jaw: pickerContext.jaw,
+        jawLabel,
+      }];
     } else {
       // Fallback: no tooth/jaw context (manual add from list)
       newEntries = [{ name: type.name, price: type.price }];
@@ -362,6 +361,11 @@ export default function NewCaseForm() {
                             {entry.toothLabel}
                           </span>
                         )}
+                        {!entry.toothLabel && entry.jawLabel && (
+                          <span className="shrink-0 inline-flex items-center justify-center px-3 h-10 rounded-full bg-blue-500 text-white text-xs font-semibold">
+                            {entry.jawLabel}
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => {
@@ -427,6 +431,7 @@ export default function NewCaseForm() {
                     <div className="border rounded-xl p-4 bg-muted/30">
                       <DentalChart
                         selectedTeeth={selectedTeeth}
+                        selectedJaws={selectedJaws}
                         onToothClick={handleToothClick}
                         onJawClick={handleJawClick}
                       />

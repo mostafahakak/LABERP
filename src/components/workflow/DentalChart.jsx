@@ -123,7 +123,7 @@ export const LOWER_TOOTH_IDS = ALL_TEETH.filter((t) => t.label.startsWith("3") |
 export const getToothById = (id) => ALL_TEETH.find((t) => t.id === id);
 export { ALL_TEETH };
 
-export default function DentalChart({ selectedTeeth = [], onToothClick, onJawClick }) {
+export default function DentalChart({ selectedTeeth = [], selectedJaws = [], onToothClick, onJawClick }) {
   const [hoveredTooth, setHoveredTooth] = useState(null);
   const [hoveredJaw, setHoveredJaw] = useState(null);
 
@@ -151,12 +151,14 @@ export default function DentalChart({ selectedTeeth = [], onToothClick, onJawCli
     return "#A6A6A5";
   };
 
-  const upperSelected = ALL_TEETH
+  const allUpperTeethSelected = ALL_TEETH
     .filter((t) => t.label.startsWith("1") || t.label.startsWith("2"))
     .every((t) => selectedTeeth.some((s) => s.id === t.id));
-  const lowerSelected = ALL_TEETH
+  const allLowerTeethSelected = ALL_TEETH
     .filter((t) => t.label.startsWith("3") || t.label.startsWith("4"))
     .every((t) => selectedTeeth.some((s) => s.id === t.id));
+  const upperSelected = selectedJaws.includes("upper") || allUpperTeethSelected;
+  const lowerSelected = selectedJaws.includes("lower") || allLowerTeethSelected;
 
   return (
     <div className="w-full flex flex-col items-center">

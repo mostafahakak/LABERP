@@ -92,7 +92,15 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
   .invoice-page { max-width: 800px; margin: 0 auto; padding: 32px; }
   .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 3px solid #c2a18c; padding-bottom: 24px; }
   .header-left { display: flex; flex-direction: column; gap: 6px; }
-  .logo { height: 60px; width: auto; margin-bottom: 8px; }
+  .logo {
+    width: 200px;
+    height: 64px;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: left center;
+    margin-bottom: 8px;
+    display: block;
+  }
   .clinic-name { font-size: 22px; font-weight: 700; color: #1a1a2e; }
   .doctor-name { font-size: 14px; color: #6b6780; }
   .header-right { text-align: right; }
