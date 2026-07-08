@@ -591,6 +591,13 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
           <p><span className="text-muted-foreground">Dr:</span> {caseData.drName}</p>
           <p><span className="text-muted-foreground">Patient:</span> {caseData.patientName}</p>
           <p><span className="text-muted-foreground">Due:</span> {caseData.dueDate || caseData.caseRequestDate}</p>
+          {Array.isArray(caseData.types) && caseData.types.some((t) => t.toothLabel || t.jawLabel) && (
+            <p className="col-span-full"><span className="text-muted-foreground">Teeth/Jaw:</span> {caseData.types.map((t) => {
+              if (t.toothLabel) return `#${t.toothLabel}`;
+              if (t.jawLabel) return t.jawLabel;
+              return null;
+            }).filter(Boolean).join(', ')}</p>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
