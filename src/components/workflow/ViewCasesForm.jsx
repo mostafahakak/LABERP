@@ -612,7 +612,7 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
             <Trash2 className="size-3.5" /> Delete
           </Button>
           <Button size="sm" variant="outline" asChild className="gap-1.5">
-            <Link href={`/dashboard/workflow/cases/edit?id=${caseData.id}`}>
+            <Link href={`/dashboard/workflow/new-case?id=${caseData.id}`}>
               <Pencil className="size-3.5" /> Edit
             </Link>
           </Button>

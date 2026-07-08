@@ -349,20 +349,39 @@ export default function NewCaseForm({ editCaseId }) {
         caseRequestDate,
         dueDate,
         notes,
-        status: selectedCaseType === "Physical" ? "Pending delivery" : "Design",
-        phase: selectedCaseType === "Physical" ? "Phase 1" : "Phase 2",
-        createdDate: formatDate(now),
-        createdTime: formatTime(now),
-        createdBy: user.uid,
-        createdByName: user.name,
       };
       if (selectedCaseType === "Physical")
         caseData.deliveryCompany = selectedDeliveryCompany;
       else caseData.assignedUser = selectedUser;
 
-      await addDoc(collection(db, "Cases"), caseData);
-      setSnack({ message: "Case created successfully", isError: false });
-      resetForm();
+      if (isEdit) {
+        await updateDoc(doc(db, "Cases", editCaseId), caseData);
+
+        await addDoc(collection(db, "CasesTrack"), {
+          action: "Edit Case",
+          caseUID: editCaseId,
+          clinicName: selectedClinic,
+          date: formatDate(now),
+          time: formatTime(now),
+          adminName: user?.name || "",
+          adminID: user?.uid || "",
+          status: editCaseData?.status || "",
+          phase: editCaseData?.phase || "",
+        });
+
+        setSnack({ message: "Case updated successfully", isError: false });
+      } else {
+        caseData.status = selectedCaseType === "Physical" ? "Pending delivery" : "Design";
+        caseData.phase = selectedCaseType === "Physical" ? "Phase 1" : "Phase 2";
+        caseData.createdDate = formatDate(now);
+        caseData.createdTime = formatTime(now);
+        caseData.createdBy = user.uid;
+        caseData.createdByName = user.name;
+
+        await addDoc(collection(db, "Cases"), caseData);
+        setSnack({ message: "Case created successfully", isError: false });
+        resetForm();
+      }
     } catch (err) {
       setSnack({
         message: `Error creating case: ${err.message}`,
@@ -375,8 +394,8 @@ export default function NewCaseForm({ editCaseId }) {
 
   return (
     <>
-      <Header title="New Case" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
-      <PageCard title="New Case" icon="??">
+      <Header title={isEdit ? "Edit Case" : "New Case"} breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
+      <PageCard title={isEdit ? "Edit Case" : "New Case"} icon="??">
         <form onSubmit={submitCase}>
           <ResponsiveRow width={width}>
             <SelectField
@@ -546,7 +565,7 @@ export default function NewCaseForm({ editCaseId }) {
                 className="mt-6 w-full max-w-md px-6 py-3 bg-primary rounded-lg font-bold flex items-center justify-center gap-2"
                 
               >
-                {loading ? "Creating..." : "Create Case"}
+                {loading ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save Changes" : "Create Case")}
               </button>
             </>
           )}
