@@ -46,6 +46,7 @@ export default function NewCaseForm() {
   const [clinics, setClinics] = useState([]);
   const [clinicDocs, setClinicDocs] = useState([]);
   const [allDoctors, setAllDoctors] = useState([]);
+  const [allCases, setAllCases] = useState([]);
   const [drNames, setDrNames] = useState([]);
   const [deliveryCompanies, setDeliveryCompanies] = useState([]);
   const [users, setUsers] = useState([]);
@@ -112,6 +113,9 @@ export default function NewCaseForm() {
           .sort((a, b) => a.name.localeCompare(b.name)),
       );
     });
+    getDocs(collection(db, "Cases")).then((snap) => {
+      setAllCases(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
   }, []);
 
   // Derive effective types: use clinic-specific prices when a clinic is selected
@@ -139,15 +143,29 @@ export default function NewCaseForm() {
   }, [selectedClinic, allDoctors, selectedDrName]);
 
   useEffect(() => {
-    if (selectedClinic && selectedDrName) {
-      const clinicNum = (clinics.indexOf(selectedClinic) + 1).toString().padStart(2, "0");
-      const drNum = (drNames.indexOf(selectedDrName) + 1).toString().padStart(2, "0");
-      const timestamp = Date.now().toString(36).toUpperCase().slice(-4);
-      setCaseCode(`${clinicNum}-${drNum}-${timestamp}`);
-    } else {
+    if (!selectedClinic || !selectedDrName) {
       setCaseCode("");
+      return;
     }
-  }, [selectedClinic, selectedDrName, clinics, drNames]);
+
+    const clinicNum = (clinics.indexOf(selectedClinic) + 1).toString().padStart(2, "0");
+    const drNum = (drNames.indexOf(selectedDrName) + 1).toString().padStart(2, "0");
+    const prefix = `${clinicNum}-${drNum}-`;
+
+    const maxCaseNumFromCodes = allCases.reduce((maxNum, c) => {
+      if (typeof c.caseCode !== "string" || !c.caseCode.startsWith(prefix)) return maxNum;
+      const lastPart = c.caseCode.slice(prefix.length);
+      const parsed = parseInt(lastPart, 10);
+      return Number.isFinite(parsed) ? Math.max(maxNum, parsed) : maxNum;
+    }, 0);
+
+    const sameClinicDoctorCount = allCases.filter(
+      (c) => c.clinicName === selectedClinic && c.drName === selectedDrName,
+    ).length;
+
+    const nextCaseNum = Math.max(maxCaseNumFromCodes, sameClinicDoctorCount) + 1;
+    setCaseCode(`${clinicNum}-${drNum}-${String(nextCaseNum).padStart(3, "0")}`);
+  }, [selectedClinic, selectedDrName, clinics, drNames, allCases]);
 
   const updateTotalPrice = (list) => {
     const sum = list.reduce((prev, el) => prev + (Number(el.price) || 0), 0);

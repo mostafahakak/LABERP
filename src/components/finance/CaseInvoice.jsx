@@ -38,7 +38,8 @@ export default function CaseInvoice() {
   const [casePrices, setCasePrices] = useState({});
   const [clinicName, setClinicName] = useState("");
   const [drFilter, setDrFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [paymentPlan, setPaymentPlan] = useState("Full Payment");
   const [bankName, setBankName] = useState("");
   const [bankId, setBankId] = useState("");
@@ -113,12 +114,16 @@ export default function CaseInvoice() {
     if (clinicName)
       filtered = filtered.filter((c) => c.clinicName === clinicName);
     if (drFilter) filtered = filtered.filter((c) => c.drName === drFilter);
-    if (dateFilter)
+    if (dateFrom)
       filtered = filtered.filter(
-        (c) => c.caseRequestDate === dateFilter || c.dueDate === dateFilter,
+        (c) => (c.caseRequestDate || "") >= dateFrom || (c.dueDate || "") >= dateFrom,
+      );
+    if (dateTo)
+      filtered = filtered.filter(
+        (c) => (c.caseRequestDate || "") <= dateTo || (c.dueDate || "") <= dateTo,
       );
     setCases(filtered);
-  }, [clinicName, drFilter, dateFilter, allCases]);
+  }, [clinicName, drFilter, dateFrom, dateTo, allCases]);
 
   const fetchOldUnpaidBillsByClinic = async (selectedClinic) => {
     if (!selectedClinic) {
@@ -352,7 +357,7 @@ export default function CaseInvoice() {
     <>
       <Header title="Case Invoice" />
       <PageCard title="Filters">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <SelectField
             label="Clinic Name"
             value={clinicName}
@@ -368,9 +373,15 @@ export default function CaseInvoice() {
             placeholder="All"
           />
           <TextField
-            label="Date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
+            label="From"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            type="date"
+          />
+          <TextField
+            label="To"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
             type="date"
           />
         </div>

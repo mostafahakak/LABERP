@@ -35,7 +35,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ManageCaseDialog, { deleteCase } from "./ManageCaseDialog";
-import EditCaseDialog from "./EditCaseDialog";
 import { Filter, X, CheckCircle2, Eye, Settings2, Trash2, Loader2, Pencil } from "lucide-react";
 
 export default function ViewCasesForm() {
@@ -49,7 +48,6 @@ export default function ViewCasesForm() {
   const [dueFilter, setDueFilter] = useState("All");
 
   const [manageCase, setManageCase] = useState(null);
-  const [editCase, setEditCase] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [singleDeleting, setSingleDeleting] = useState(false);
   const [deleteDetails, setDeleteDetails] = useState(null);
@@ -380,7 +378,6 @@ export default function ViewCasesForm() {
             key={c.id}
             caseData={c}
             onManage={() => setManageCase(c)}
-            onEdit={() => setEditCase(c)}
             onDelete={() => openDeleteCaseDialog(c)}
             onFinalize={() => handleFinalize(c.id)}
           />
@@ -397,15 +394,6 @@ export default function ViewCasesForm() {
           caseId={manageCase.id}
           caseData={manageCase}
           onClose={() => setManageCase(null)}
-        />
-      )}
-
-      {editCase && (
-        <EditCaseDialog
-          caseId={editCase.id}
-          caseData={editCase}
-          onClose={() => setEditCase(null)}
-          onSuccess={() => setSnack({ message: "Case updated successfully", isError: false })}
         />
       )}
 
@@ -492,7 +480,7 @@ export default function ViewCasesForm() {
   );
 }
 
-function CaseCard({ caseData, onManage, onEdit, onDelete, onFinalize }) {
+function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
   const [balance, setBalance] = useState(null);
   const delayed = isDelayed(caseData);
   const overdue = isOverdue(caseData);
@@ -511,6 +499,20 @@ function CaseCard({ caseData, onManage, onEdit, onDelete, onFinalize }) {
     caseData.status === "Ready to be delivered" ||
     caseData.status === "Ready to Invoice" ||
     caseData.status === "Done";
+  const isDelivered =
+    caseData.status === "Ready to be delivered" ||
+    caseData.status === "Ready to Invoice" ||
+    caseData.status === "Done";
+
+  const formatType = (typeStr) => {
+    if (!typeStr) return "";
+    const parts = typeStr.split(",").map((s) => s.trim()).filter(Boolean);
+    const counts = {};
+    parts.forEach((p) => { counts[p] = (counts[p] || 0) + 1; });
+    return Object.entries(counts)
+      .map(([name, count]) => (count > 1 ? `${count}x ${name}` : name))
+      .join(", ");
+  };
 
   useEffect(() => {
     if (!caseData.clinicName) return;
@@ -528,15 +530,17 @@ function CaseCard({ caseData, onManage, onEdit, onDelete, onFinalize }) {
   return (
     <Card className={`relative overflow-hidden transition-all ${
       overdue
-        ? "border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] ring-2 ring-red-500/20"
+        ? isDelivered
+          ? "border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] ring-2 ring-emerald-500/20"
+          : "border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] ring-2 ring-red-500/20"
         : delayed
           ? "border-2 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.2)] ring-1 ring-amber-500/20"
           : ""
     }`}>
       {overdue && (
-        <div className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 flex items-center gap-2">
-          <span className="inline-block w-2 h-2 bg-white rounded-full animate-pulse" />
-          ⚠️ OVERDUE — This case has passed its due date!
+        <div className={`${isDelivered ? "bg-emerald-600" : "bg-red-600"} text-white text-xs font-bold px-3 py-1.5 flex items-center gap-2`}>
+          <span className={`inline-block w-2 h-2 bg-white rounded-full ${isDelivered ? "" : "animate-pulse"}`} />
+          {isDelivered ? "✅ DELIVERED — This case has been completed." : "⚠️ OVERDUE — This case has passed its due date!"}
         </div>
       )}
       {delayed && !overdue && (
@@ -583,7 +587,7 @@ function CaseCard({ caseData, onManage, onEdit, onDelete, onFinalize }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-foreground mb-4">
           <p><span className="text-muted-foreground">ID:</span> {shortId(caseData.id)}</p>
           <p><span className="text-muted-foreground">Price:</span> {formatPriceLE(caseData.price)}</p>
-          <p><span className="text-muted-foreground">Type:</span> {caseData.type}</p>
+          <p><span className="text-muted-foreground">Type:</span> {formatType(caseData.type)}</p>
           <p><span className="text-muted-foreground">Dr:</span> {caseData.drName}</p>
           <p><span className="text-muted-foreground">Patient:</span> {caseData.patientName}</p>
           <p><span className="text-muted-foreground">Due:</span> {caseData.dueDate || caseData.caseRequestDate}</p>
@@ -607,8 +611,10 @@ function CaseCard({ caseData, onManage, onEdit, onDelete, onFinalize }) {
           <Button size="sm" variant="outline" onClick={onDelete} className="gap-1.5 text-destructive hover:text-destructive">
             <Trash2 className="size-3.5" /> Delete
           </Button>
-          <Button size="sm" variant="outline" onClick={onEdit} className="gap-1.5">
-            <Pencil className="size-3.5" /> Edit
+          <Button size="sm" variant="outline" asChild className="gap-1.5">
+            <Link href={`/dashboard/workflow/cases/${caseData.id}/edit`}>
+              <Pencil className="size-3.5" /> Edit
+            </Link>
           </Button>
         </div>
       </CardContent>
