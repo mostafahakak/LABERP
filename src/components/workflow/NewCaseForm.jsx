@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/PageComponents";
 import DentalChart, { ALL_TEETH } from "@/components/workflow/DentalChart";
 
-export default function NewCaseForm() {
+export default function NewCaseForm({ editCaseId }) {
   const { user } = useAuth();
   const [width, setWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200,
@@ -117,6 +117,37 @@ export default function NewCaseForm() {
       setAllCases(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
   }, []);
+
+  // Load existing case data when editing
+  const isEdit = Boolean(editCaseId);
+  const [editCaseData, setEditCaseData] = useState(null);
+
+  useEffect(() => {
+    if (!editCaseId) return;
+    getDoc(doc(db, "Cases", editCaseId)).then((snap) => {
+      if (!snap.exists()) return;
+      const data = { id: snap.id, ...snap.data() };
+      setEditCaseData(data);
+      setSelectedCaseType(data.caseType || null);
+      setSelectedClinic(data.clinicName || null);
+      setSelectedDrName(data.drName || null);
+      setSelectedDeliveryCompany(data.deliveryCompany || null);
+      setSelectedUser(data.assignedUser || null);
+      setPatientName(data.patientName || "");
+      setShade(data.shade || "");
+      setNotes(data.notes || "");
+      setCaseRequestDate(data.caseRequestDate || "");
+      setDueDate(data.dueDate || "");
+      setCaseCode(data.caseCode || "");
+      if (Array.isArray(data.types) && data.types.length > 0) {
+        setSelectedTypesList(data.types);
+        const sum = data.types.reduce((s, e) => s + (Number(e.price) || 0), 0);
+        setTotalPrice(formatPrice(sum));
+      } else {
+        setTotalPrice(String(data.price || 0));
+      }
+    });
+  }, [editCaseId]);
 
   // Derive effective types: use clinic-specific prices when a clinic is selected
   const types = allTypes.map((t) => {
