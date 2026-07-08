@@ -180,7 +180,7 @@ function EmployeeCard({ employee, onLongPress }) {
 
   return (
     <Link
-      href={`/dashboard/hr/employees/${employee.id}`}
+      href={`/dashboard/hr/employees/detail?id=${employee.id}`}
       onContextMenu={(e) => {
         e.preventDefault();
         onLongPress();

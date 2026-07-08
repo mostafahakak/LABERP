@@ -66,7 +66,7 @@ export default function ClinicDetailForm({ clinicId }) {
         <h3 className="font-bold text-foreground mb-3">Cases ({cases.length})</h3>
         <div className="space-y-2">
           {cases.map((c) => (
-            <Link key={c.id} href={`/dashboard/workflow/cases/${c.id}`} className="block border rounded-lg p-3 hover:bg-muted text-foreground">
+            <Link key={c.id} href={`/dashboard/workflow/cases/detail?id=${c.id}`} className="block border rounded-lg p-3 hover:bg-muted text-foreground">
               <div className="flex justify-between">
                 <span>{c.patientName} — {c.type}</span>
                 <span className="text-sm text-muted-foreground">{shortId(c.id)} · {c.status}</span>

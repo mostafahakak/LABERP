@@ -1,15 +1,21 @@
 'use client';
 
-import { Suspense, use } from 'react';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import InvoiceDetail from '@/components/finance/InvoiceDetail';
 
-export default function Page({ params }) {
-  const { id } = use(params);
+function Content() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  return <InvoiceDetail invoiceId={id} />;
+}
+
+export default function Page() {
   return (
     <DashboardLayout>
       <Suspense fallback={<p className="text-center py-8">Loading...</p>}>
-        <InvoiceDetail invoiceId={id} />
+        <Content />
       </Suspense>
     </DashboardLayout>
   );

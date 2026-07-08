@@ -20,7 +20,7 @@ export default function FinanceDocCard({ doc, linkable = true }) {
   const statusColor = status === 'Paid' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' : 'text-destructive bg-destructive/10';
   const typeColor = type === 'Invoice' ? 'text-blue-600 bg-blue-50' : 'text-purple-600 bg-purple-50';
   const logType = type === 'Invoice' ? 'Income' : 'Expense';
-  const href = `/dashboard/finance/invoices/${doc.id}?type=${logType}`;
+  const href = `/dashboard/finance/invoices/detail?id=${doc.id}&type=${logType}`;
 
   const inner = (
     <div className="bg-card rounded-2xl shadow-sm border border-border p-5 hover:shadow-md transition-shadow">

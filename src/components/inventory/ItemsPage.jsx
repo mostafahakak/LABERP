@@ -354,7 +354,7 @@ export default function ItemsPage() {
                   className="border rounded-lg p-4 hover:bg-muted cursor-pointer"
                   onClick={() =>
                     router.push(
-                      `/dashboard/inventory/items/${item.id}/history?name=${encodeURIComponent(item.name || '')}`
+                      `/dashboard/inventory/items/history?id=${item.id}&name=${encodeURIComponent(item.name || '')}`
                     )
                   }
                 >
@@ -397,7 +397,7 @@ export default function ItemsPage() {
                       type="button"
                       onClick={() =>
                         router.push(
-                          `/dashboard/inventory/items/${item.id}/history?name=${encodeURIComponent(item.name || '')}`
+                          `/dashboard/inventory/items/history?id=${item.id}&name=${encodeURIComponent(item.name || '')}`
                         )
                       }
                       className="px-3 py-1 border rounded-md text-sm text-primary"

@@ -26,7 +26,7 @@ function InvoiceCard({ invoice }) {
 
   return (
     <Link
-      href={`/dashboard/finance/invoices/${invoice.id}`}
+      href={`/dashboard/finance/invoices/detail?id=${invoice.id}`}
       className="block border rounded-xl p-4 hover:shadow-md transition-shadow bg-card mb-3"
     >
       <div className="flex justify-between items-start gap-2 mb-2">

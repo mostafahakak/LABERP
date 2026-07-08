@@ -46,7 +46,7 @@ function FinanceRecordCard({ record, type }) {
   const bankBefore = Number(record.bankBalanceBefore);
   const bankAfter = Number(record.bankBalanceAfter);
   const detailType = type === 'Invoice' ? 'Income' : 'Outcome';
-  const href = `/dashboard/finance/invoices/${record.id}?type=${detailType}`;
+  const href = `/dashboard/finance/invoices/detail?id=${record.id}&type=${detailType}`;
 
   return (
     <Link

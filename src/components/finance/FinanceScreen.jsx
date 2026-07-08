@@ -229,7 +229,7 @@ function LogsTab({ logType, allTypesLabel }) {
                     </TableRow>
                   );
                   if (!isExpense && d.actionID) {
-                    return <Link key={d.id} href={`/dashboard/finance/invoices/${d.actionID}?type=Income`} className="contents">{row}</Link>;
+                    return <Link key={d.id} href={`/dashboard/finance/invoices/detail?id=${d.actionID}&type=Income`} className="contents">{row}</Link>;
                   }
                   return row;
                 })}

@@ -252,7 +252,7 @@ export function ManageClinicsForm() {
         <div className="space-y-3">
           {items.map((item) => (
             <div key={item.id} className="flex flex-wrap items-center justify-between border rounded-lg p-4 hover:bg-muted">
-              <Link href={`/dashboard/workflow/clinics/${item.id}`} className="flex-1 min-w-0">
+              <Link href={`/dashboard/workflow/clinics/detail?id=${item.id}`} className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground">{item.name}</p>
                 <p className="text-sm text-muted-foreground">Balance: {formatPriceLE(item.balance || 0)}</p>
               </Link>

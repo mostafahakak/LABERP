@@ -107,7 +107,7 @@ function ClientCard({ client }) {
 
   return (
     <Link
-      href={`/dashboard/hr/clients/${client.id}`}
+      href={`/dashboard/hr/clients/detail?id=${client.id}`}
       className="block bg-card rounded-2xl shadow-sm border border-border p-5 hover:shadow-lg transition-shadow h-full"
     >
       <div className="flex items-start gap-3 mb-3">
