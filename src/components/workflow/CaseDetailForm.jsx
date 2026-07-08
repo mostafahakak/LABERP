@@ -37,6 +37,15 @@ export default function CaseDetailForm({ caseId }) {
   const rows = [
     ['Clinic', caseData.clinicName],
     ['Type', caseData.type],
+    ['Teeth / Jaw', Array.isArray(caseData.types)
+      ? caseData.types
+          .map((t) => {
+            if (t.toothLabel) return `Tooth #${t.toothLabel} — ${t.name}`;
+            if (t.jawLabel) return `${t.jawLabel} — ${t.name}`;
+            return t.name;
+          })
+          .join(', ')
+      : 'N/A'],
     ['Case Type', caseData.caseType],
     ['Doctor', caseData.drName],
     ['Patient', caseData.patientName],

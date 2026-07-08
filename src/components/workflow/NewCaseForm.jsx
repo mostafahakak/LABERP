@@ -143,6 +143,11 @@ export default function NewCaseForm({ editCaseId }) {
         setSelectedTypesList(data.types);
         const sum = data.types.reduce((s, e) => s + (Number(e.price) || 0), 0);
         setTotalPrice(formatPrice(sum));
+        setTeethCount(String(
+          data.types.filter((e) => e.toothId)
+            .map((e) => e.toothId)
+            .filter((v, i, a) => a.indexOf(v) === i).length
+        ));
       } else {
         setTotalPrice(String(data.price || 0));
       }
@@ -337,7 +342,12 @@ export default function NewCaseForm({ editCaseId }) {
       const now = new Date();
       const caseData = {
         type: selectedTypesList.map((e) => e.name).join(", "),
-        types: selectedTypesList.map((e) => ({ name: e.name, price: e.price })),
+        types: selectedTypesList.map((e) => {
+          const entry = { name: e.name, price: e.price };
+          if (e.toothId) { entry.toothId = e.toothId; entry.toothLabel = e.toothLabel; }
+          if (e.jaw) { entry.jaw = e.jaw; entry.jawLabel = e.jawLabel; }
+          return entry;
+        }),
         caseType: selectedCaseType,
         clinicName: selectedClinic,
         drName: selectedDrName,
