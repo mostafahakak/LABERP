@@ -35,7 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ManageCaseDialog, { deleteCase } from "./ManageCaseDialog";
-import { Filter, X, CheckCircle2, Eye, Settings2, Trash2, Loader2, Pencil } from "lucide-react";
+import { Filter, X, CheckCircle2, Eye, Settings2, Trash2, Loader2, Pencil, User, Stethoscope, Calendar, Hash, DollarSign } from "lucide-react";
 
 export default function ViewCasesForm() {
   const [allCases, setAllCases] = useState([]);
@@ -528,30 +528,33 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
   }, [caseData.clinicName]);
 
   return (
-    <Card className={`relative overflow-hidden transition-all ${
+    <Card className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl group ${
       overdue
         ? isDelivered
-          ? "border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)] ring-2 ring-emerald-500/20"
-          : "border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] ring-2 ring-red-500/20"
+          ? "border border-emerald-500/50 shadow-emerald-500/10"
+          : "border border-red-500/50 shadow-red-500/10"
         : delayed
-          ? "border-2 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.2)] ring-1 ring-amber-500/20"
-          : ""
+          ? "border border-amber-500/50 shadow-amber-500/10"
+          : "border-border/50 hover:border-primary/30"
     }`}>
+      {/* Status ribbon */}
       {overdue && (
-        <div className={`${isDelivered ? "bg-emerald-600" : "bg-red-600"} text-white text-xs font-bold px-3 py-1.5 flex items-center gap-2`}>
-          <span className={`inline-block w-2 h-2 bg-white rounded-full ${isDelivered ? "" : "animate-pulse"}`} />
-          {isDelivered ? "✅ DELIVERED — This case has been completed." : "⚠️ OVERDUE — This case has passed its due date!"}
+        <div className={`${isDelivered ? "bg-gradient-to-r from-emerald-600 to-emerald-500" : "bg-gradient-to-r from-red-600 to-red-500"} text-white text-xs font-semibold px-4 py-1.5 flex items-center gap-2`}>
+          <span className={`inline-block w-1.5 h-1.5 bg-white rounded-full ${isDelivered ? "" : "animate-pulse"}`} />
+          {isDelivered ? "✅ Delivered" : "⚠️ Overdue"}
         </div>
       )}
       {delayed && !overdue && (
-        <div className="bg-amber-500 text-white text-xs font-bold px-3 py-1.5 flex items-center gap-2">
-          <span className="inline-block w-2 h-2 bg-white rounded-full animate-pulse" />
-          ⏰ DUE TOMORROW — Action required!
+        <div className="bg-gradient-to-r from-amber-500 to-orange-400 text-white text-xs font-semibold px-4 py-1.5 flex items-center gap-2">
+          <span className="inline-block w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+          ⏰ Due Tomorrow
         </div>
       )}
-      <CardContent className="pt-5">
-        <div className="flex flex-wrap justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3">
+
+      <CardContent className="p-0">
+        {/* Top section — Clinic header with badges */}
+        <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={onFinalize}
@@ -559,69 +562,131 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
               className="shrink-0"
               title="Mark as Finalized"
             >
-              <CheckCircle2 className={`size-5 ${isFinalized ? 'text-emerald-500' : 'text-muted-foreground/40 hover:text-emerald-500'} transition-colors`} />
+              <CheckCircle2 className={`size-5 ${isFinalized ? 'text-emerald-500' : 'text-muted-foreground/30 hover:text-emerald-500'} transition-colors`} />
             </button>
-            <div>
-              <p className="font-bold text-foreground">{caseData.clinicName}</p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🏥</span>
+                <p className="font-bold text-foreground truncate">{caseData.clinicName}</p>
+              </div>
               {caseData.caseCode && (
-                <p className="text-xs text-muted-foreground">{caseData.caseCode}</p>
-              )}
-              {balance !== null && (
-                <p className={`text-sm ${balance >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                  Balance: {formatPriceLE(balance)}
-                </p>
+                <p className="text-xs text-muted-foreground ml-7 font-mono">{caseData.caseCode}</p>
               )}
             </div>
           </div>
-          <div className="flex gap-2 items-start">
-            <Badge variant="secondary">{caseData.caseType}</Badge>
-            <Badge className={phaseColors[phase] || "bg-muted text-foreground"}>{phase}</Badge>
-            <Badge variant={overdue ? 'destructive' : delayed ? 'outline' : 'default'}
-              className={overdue ? 'animate-pulse bg-red-600' : delayed ? 'border-amber-500 text-amber-600 bg-amber-50 dark:bg-amber-950' : ''}
-            >{caseData.status}</Badge>
+          <div className="flex flex-wrap gap-1.5 shrink-0">
+            <Badge variant="outline" className="text-[10px] px-2 py-0.5 border-blue-400/40 text-blue-400">{caseData.caseType}</Badge>
+            <Badge className={`text-[10px] px-2 py-0.5 ${phaseColors[phase] || "bg-muted text-foreground"}`}>{phase}</Badge>
+            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${
+              overdue && !isDelivered ? 'border-red-400/40 text-red-400' : delayed ? 'border-amber-400/40 text-amber-500' : 'border-emerald-400/40 text-emerald-400'
+            }`}>{caseData.status}</Badge>
           </div>
         </div>
 
-        <Separator className="mb-3" />
+        {/* Info grid */}
+        <div className="px-4 pb-3">
+          <div className="rounded-xl bg-muted/40 border border-border/30 p-3 space-y-2">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <Stethoscope className="size-3.5 text-blue-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Doctor</p>
+                  <p className="text-foreground font-medium truncate text-sm">{caseData.drName}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
+                  <User className="size-3.5 text-violet-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Patient</p>
+                  <p className="text-foreground font-medium truncate text-sm">{caseData.patientName}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <DollarSign className="size-3.5 text-emerald-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Price</p>
+                  <p className="text-foreground font-medium text-sm">{formatPriceLE(caseData.price)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                  <Calendar className="size-3.5 text-orange-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Due</p>
+                  <p className="text-foreground font-medium text-sm">{caseData.dueDate || caseData.caseRequestDate}</p>
+                </div>
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm text-foreground mb-4">
-          <p><span className="text-muted-foreground">ID:</span> {shortId(caseData.id)}</p>
-          <p><span className="text-muted-foreground">Price:</span> {formatPriceLE(caseData.price)}</p>
-          <p><span className="text-muted-foreground">Type:</span> {formatType(caseData.type)}</p>
-          <p><span className="text-muted-foreground">Dr:</span> {caseData.drName}</p>
-          <p><span className="text-muted-foreground">Patient:</span> {caseData.patientName}</p>
-          <p><span className="text-muted-foreground">Due:</span> {caseData.dueDate || caseData.caseRequestDate}</p>
-          {Array.isArray(caseData.types) && caseData.types.some((t) => t.toothLabel || t.jawLabel) && (
-            <p className="col-span-full"><span className="text-muted-foreground">Teeth/Jaw:</span> {caseData.types.map((t) => {
-              if (t.toothLabel) return `#${t.toothLabel}`;
-              if (t.jawLabel) return t.jawLabel;
-              return null;
-            }).filter(Boolean).join(', ')}</p>
-          )}
+            {/* Type tags */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider mr-1 self-center">🦷</span>
+              {formatType(caseData.type).split(", ").map((t, i) => (
+                <span key={i} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">{t}</span>
+              ))}
+            </div>
+
+            {/* Teeth / Jaw chips */}
+            {Array.isArray(caseData.types) && caseData.types.some((t) => t.toothLabel || t.jawLabel) && (
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {caseData.types.map((t, i) => {
+                  if (t.toothLabel) return (
+                    <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-medium">
+                      <span className="w-4 h-4 rounded-full bg-sky-500 text-white text-[9px] flex items-center justify-center font-bold">{t.toothLabel}</span>
+                      {t.name}
+                    </span>
+                  );
+                  if (t.jawLabel) return (
+                    <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-medium">
+                      🦴 {t.jawLabel} — {t.name}
+                    </span>
+                  );
+                  return null;
+                })}
+              </div>
+            )}
+
+            {balance !== null && (
+              <div className="pt-1">
+                <span className={`text-xs font-semibold ${balance >= 0 ? "text-emerald-500" : "text-destructive"}`}>
+                  Clinic Balance: {formatPriceLE(balance)}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={onManage} className="gap-1.5">
-            <Settings2 className="size-3.5" /> Manage
+        {/* Action buttons */}
+        <div className="flex items-center gap-1.5 px-4 pb-4">
+          <Button size="sm" onClick={onManage} className="gap-1.5 rounded-lg h-8 text-xs">
+            <Settings2 className="size-3" /> Manage
           </Button>
           <Button
             size="sm"
-            variant="outline"
+            variant="ghost"
             asChild
-            className="gap-1.5 min-w-20 border-blue-400/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 hover:text-blue-200 hover:border-blue-300/50"
+            className="gap-1.5 rounded-lg h-8 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
           >
             <Link href={`/dashboard/workflow/cases/detail?id=${caseData.id}`} className="inline-flex items-center gap-1.5">
-              <Eye className="size-3.5 shrink-0" />
-              <span>View</span>
+              <Eye className="size-3 shrink-0" />
+              View
             </Link>
           </Button>
-          <Button size="sm" variant="outline" onClick={onDelete} className="gap-1.5 text-destructive hover:text-destructive">
-            <Trash2 className="size-3.5" /> Delete
-          </Button>
-          <Button size="sm" variant="outline" asChild className="gap-1.5">
+          <Button size="sm" variant="ghost" asChild className="gap-1.5 rounded-lg h-8 text-xs text-muted-foreground hover:text-foreground">
             <Link href={`/dashboard/workflow/new-case?id=${caseData.id}`}>
-              <Pencil className="size-3.5" /> Edit
+              <Pencil className="size-3" /> Edit
             </Link>
+          </Button>
+          <div className="flex-1" />
+          <Button size="sm" variant="ghost" onClick={onDelete} className="gap-1 rounded-lg h-8 text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10">
+            <Trash2 className="size-3" />
           </Button>
         </div>
       </CardContent>
