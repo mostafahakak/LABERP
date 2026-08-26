@@ -2,7 +2,6 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import ClientDetail from '@/components/hr/ClientDetail';
 
 function Content() {
@@ -13,10 +12,8 @@ function Content() {
 
 export default function Page() {
   return (
-    <DashboardLayout>
       <Suspense fallback={<p className="text-center py-8">Loading...</p>}>
         <Content />
       </Suspense>
-    </DashboardLayout>
   );
 }

@@ -23,6 +23,7 @@ import {
   Snackbar,
   LoadingOverlay,
 } from '@/components/ui/PageComponents';
+import { formatItemSuppliers, getItemSuppliers } from '@/lib/item-suppliers';
 
 const STOCK_FILTERS = ['All', 'Low stock only', 'Above low stock'];
 
@@ -34,7 +35,7 @@ function ItemDialog({ mode, item, categories, suppliers, onClose, onSave, onDele
   const [barcode, setBarcode] = useState(item?.barcode || item?.id || '');
   const [grams, setGrams] = useState(item?.grams?.toString() || '');
   const [category, setCategory] = useState(item?.category || null);
-  const [supplier, setSupplier] = useState(item?.supplier || null);
+  const [selectedSuppliers, setSelectedSuppliers] = useState(() => getItemSuppliers(item));
 
   const catOptions = useMemo(() => {
     const list = [...categories];
@@ -42,15 +43,32 @@ function ItemDialog({ mode, item, categories, suppliers, onClose, onSave, onDele
     return list.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   }, [categories, category]);
 
-  const supOptions = useMemo(() => {
-    const list = [...suppliers];
-    if (supplier && !list.includes(supplier)) list.push(supplier);
-    return list.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-  }, [suppliers, supplier]);
+  const availableSuppliers = useMemo(() => {
+    const selected = new Set(selectedSuppliers.map((s) => s.toLowerCase()));
+    const extra = selectedSuppliers.filter(
+      (s) => !suppliers.some((opt) => opt.toLowerCase() === s.toLowerCase())
+    );
+    return [...suppliers, ...extra]
+      .filter((s) => !selected.has(s.toLowerCase()))
+      .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  }, [suppliers, selectedSuppliers]);
+
+  const addSupplier = (value) => {
+    const name = String(value || '').trim();
+    if (!name) return;
+    setSelectedSuppliers((prev) => {
+      if (prev.some((s) => s.toLowerCase() === name.toLowerCase())) return prev;
+      return [...prev, name];
+    });
+  };
+
+  const removeSupplier = (name) => {
+    setSelectedSuppliers((prev) => prev.filter((s) => s !== name));
+  };
 
   const handleSubmit = () => {
     if (!barcode.trim()) return;
-    if (!category || !supplier) return;
+    if (!category || selectedSuppliers.length === 0) return;
     if (!name.trim()) return;
     const priceNum = parseFloat(price);
     if (!priceNum || priceNum <= 0) return;
@@ -62,7 +80,8 @@ function ItemDialog({ mode, item, categories, suppliers, onClose, onSave, onDele
       name: name.trim(),
       price: priceNum,
       category,
-      supplier,
+      supplier: selectedSuppliers[0],
+      suppliers: selectedSuppliers,
       lowStock: lowStockNum,
       barcode: barcode.trim(),
     };
@@ -84,7 +103,44 @@ function ItemDialog({ mode, item, categories, suppliers, onClose, onSave, onDele
             readOnly={isEditing}
           />
           <SelectField label="Category" value={category} onChange={setCategory} options={catOptions} />
-          <SelectField label="Supplier" value={supplier} onChange={setSupplier} options={supOptions} />
+          <div className="space-y-1.5">
+            <label className="block text-sm text-muted-foreground">Suppliers</label>
+            {selectedSuppliers.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedSuppliers.map((supplier) => (
+                  <span
+                    key={supplier}
+                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-sm text-foreground"
+                  >
+                    {supplier}
+                    <button
+                      type="button"
+                      onClick={() => removeSupplier(supplier)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label={`Remove ${supplier}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <select
+              value=""
+              onChange={(e) => addSupplier(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground"
+            >
+              <option value="">Add supplier...</option>
+              {availableSuppliers.map((supplier) => (
+                <option key={supplier} value={supplier}>
+                  {supplier}
+                </option>
+              ))}
+            </select>
+            {selectedSuppliers.length === 0 && (
+              <p className="text-xs text-muted-foreground">Select at least one supplier.</p>
+            )}
+          </div>
           <TextField label="Item Name" value={name} onChange={(e) => setName(e.target.value)} />
           <TextField label="Price (LE)" value={price} onChange={(e) => setPrice(e.target.value)} type="number" />
           <TextField
@@ -152,6 +208,7 @@ function MakeItemsDialog({ item, onClose, onDone, saving, setSaving }) {
         price: priceNum,
         category: item.category,
         supplier: item.supplier,
+        suppliers: getItemSuppliers(item),
         lowStock: item.lowStock,
         quantity: itemsToMake,
         barcode: '',
@@ -235,8 +292,8 @@ export default function ItemsPage() {
     return items.filter((item) => {
       const name = (item.name || '').toLowerCase();
       const category = (item.category || '').toLowerCase();
-      const supplier = (item.supplier || '').toLowerCase();
-      const matchesSearch = !q || name.includes(q) || category.includes(q) || supplier.includes(q);
+      const supplierText = formatItemSuppliers(item).toLowerCase();
+      const matchesSearch = !q || name.includes(q) || category.includes(q) || supplierText.includes(q);
 
       const quantity = Number(item.quantity) || 0;
       const low = Number(item.lowStock) || 0;
@@ -363,7 +420,7 @@ export default function ItemsPage() {
                     <p className="font-bold text-blue-600">{price.toFixed(2)} LE</p>
                   </div>
                   <p className="text-sm text-foreground/80 mt-1">Category: {item.category || 'N/A'}</p>
-                  <p className="text-sm text-foreground/80">Supplier: {item.supplier || 'N/A'}</p>
+                  <p className="text-sm text-foreground/80">Supplier: {formatItemSuppliers(item)}</p>
                   {isPowder && grams != null && (
                     <div className="flex justify-between items-center mt-2">
                       <p className="text-sm text-purple-700">Grams: {grams.toFixed(1)}g</p>

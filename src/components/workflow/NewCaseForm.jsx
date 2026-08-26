@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { addDoc, collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -20,6 +20,7 @@ import {
   LoadingOverlay,
 } from "@/components/ui/PageComponents";
 import DentalChart, { ALL_TEETH } from "@/components/workflow/DentalChart";
+import { canEditLockedCase, filterUsersForRole } from "@/lib/phase-utils";
 
 export default function NewCaseForm({ editCaseId }) {
   const { user } = useAuth();
@@ -95,12 +96,7 @@ export default function NewCaseForm({ editCaseId }) {
       );
     });
     getDocs(collection(db, "Users")).then((snap) => {
-      setUsers(
-        snap.docs
-          .map((d) => d.data().name)
-          .filter(Boolean)
-          .sort(),
-      );
+      setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
     getDocs(collection(db, "Types")).then((snap) => {
       setAllTypes(
@@ -153,6 +149,12 @@ export default function NewCaseForm({ editCaseId }) {
       }
     });
   }, [editCaseId]);
+
+  const designUsers = useMemo(
+    () => filterUsersForRole(users, "Design").map((u) => u.name),
+    [users],
+  );
+  const editLocked = isEdit && !canEditLockedCase(user?.type, editCaseData?.status);
 
   // Derive effective types: use clinic-specific prices when a clinic is selected
   const types = allTypes.map((t) => {
@@ -337,6 +339,14 @@ export default function NewCaseForm({ editCaseId }) {
       return;
     }
 
+    if (editLocked) {
+      setSnack({
+        message: "Only Admin or Moderator can edit this case now.",
+        isError: true,
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const now = new Date();
@@ -381,8 +391,8 @@ export default function NewCaseForm({ editCaseId }) {
 
         setSnack({ message: "Case updated successfully", isError: false });
       } else {
-        caseData.status = selectedCaseType === "Physical" ? "Pending delivery" : "Design";
-        caseData.phase = selectedCaseType === "Physical" ? "Phase 1" : "Phase 2";
+        caseData.status = selectedCaseType === "Physical" ? "Physical" : "Design";
+        caseData.phase = selectedCaseType === "Physical" ? "P1" : "P2";
         caseData.createdDate = formatDate(now);
         caseData.createdTime = formatTime(now);
         caseData.createdBy = user.uid;
@@ -406,6 +416,11 @@ export default function NewCaseForm({ editCaseId }) {
     <>
       <Header title={isEdit ? "Edit Case" : "New Case"} breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }]} />
       <PageCard title={isEdit ? "Edit Case" : "New Case"} icon="??">
+        {editLocked && (
+          <p className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            Only Admin or Moderator can edit a case after it is ready to be delivered or invoiced.
+          </p>
+        )}
         <form onSubmit={submitCase}>
           <ResponsiveRow width={width}>
             <SelectField
@@ -553,10 +568,10 @@ export default function NewCaseForm({ editCaseId }) {
                     />
                   ) : (
                     <SelectField
-                      label="Assign to User"
+                      label="Assign to Designer"
                       value={selectedUser}
                       onChange={setSelectedUser}
-                      options={users}
+                      options={designUsers}
                     />
                   )}
                 </ResponsiveRow>
@@ -571,8 +586,8 @@ export default function NewCaseForm({ editCaseId }) {
 
               <button
                 type="submit"
-                disabled={loading}
-                className="mt-6 w-full max-w-md px-6 py-3 bg-primary rounded-lg font-bold flex items-center justify-center gap-2"
+                disabled={loading || editLocked}
+                className="mt-6 w-full max-w-md px-6 py-3 bg-primary rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                 
               >
                 {loading ? (isEdit ? "Saving..." : "Creating...") : (isEdit ? "Save Changes" : "Create Case")}

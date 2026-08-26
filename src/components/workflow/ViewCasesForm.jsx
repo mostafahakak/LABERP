@@ -15,7 +15,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { formatDate, isDelayed, isOverdue, shortId, formatPriceLE } from "@/lib/utils";
-import { getPhaseInfo } from "@/lib/phase-utils";
+import { canEditLockedCase, getPhaseInfo } from "@/lib/phase-utils";
+import { useAuth } from "@/lib/auth-context";
 import Header from "@/components/layout/Header";
 import { SelectField, Snackbar } from "@/components/ui/PageComponents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +39,7 @@ import ManageCaseDialog, { deleteCase } from "./ManageCaseDialog";
 import { Filter, X, CheckCircle2, Eye, Settings2, Trash2, Loader2, Pencil, User, Stethoscope, Calendar, Hash, DollarSign } from "lucide-react";
 
 export default function ViewCasesForm() {
+  const { user } = useAuth();
   const [allCases, setAllCases] = useState([]);
 
   const [selectedClinic, setSelectedClinic] = useState(null);
@@ -92,15 +94,22 @@ export default function ViewCasesForm() {
   }, [clinicScopedCases]);
 
   const canonicalPhaseByStatus = {
-    "pending delivery": "Phase 1",
-    "design": "Phase 2",
-    "try in": "Phase 3",
-    "finishing": "Phase 4",
-    "finalized": "Phase 4",
-    "ready to be delivered": "Phase 5",
-    "ready to invoice": "Phase 6",
-    "ready to get invoice": "Phase 6",
-    "done": "Phase 7",
+    "pending delivery": "P1",
+    "physical": "P1",
+    "design": "P2",
+    "room1": "P2",
+    "production": "P3",
+    "try in": "P4",
+    "try in order": "P4",
+    "final order": "P4",
+    "finishing": "P5",
+    "finalized": "P5",
+    "try in delivery": "P5",
+    "back from try in": "P6",
+    "ready to be delivered": "P6",
+    "ready to invoice": "P7",
+    "ready to get invoice": "P7",
+    "done": "P7",
   };
 
   const normalizeStatus = (status) => String(status || "").trim().toLowerCase();
@@ -315,10 +324,11 @@ export default function ViewCasesForm() {
   const handleFinalize = async (caseId) => {
     try {
       await updateDoc(doc(db, "Cases", caseId), {
-        status: "Finalized",
-        phase: "Phase 4",
+        status: "Final order",
+        phase: "P4",
+        orderPath: "Final",
       });
-      setSnack({ message: "Case marked as Finalized", isError: false });
+      setSnack({ message: "Case marked as Final order", isError: false });
     } catch (e) {
       setSnack({ message: e.message, isError: true });
     }
@@ -380,6 +390,7 @@ export default function ViewCasesForm() {
             onManage={() => setManageCase(c)}
             onDelete={() => openDeleteCaseDialog(c)}
             onFinalize={() => handleFinalize(c.id)}
+            canEdit={canEditLockedCase(user?.type, c.status)}
           />
         ))}
         {cases.length === 0 && (
@@ -480,12 +491,19 @@ export default function ViewCasesForm() {
   );
 }
 
-function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
+function CaseCard({ caseData, onManage, onDelete, onFinalize, canEdit = true }) {
   const [balance, setBalance] = useState(null);
   const delayed = isDelayed(caseData);
   const overdue = isOverdue(caseData);
   const phase = caseData.phase || getPhaseInfo(caseData).currentPhase;
   const phaseColors = {
+    "P1": "bg-orange-500/15 text-orange-600 dark:text-orange-300",
+    "P2": "bg-blue-500/15 text-blue-600 dark:text-blue-300",
+    "P3": "bg-violet-500/15 text-violet-600 dark:text-violet-300",
+    "P4": "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
+    "P5": "bg-cyan-500/15 text-cyan-600 dark:text-cyan-300",
+    "P6": "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+    "P7": "bg-rose-500/15 text-rose-600 dark:text-rose-300",
     "Phase 1": "bg-orange-500/15 text-orange-600 dark:text-orange-300",
     "Phase 2": "bg-blue-500/15 text-blue-600 dark:text-blue-300",
     "Phase 3": "bg-violet-500/15 text-violet-600 dark:text-violet-300",
@@ -496,6 +514,7 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
   };
   const isFinalized =
     caseData.status === "Finalized" ||
+    caseData.status === "Final order" ||
     caseData.status === "Ready to be delivered" ||
     caseData.status === "Ready to Invoice" ||
     caseData.status === "Done";
@@ -679,11 +698,13 @@ function CaseCard({ caseData, onManage, onDelete, onFinalize }) {
               View
             </Link>
           </Button>
-          <Button size="sm" variant="ghost" asChild className="gap-1.5 rounded-lg h-8 text-xs text-muted-foreground hover:text-foreground">
-            <Link href={`/dashboard/workflow/new-case?id=${caseData.id}`}>
-              <Pencil className="size-3" /> Edit
-            </Link>
-          </Button>
+          {canEdit && (
+            <Button size="sm" variant="ghost" asChild className="gap-1.5 rounded-lg h-8 text-xs text-muted-foreground hover:text-foreground">
+              <Link href={`/dashboard/workflow/new-case?id=${caseData.id}`}>
+                <Pencil className="size-3" /> Edit
+              </Link>
+            </Button>
+          )}
           <div className="flex-1" />
           <Button size="sm" variant="ghost" onClick={onDelete} className="gap-1 rounded-lg h-8 text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10">
             <Trash2 className="size-3" />

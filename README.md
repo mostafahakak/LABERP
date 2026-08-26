@@ -34,8 +34,17 @@ Open http://localhost:3000 — login with the same credentials as the Flutter ap
 
 Same web config as Flutter (`lab360erp`). Session stored in `localStorage` key `UID`.
 
-## Notes
+## Deploy to Firebase Hosting
 
-- PDF export from Flutter is not ported (web uses on-screen data + CSV where applicable).
-- Barcode scanner uses manual entry on web (no camera scanner).
-- Firestore composite indexes may be required — Firebase Console will prompt when needed.
+**Important:** Always deploy from the `laberp-web` folder, not the Flutter project root.
+
+```bash
+cd laberp-web
+npm run deploy
+```
+
+This runs `next build` (static export to `out/`) then `firebase deploy --only hosting`.
+
+The Flutter root `firebase.json` points to `build/web` — that is the old Flutter app, not this Next.js site. This folder has its own `firebase.json` pointing to `out/`.
+
+Live URL: https://lab360erp.web.app

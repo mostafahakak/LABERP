@@ -16,6 +16,7 @@ import {
   LoadingOverlay,
 } from "@/components/ui/PageComponents";
 import { DetailSkeleton } from "@/components/ui/PageSkeleton";
+import { canEditLockedCase } from "@/lib/phase-utils";
 
 export default function EditCaseForm({ caseId }) {
   const { user } = useAuth();
@@ -94,7 +95,13 @@ export default function EditCaseForm({ caseId }) {
     }
   }, [doctorOptions, drName]);
 
+  const editLocked = !canEditLockedCase(user?.type, caseData?.status);
+
   const save = async () => {
+    if (editLocked) {
+      setSnack({ message: "Only Admin or Moderator can edit this case now.", isError: true });
+      return;
+    }
     if (!clinicName || !drName || !patientName.trim() || !caseRequestDate || !dueDate) {
       setSnack({ message: "Please fill all required fields", isError: true });
       return;
@@ -150,6 +157,11 @@ export default function EditCaseForm({ caseId }) {
         ]}
       />
 
+      {editLocked && (
+        <p className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          Only Admin or Moderator can edit a case after it is ready to be delivered or invoiced.
+        </p>
+      )}
       <PageCard title="Edit Case Details">
         <ResponsiveRow>
           <SelectField
@@ -227,7 +239,7 @@ export default function EditCaseForm({ caseId }) {
             type="button"
             onClick={save}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
-            disabled={saving}
+            disabled={saving || editLocked}
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>

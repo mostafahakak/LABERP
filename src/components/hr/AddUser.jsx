@@ -7,10 +7,14 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import Header from '@/components/layout/Header';
 import { PageCard, TextField, SelectField, Snackbar, LoadingOverlay } from '@/components/ui/PageComponents';
+import { USER_TYPES, WORKFLOW_ROLE_LABELS, WORKFLOW_ROLES, WORKFLOW_USER_TYPE } from '@/lib/phase-utils';
 
-const USER_TYPES = ['Admin', 'Sales'];
 const FULL_TIME_OPTIONS = ['Full time', 'Part time'];
 const FEE_TYPE_OPTIONS = ['Fixed', '%'];
+const ROLE_OPTIONS = WORKFLOW_ROLES.map((role) => ({
+  value: role,
+  label: WORKFLOW_ROLE_LABELS[role] || role,
+}));
 
 export default function AddUser() {
   const router = useRouter();
@@ -23,6 +27,7 @@ export default function AddUser() {
   const [familyPhone, setFamilyPhone] = useState('');
   const [email, setEmail] = useState('');
   const [selectedType, setSelectedType] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedFeeType, setSelectedFeeType] = useState(null);
   const [feeValue, setFeeValue] = useState('3');
@@ -37,6 +42,7 @@ export default function AddUser() {
     setFamilyPhone('');
     setEmail('');
     setSelectedType(null);
+    setSelectedRole(null);
     setSelectedTime(null);
     setSelectedFeeType(null);
     setFeeValue('3');
@@ -53,6 +59,7 @@ export default function AddUser() {
     if (!email.trim()) return 'Please enter email';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return 'Please enter a valid email';
     if (!selectedType) return 'Please select user type';
+    if (selectedType === WORKFLOW_USER_TYPE && !selectedRole) return 'Please select a workflow role (phase)';
     if (!selectedTime) return 'Please select employment type';
     if (!selectedFeeType) return 'Please select fee type';
     if (!feeValue.trim() || Number(feeValue) < 0) return 'Enter valid fee value';
@@ -82,6 +89,7 @@ export default function AddUser() {
 
       await setDoc(doc(db, 'Users', uid), {
         type: selectedType,
+        role: selectedType === WORKFLOW_USER_TYPE ? selectedRole : '',
         address: address.trim(),
         balance: 0,
         feeValue: parseFloat(feeValue.trim()) || 3,
@@ -118,7 +126,23 @@ export default function AddUser() {
           <TextField label="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" />
           <TextField label="Family Phone" value={familyPhone} onChange={(e) => setFamilyPhone(e.target.value)} type="tel" />
           <TextField label="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
-          <SelectField label="User Type" value={selectedType} onChange={setSelectedType} options={USER_TYPES} />
+          <SelectField
+            label="User Type"
+            value={selectedType}
+            onChange={(value) => {
+              setSelectedType(value);
+              if (value !== WORKFLOW_USER_TYPE) setSelectedRole(null);
+            }}
+            options={USER_TYPES}
+          />
+          {selectedType === WORKFLOW_USER_TYPE && (
+            <SelectField
+              label="Role (phase)"
+              value={selectedRole}
+              onChange={setSelectedRole}
+              options={ROLE_OPTIONS}
+            />
+          )}
           <SelectField label="Employment Type" value={selectedTime} onChange={setSelectedTime} options={FULL_TIME_OPTIONS} />
           <SelectField label="Fee Type" value={selectedFeeType} onChange={setSelectedFeeType} options={FEE_TYPE_OPTIONS} />
           <TextField label="Fee Value" value={feeValue} onChange={(e) => setFeeValue(e.target.value)} type="number" />

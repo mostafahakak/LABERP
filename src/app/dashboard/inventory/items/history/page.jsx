@@ -3,7 +3,6 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import ItemHistoryPage from '@/components/inventory/ItemHistoryPage';
 
 function Content() {
@@ -22,10 +21,8 @@ function Content() {
 
 export default function ItemHistoryRoute() {
   return (
-    <DashboardLayout>
       <Suspense fallback={<p className="text-center py-8">Loading...</p>}>
         <Content />
       </Suspense>
-    </DashboardLayout>
   );
 }

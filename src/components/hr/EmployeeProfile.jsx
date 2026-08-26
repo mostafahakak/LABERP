@@ -20,11 +20,12 @@ import { DetailSkeleton } from '@/components/ui/PageSkeleton';
 import Header from '@/components/layout/Header';
 import { PageCard, TextField, SelectField, Snackbar, LoadingOverlay } from '@/components/ui/PageComponents';
 import { formatPriceLE } from '@/lib/utils';
+import { WORKFLOW_ROLE_LABELS, WORKFLOW_ROLES, WORKFLOW_USER_TYPE } from '@/lib/phase-utils';
 
 const SHIFT_OPTIONS = ['Day', 'Night'];
 const FULL_TIME_OPTIONS = ['Full time', 'Part time'];
-const USER_TYPES_ADMIN = ['Admin', 'Dr', 'Website', 'HR'];
-const USER_TYPES_HR = ['Dr', 'HR'];
+const USER_TYPES_ADMIN = ['Admin', 'Moderator', 'Receptionist', 'Workflow', 'Dr', 'Website', 'HR'];
+const USER_TYPES_HR = ['Dr', 'HR', 'Workflow', 'Receptionist'];
 const BRANCH_OPTIONS = ['New cairo', 'Madinaty'];
 const FEE_TYPE_OPTIONS = ['Fixed', '%'];
 
@@ -334,6 +335,17 @@ export default function EmployeeProfile({ userId }) {
             onChange={(v) => updateField('type', v)}
             options={typeOptions}
           />
+          {userData.type === WORKFLOW_USER_TYPE && (
+            <SelectField
+              label="Role (phase)"
+              value={WORKFLOW_ROLES.includes(userData.role) ? userData.role : ''}
+              onChange={(v) => updateField('role', v)}
+              options={WORKFLOW_ROLES.map((role) => ({
+                value: role,
+                label: WORKFLOW_ROLE_LABELS[role] || role,
+              }))}
+            />
+          )}
           <SelectField
             label="Branch"
             value={BRANCH_OPTIONS.includes(userData.branch) ? userData.branch : ''}

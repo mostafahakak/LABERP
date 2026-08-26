@@ -46,7 +46,12 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
   const [snack, setSnack] = useState({ message: '', isError: false });
 
   useEffect(() => {
-    if (!invoiceId) return;
+    if (!invoiceId) {
+      setInvoice(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     const unsub = onSnapshot(doc(db, 'Finance', invoiceId), (d) => {
       setInvoice(d.exists() ? { id: d.id, ...d.data() } : null);
       setLoading(false);

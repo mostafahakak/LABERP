@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
+import { getHomeHref, isPathAllowedForUser } from "@/lib/menu-config";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -22,17 +23,24 @@ function LoginContent() {
   const { login, user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
+  const requestedRedirect = searchParams.get("redirect");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const destinationFor = (currentUser) => {
+    const home = getHomeHref(currentUser?.type);
+    if (!requestedRedirect || requestedRedirect === "/dashboard") return home;
+    if (!isPathAllowedForUser(currentUser?.type, requestedRedirect)) return home;
+    return requestedRedirect;
+  };
+
   useEffect(() => {
     if (!loading && user) {
-      router.replace(redirect);
+      router.replace(destinationFor(user));
     }
-  }, [loading, user, router, redirect]);
+  }, [loading, user, router, requestedRedirect]);
 
   if (!loading && user) return null;
 
@@ -41,8 +49,8 @@ function LoginContent() {
     setIsLoading(true);
     setError("");
     try {
-      await login(email, password);
-      router.replace(redirect);
+      const profile = await login(email, password);
+      router.replace(destinationFor(profile));
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {

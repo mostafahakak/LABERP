@@ -107,9 +107,11 @@ export default function SettingsPageContent() {
           <p><strong>Role:</strong> {user?.type}</p>
           <p><strong>Branch:</strong> {user?.branch}</p>
           <div className="flex flex-wrap gap-3 pt-4">
-            <button type="button" onClick={() => setSalaryDialog(true)} className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold">
-              Calculate Salaries
-            </button>
+            {user?.type === 'Admin' && (
+              <button type="button" onClick={() => setSalaryDialog(true)} className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold">
+                Calculate Salaries
+              </button>
+            )}
             <button type="button" onClick={handleLogout} className="px-6 py-3 border border-red-300 text-destructive rounded-lg font-semibold">
               Logout
             </button>

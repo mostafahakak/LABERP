@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
-import { getMenuForUserType } from '@/lib/menu-config';
+import { getHomeHref, getMenuForUserType } from '@/lib/menu-config';
 import { useTheme } from 'next-themes';
 import { ChevronRight, LogOut, ChevronsUpDown, Sun, Moon } from 'lucide-react';
 import {
@@ -44,8 +44,12 @@ export default function AppSidebar() {
   const { resolvedTheme, setTheme } = useTheme();
   const menu = useMemo(() => getMenuForUserType(user?.type), [user?.type]);
 
-  const isActive = (href) =>
-    pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+  const homeHref = getHomeHref(user?.type);
+  const isActive = (href) => {
+    const current = pathname.replace(/\/$/, '') || '/';
+    const target = href.replace(/\/$/, '') || '/';
+    return current === target || (target !== '/dashboard' && current.startsWith(target));
+  };
 
   const initials = (user?.name || 'U')
     .split(' ')
@@ -62,7 +66,7 @@ export default function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              render={<Link href="/dashboard" />}
+              render={<Link href={homeHref} />}
               className="data-[slot=sidebar-menu-button]:p-1.5! group-data-[collapsible=icon]:justify-center"
             >
               <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-full bg-white overflow-hidden">

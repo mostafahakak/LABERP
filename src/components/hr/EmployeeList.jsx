@@ -195,7 +195,9 @@ function EmployeeCard({ employee, onLongPress }) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-bold text-foreground truncate">{name}</p>
-          <p className="text-sm text-muted-foreground truncate">{type}</p>
+          <p className="text-sm text-muted-foreground truncate">
+            {employee.role ? `${type} · ${employee.role}` : type}
+          </p>
         </div>
       </div>
       {email && (

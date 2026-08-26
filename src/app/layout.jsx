@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const zain = Zain({ subsets: ['latin'], weight: ['300', '400', '700', '800', '900'], variable: '--font-sans', display: 'swap' });
 
 export const metadata = {
+  metadataBase: new URL('https://lab360erp.web.app'),
   title: {
     default: "360 Lab ERP",
     template: "%s | 360 Lab ERP",

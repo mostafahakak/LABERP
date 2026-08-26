@@ -362,9 +362,96 @@ export function getHrAdminMenu() {
   ];
 }
 
-export function getMenuForUserType(type) {
-  if (type === "HR" || type === "Sales") {
-    return getHrAdminMenu();
+export function getWorkflowMenu() {
+  return [
+    {
+      title: "Workflow",
+      icon: BriefcaseMedical,
+      href: "/dashboard/workflow/view-cases",
+      children: [
+        { title: "New cases", href: "/dashboard/workflow/new-case", icon: FilePlus },
+        { title: "View cases", href: "/dashboard/workflow/view-cases", icon: Eye },
+        { title: "Actions", href: "/dashboard/workflow/actions", icon: ListChecks },
+      ],
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      href: "/dashboard/settings",
+    },
+  ];
+}
+
+export function getModeratorMenu() {
+  return [
+    {
+      title: "Workflow",
+      icon: BriefcaseMedical,
+      href: "/dashboard/workflow/view-cases",
+      children: [
+        { title: "New cases", href: "/dashboard/workflow/new-case", icon: FilePlus },
+        { title: "View cases", href: "/dashboard/workflow/view-cases", icon: Eye },
+        { title: "Actions", href: "/dashboard/workflow/actions", icon: ListChecks },
+        { title: "Manage Types", href: "/dashboard/workflow/types", icon: Tags },
+        { title: "Manage Clinic", href: "/dashboard/workflow/clinics", icon: Hospital },
+        { title: "Manage Dr", href: "/dashboard/workflow/doctors", icon: Stethoscope },
+      ],
+    },
+    {
+      title: "Invoices",
+      icon: FileText,
+      href: "/dashboard/finance/invoices",
+      children: [
+        { title: "View Invoices", href: "/dashboard/finance/invoices", icon: FileText },
+        { title: "Invoice", href: "/dashboard/payments/case-invoice", icon: Receipt },
+      ],
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      href: "/dashboard/settings",
+    },
+  ];
+}
+
+export function getHomeHref(type) {
+  if (type === "Workflow") return "/dashboard/workflow/view-cases";
+  if (type === "Moderator" || type === "Receptionist") return "/dashboard/workflow/view-cases";
+  return "/dashboard";
+}
+
+function pathMatches(path, prefixes) {
+  return prefixes.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+  );
+}
+
+export function isPathAllowedForUser(type, pathname) {
+  if (!type || type === "Admin" || type === "HR" || type === "Sales") return true;
+  const path = String(pathname || "").replace(/\/$/, "") || "/";
+  if (type === "Workflow") {
+    return pathMatches(path, [
+      "/dashboard/workflow/new-case",
+      "/dashboard/workflow/view-cases",
+      "/dashboard/workflow/actions",
+      "/dashboard/workflow/cases",
+      "/dashboard/settings",
+    ]) && path !== "/dashboard/settings/invoice-items" && !path.startsWith("/dashboard/settings/");
   }
+  if (type === "Moderator" || type === "Receptionist") {
+    return pathMatches(path, [
+      "/dashboard/workflow",
+      "/dashboard/finance/invoices",
+      "/dashboard/payments/case-invoice",
+      "/dashboard/settings",
+    ]) && path !== "/dashboard/settings/invoice-items" && !path.startsWith("/dashboard/settings/");
+  }
+  return true;
+}
+
+export function getMenuForUserType(type) {
+  if (type === "HR" || type === "Sales") return getHrAdminMenu();
+  if (type === "Workflow") return getWorkflowMenu();
+  if (type === "Moderator" || type === "Receptionist") return getModeratorMenu();
   return getSuperAdminMenu();
 }

@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   addDoc,
   collection,
@@ -13,15 +13,14 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth-context';
-import { formatDate, formatTime, formatPriceLE } from '@/lib/utils';
-import { getPhaseInfo } from '@/lib/phase-utils';
-
+import { formatDate, formatTime } from '@/lib/utils';
+import { filterUsersForRole, getPhaseInfo } from '@/lib/phase-utils';
 
 export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess }) {
   const { user } = useAuth();
-  const phaseInfo = getPhaseInfo(caseData);
-  const [users, setUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(caseData.assignedUser || '');
+  const [orderPath, setOrderPath] = useState(caseData.orderPath || '');
   const [dueDate, setDueDate] = useState(caseData.dueDate || caseData.caseRequestDate || '');
   const [note, setNote] = useState('');
   const [price, setPrice] = useState(String(caseData.price || 0));
@@ -29,23 +28,36 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
   const [reassignLoading, setReassignLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const phaseInfo = useMemo(
+    () => getPhaseInfo(caseData, { selectedOrderPath: orderPath || undefined }),
+    [caseData, orderPath]
+  );
+
   useEffect(() => {
     getDocs(collection(db, 'Users')).then((snap) => {
-      const names = snap.docs.map((d) => d.data().name).filter(Boolean).sort();
-      setUsers(names);
+      setAllUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
   }, []);
+
+  const assignableUsers = useMemo(
+    () => filterUsersForRole(allUsers, phaseInfo.assignRole),
+    [allUsers, phaseInfo.assignRole]
+  );
 
   const needsUser = phaseInfo.requiresUser;
 
   const moveToNextPhase = async () => {
     setError('');
+    if (phaseInfo.chooseOrderPath && !orderPath) {
+      setError('Please choose Final or Try in');
+      return;
+    }
     if (!phaseInfo.nextPhase) {
       setError('Case is already in final phase');
       return;
     }
     if (needsUser && !selectedUser) {
-      setError('Please select a user');
+      setError('Please select a user from this phase');
       return;
     }
     if (!dueDate) {
@@ -70,6 +82,7 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
         phase: phaseInfo.nextPhase,
         dueDate,
       };
+      if (phaseInfo.chooseOrderPath) updateData.orderPath = orderPath;
       if (phaseInfo.nextStatus === 'Ready to get invoice') {
         updateData.price = parseFloat(price);
       }
@@ -89,6 +102,7 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
         fromStatus: caseData.status,
         toStatus: phaseInfo.nextStatus,
         assignedUser: selectedUser || caseData.assignedUser || '',
+        orderPath: orderPath || caseData.orderPath || '',
       });
 
       if (note.trim()) {
@@ -153,17 +167,47 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
         <h3 className="text-xl font-bold text-foreground mb-4">Manage Case</h3>
 
         <div className="bg-muted rounded-lg p-4 mb-4 text-sm text-foreground space-y-1">
-          <p><strong>Phase:</strong> {caseData.phase}</p>
+          <p><strong>Phase:</strong> {phaseInfo.currentPhase} — {phaseInfo.currentStatus}</p>
           <p><strong>Status:</strong> {caseData.status}</p>
+          {caseData.orderPath && <p><strong>Path:</strong> {caseData.orderPath}</p>}
           {caseData.assignedUser && <p><strong>Assigned:</strong> {caseData.assignedUser}</p>}
         </div>
 
-        {phaseInfo.nextPhase ? (
+        {phaseInfo.chooseOrderPath || phaseInfo.nextPhase ? (
           <>
-            <div className="mb-4 p-3 border rounded-lg text-foreground">
-              <p className="font-semibold">Next: {phaseInfo.nextPhase}</p>
-              <p className="text-sm text-muted-foreground">Status → {phaseInfo.nextStatus}</p>
-            </div>
+            {phaseInfo.chooseOrderPath && (
+              <div className="mb-4">
+                <label className="block text-sm mb-2 text-foreground">Production type *</label>
+                <div className="flex gap-3">
+                  {['Final', 'Try in'].map((path) => (
+                    <button
+                      key={path}
+                      type="button"
+                      onClick={() => {
+                        setOrderPath(path);
+                        setSelectedUser('');
+                      }}
+                      className={`flex-1 rounded-md border px-3 py-2 text-sm ${
+                        orderPath === path
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-input text-foreground'
+                      }`}
+                    >
+                      {path === 'Final' ? 'Final order' : 'Try in'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {phaseInfo.nextPhase ? (
+              <div className="mb-4 p-3 border rounded-lg text-foreground">
+                <p className="font-semibold">Next: {phaseInfo.nextPhase}</p>
+                <p className="text-sm text-muted-foreground">Status → {phaseInfo.nextStatus}</p>
+              </div>
+            ) : (
+              <p className="mb-4 text-sm text-muted-foreground">Choose Final or Try in to continue.</p>
+            )}
 
             <div className="space-y-4">
               <div>
@@ -176,11 +220,20 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
               </div>
               {needsUser && (
                 <div>
-                  <label className="block text-sm mb-1 text-foreground">Assign User *</label>
+                  <label className="block text-sm mb-1 text-foreground">
+                    Assign {phaseInfo.assignRole} user *
+                  </label>
                   <select value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} className="w-full border rounded-md p-2 text-foreground">
                     <option value="">Select user</option>
-                    {users.map((u) => <option key={u} value={u}>{u}</option>)}
+                    {assignableUsers.map((u) => (
+                      <option key={u.id || u.name} value={u.name}>{u.name}</option>
+                    ))}
                   </select>
+                  {assignableUsers.length === 0 && (
+                    <p className="mt-1 text-xs text-destructive">
+                      No Workflow users with the {phaseInfo.assignRole} role.
+                    </p>
+                  )}
                 </div>
               )}
               {phaseInfo.nextStatus === 'Ready to get invoice' && (
@@ -198,8 +251,13 @@ export default function ManageCaseDialog({ caseId, caseData, onClose, onSuccess 
               <button type="button" onClick={reassignDueDate} disabled={reassignLoading} className="px-4 py-2 border border-primary text-primary rounded-md">
                 {reassignLoading ? 'Saving...' : 'Reassign Date'}
               </button>
-              <button type="button" onClick={moveToNextPhase} disabled={loading} className="px-4 py-2 rounded-md bg-primary text-primary-foreground">
-                {loading ? 'Moving...' : `Move to ${phaseInfo.nextPhase}`}
+              <button
+                type="button"
+                onClick={moveToNextPhase}
+                disabled={loading || !phaseInfo.nextPhase}
+                className="px-4 py-2 rounded-md bg-primary text-primary-foreground disabled:opacity-50"
+              >
+                {loading ? 'Moving...' : phaseInfo.nextPhase ? `Move to ${phaseInfo.nextStatus}` : 'Choose path first'}
               </button>
             </div>
           </>
