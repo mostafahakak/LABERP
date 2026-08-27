@@ -1,9 +1,9 @@
 'use client';
 
-import EmployeesHub from '@/components/hr/EmployeesHub';
+import EmployeeList from '@/components/hr/EmployeeList';
 
 export default function Page() {
   return (
-      <EmployeesHub />
+      <EmployeeList />
   );
 }

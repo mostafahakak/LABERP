@@ -60,6 +60,9 @@ export default function ViewCasesForm() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [snack, setSnack] = useState({ message: "", isError: false });
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
   const withAllOption = (arr) => ["All", ...arr.filter(Boolean)];
   const toList = (val) => String(val || "")
     .split(",")

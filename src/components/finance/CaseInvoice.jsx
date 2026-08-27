@@ -40,7 +40,7 @@ export default function CaseInvoice() {
   const [drFilter, setDrFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [paymentPlan, setPaymentPlan] = useState("Full Payment");
+  const [paymentPlan, setPaymentPlan] = useState("Partial Payment");
   const [bankName, setBankName] = useState("");
   const [bankId, setBankId] = useState("");
   const [previousBill, setPreviousBill] = useState("0");

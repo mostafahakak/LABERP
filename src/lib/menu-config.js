@@ -48,9 +48,9 @@ export function getSuperAdminMenu() {
     {
       title: "HR",
       icon: Users,
-      href: "/dashboard/hr/employees",
+      href: "/dashboard/hr/employees/list",
       children: [
-        { title: "HR", href: "/dashboard/hr/employees", icon: UserCheck },
+        { title: "Employees", href: "/dashboard/hr/employees/list", icon: UserCheck },
         { title: "Clients", href: "/dashboard/hr/clients", icon: Building2 },
         { title: "Suppliers", href: "/dashboard/hr/suppliers", icon: Truck },
         {
@@ -217,9 +217,9 @@ export function getHrAdminMenu() {
     {
       title: "HR",
       icon: Users,
-      href: "/dashboard/hr/employees",
+      href: "/dashboard/hr/employees/list",
       children: [
-        { title: "HR", href: "/dashboard/hr/employees", icon: UserCheck },
+        { title: "Employees", href: "/dashboard/hr/employees/list", icon: UserCheck },
         { title: "Clients", href: "/dashboard/hr/clients", icon: Building2 },
         { title: "Suppliers", href: "/dashboard/hr/suppliers", icon: Truck },
         {

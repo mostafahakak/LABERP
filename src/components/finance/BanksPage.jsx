@@ -157,40 +157,77 @@ export default function BanksPage() {
     return acc;
   }, {});
 
+  const totalBalance = banks.reduce((sum, b) => sum + (Number(b.balance) || 0), 0);
+
   return (
     <>
       <Header title="Payment Methods" />
-      <PageCard
-        title="Banks"
-        className="border-primary/20 bg-linear-to-b from-card to-card/90 shadow-xl shadow-primary/5"
-        action={
-          <button type="button" onClick={() => setShowAdd(true)} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/20 active:translate-y-0">+ Add Bank</button>
-        }
-      >
-        {Object.entries(grouped).map(([type, list]) => (
-          <div key={type} className="mb-6">
-            <h3 className="font-semibold text-foreground mb-3 uppercase tracking-wide text-sm">{type}</h3>
-            <div className="space-y-3">
-              {list.map((bank) => (
-                <div key={bank.id} className="group relative overflow-hidden flex flex-wrap items-center justify-between gap-3 border border-border/70 rounded-2xl p-4 bg-card/80 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10">
-                  <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-primary/10 blur-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                  <div className="relative">
-                    <p className="font-bold text-foreground text-lg leading-tight">{bank.name}</p>
-                    <p className="text-green-600 font-semibold mt-1">{formatPriceLE(bank.balance)}</p>
-                  </div>
-                  <div className="relative flex flex-wrap gap-2">
-                    <button type="button" onClick={() => router.push(`/dashboard/finance/banks/transactions?bank=${encodeURIComponent(bank.name)}&id=${bank.id}`)} className="px-3 py-1.5 border border-border/70 rounded-md text-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md active:translate-y-0">Transactions</button>
-                    <button type="button" onClick={() => setTransferBank(bank)} className="px-3 py-1.5 border border-border/70 rounded-md text-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md active:translate-y-0">Transfer</button>
-                    <button type="button" onClick={() => setHistoryBank(bank.name)} className="px-3 py-1.5 border border-border/70 rounded-md text-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md active:translate-y-0">History</button>
-                    <button type="button" onClick={() => removeBank(bank.id, bank.name)} className="px-3 py-1.5 border border-red-300 text-destructive rounded-md text-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-500/10 hover:shadow-md active:translate-y-0">Delete</button>
-                  </div>
-                </div>
-              ))}
+
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="rounded-2xl bg-secondary p-5 text-secondary-foreground shadow-md">
+          <p className="text-xs uppercase tracking-widest text-primary">Total Balance</p>
+          <p className="mt-1 text-2xl font-extrabold">{formatPriceLE(totalBalance)}</p>
+          <p className="mt-1 text-xs text-secondary-foreground/60">{banks.length} payment method{banks.length !== 1 ? 's' : ''}</p>
+        </div>
+        {banks.map((b) => (
+          <div key={b.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{b.name}</p>
+            <p className={`mt-1 text-xl font-bold ${(Number(b.balance) || 0) >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+              {formatPriceLE(b.balance)}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-foreground">Payment Methods</h2>
+        <button type="button" onClick={() => setShowAdd(true)} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-sm">
+          + Add Bank
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {banks.map((bank) => (
+          <div key={bank.id} className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm hover:shadow-lg hover:border-primary/25">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl opacity-0 group-hover:opacity-100" />
+            <div className="relative flex items-start justify-between gap-3 mb-4">
+              <div>
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-sm">
+                  {(bank.name || 'B').charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-foreground text-lg truncate">{bank.name}</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">{bank.type || 'General'}</p>
+              </div>
+              <p className={`text-lg font-extrabold whitespace-nowrap ${(Number(bank.balance) || 0) >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                {formatPriceLE(bank.balance)}
+              </p>
+            </div>
+            <div className="relative flex flex-wrap gap-2">
+              <button type="button" onClick={() => router.push(`/dashboard/finance/banks/transactions?bank=${encodeURIComponent(bank.name)}&id=${bank.id}`)} className="flex-1 min-w-22.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-foreground hover:bg-muted/60">
+                Transactions
+              </button>
+              <button type="button" onClick={() => setTransferBank(bank)} className="flex-1 min-w-17.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-foreground hover:bg-muted/60">
+                Transfer
+              </button>
+              <button type="button" onClick={() => setHistoryBank(bank.name)} className="flex-1 min-w-15 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-foreground hover:bg-muted/60">
+                History
+              </button>
+              <button type="button" onClick={() => removeBank(bank.id, bank.name)} className="px-3 py-2 rounded-xl border border-destructive/30 text-xs font-semibold text-destructive hover:bg-destructive/10">
+                Delete
+              </button>
             </div>
           </div>
         ))}
-        {banks.length === 0 && <p className="text-muted-foreground">No banks found.</p>}
-      </PageCard>
+      </div>
+
+      {banks.length === 0 && (
+        <div className="text-center py-16 text-muted-foreground rounded-2xl border border-dashed border-border">
+          <p className="text-4xl mb-3">🏦</p>
+          <p>No payment methods found.</p>
+        </div>
+      )}
 
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">

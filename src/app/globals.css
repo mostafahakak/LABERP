@@ -135,9 +135,23 @@ input, select, textarea, button {
     @apply font-sans;
   }
 
+  :where(
+    a,
+    button,
+    [role='button'],
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]:not([tabindex='-1'])
+  ) {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter;
+    transition-duration: 220ms;
+    transition-timing-function: ease;
+  }
+
   button:not(:disabled),
   [role='button']:not([aria-disabled='true']) {
-    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
     will-change: transform;
   }
 
@@ -154,6 +168,19 @@ input, select, textarea, button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :where(
+    a,
+    button,
+    [role='button'],
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex]:not([tabindex='-1'])
+  ) {
+    transition: none;
+  }
+
   button:not(:disabled),
   [role='button']:not([aria-disabled='true']) {
     transition: none;

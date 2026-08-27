@@ -10,16 +10,6 @@ const NAV_ITEMS = [
     icon: '👥',
     label: '01. Employee Records',
   },
-  {
-    href: '/dashboard/hr/employees/salary-history',
-    icon: '💰',
-    label: '02. Salary History',
-  },
-  {
-    href: '/dashboard/hr/employees/loans',
-    icon: '💵',
-    label: '03. Loans',
-  },
 ];
 
 export default function EmployeesHub() {

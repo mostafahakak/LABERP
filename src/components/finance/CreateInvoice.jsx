@@ -31,7 +31,7 @@ export default function CreateInvoice() {
   const [userID, setUserID] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [drUID, setDrUID] = useState('');
-  const [paymentPlan, setPaymentPlan] = useState('Full Payment');
+  const [paymentPlan, setPaymentPlan] = useState('Partial Payment');
   const [bankName, setBankName] = useState('');
   const [bankId, setBankId] = useState('');
   const [discount, setDiscount] = useState('0');

@@ -35,6 +35,7 @@ export default function CaseDetailForm({ caseId }) {
   if (!caseData) return <div className="p-8 text-center text-foreground">Case not found</div>;
 
   const rows = [
+    ['Case Code', caseData.caseCode],
     ['Clinic', caseData.clinicName],
     ['Type', caseData.type],
     ['Teeth / Jaw', Array.isArray(caseData.types)
@@ -63,7 +64,7 @@ export default function CaseDetailForm({ caseId }) {
   return (
     <>
       <Header title="Case Detail" breadcrumbs={[{ label: 'Workflow', href: '/dashboard/workflow/new-case' }, { label: 'View Cases', href: '/dashboard/workflow/view-cases' }]} />
-      <PageCard title={`Case ${caseId.substring(0, 8)}`} icon="📄">
+      <PageCard title={caseData.caseCode ? `Case ${caseData.caseCode}` : `Case ${caseId.substring(0, 8)}`} icon="📄">
         <div className="flex items-center gap-2 mb-4">
           <span className={`px-3 py-1 rounded-full text-sm ${getStatusBadgeColor(caseData.status)}`}>{caseData.status}</span>
         </div>

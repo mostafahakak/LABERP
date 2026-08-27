@@ -88,8 +88,8 @@ function SalaryCalcDialog({ employeeName, onClose, onSnack }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-card rounded-xl p-6 max-w-lg w-full max-h-[80vh] flex flex-col">
-        <h3 className="font-bold text-foreground mb-2">Salary Calculations — {employeeName}</h3>
+      <div className="bg-card rounded-2xl border border-cyan-200/40 p-6 max-w-lg w-full max-h-[80vh] flex flex-col shadow-2xl shadow-cyan-900/10">
+        <h3 className="font-bold text-foreground mb-2">Salary Calculations - {employeeName}</h3>
         <p className="text-sm text-muted-foreground mb-4">Click delete on any salary calculation to remove it.</p>
         {loading ? (
           <div className="flex justify-center py-8">
@@ -102,10 +102,10 @@ function SalaryCalcDialog({ employeeName, onClose, onSnack }) {
             {items.map((item) => {
               const amount = Number(item.amount) || 0;
               return (
-                <div key={item.id} className="flex items-center justify-between border rounded-lg p-3">
+                <div key={item.id} className="flex items-center justify-between border border-cyan-100 rounded-xl p-3 bg-white/70 dark:bg-card/80">
                   <div>
                     <p className="font-semibold text-foreground">
-                      {item.month} — {formatPriceLE(amount)}
+                      {item.month} - {formatPriceLE(amount)}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Date: {item.date} at {item.time}
@@ -132,15 +132,15 @@ function SalaryCalcDialog({ employeeName, onClose, onSnack }) {
           </div>
         )}
         <div className="flex justify-end mt-4">
-          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-foreground">
+          <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md text-foreground hover:bg-muted transition-colors">
             Close
           </button>
         </div>
       </div>
 
       {confirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-card rounded-xl p-6 max-w-md w-full">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-2xl border border-red-200/40 p-6 max-w-md w-full shadow-xl">
             <h4 className="font-bold text-foreground mb-3">Confirm Deletion</h4>
             <p className="text-sm text-foreground/80 mb-4">
               Delete salary calculation for {employeeName}?
@@ -168,51 +168,6 @@ function SalaryCalcDialog({ employeeName, onClose, onSnack }) {
         </div>
       )}
     </div>
-  );
-}
-
-function EmployeeCard({ employee, onLongPress }) {
-  const name = employee.name || 'No name';
-  const type = employee.type || 'N/A';
-  const email = employee.email || '';
-  const salary = Number(employee.salary) || 0;
-  const balance = Number(employee.balance) || 0;
-
-  return (
-    <Link
-      href={`/dashboard/hr/employees/detail?id=${employee.id}`}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        onLongPress();
-      }}
-      className="block bg-card rounded-2xl shadow-sm border border-border p-5 hover:shadow-lg transition-shadow"
-    >
-      <div className="flex items-start gap-3 mb-3">
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-primary/10"
-        >
-          👤
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-bold text-foreground truncate">{name}</p>
-          <p className="text-sm text-muted-foreground truncate">
-            {employee.role ? `${type} · ${employee.role}` : type}
-          </p>
-        </div>
-      </div>
-      {email && (
-        <p className="text-xs text-muted-foreground mb-1 truncate">✉ {email}</p>
-      )}
-      <p className="text-xs text-muted-foreground mb-2">Monthly Salary: {formatPriceLE(salary)}</p>
-      <div
-        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-bold ${
-          balance >= 0 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' : 'bg-destructive/10 text-destructive border border-destructive/30'
-        }`}
-      >
-        Balance: {formatPriceLE(balance)}
-      </div>
-      <p className="text-xs text-muted-foreground/70 mt-2">Right-click for salary calculations</p>
-    </Link>
   );
 }
 
@@ -244,47 +199,128 @@ export default function EmployeeList() {
 
   return (
     <>
-      <Header title="Employee Records" breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees' }]} />
+      <Header title="Employee Team" breadcrumbs={[{ label: 'HR', href: '/dashboard/hr/employees/list' }]} />
+
+      <section className="relative mb-6 overflow-hidden rounded-2xl bg-secondary p-6 text-secondary-foreground shadow-md">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-primary/15 blur-2xl" />
+        <div className="relative z-10 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-primary">HR Module</p>
+            <h2 className="text-2xl font-extrabold">Dental Employee Directory</h2>
+            <p className="text-sm text-secondary-foreground/70">Manage dental employees in one place.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur">
+              Employees: {employees.length}
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push('/dashboard/hr/employees/add')}
+              className="inline-flex items-center rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-sm hover:brightness-110"
+            >
+              Add Employee
+            </button>
+          </div>
+        </div>
+      </section>
+
       {loading && <ListSkeleton />}
       {error && <p className="text-destructive text-center py-8">Error: {error}</p>}
       {!loading && !error && employees.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-4xl mb-3">👥</p>
+        <div className="text-center py-16 text-muted-foreground rounded-2xl border border-dashed border-primary/20 bg-primary/5">
+          <p className="text-4xl mb-3">🦷</p>
           <p>No employees found.</p>
         </div>
       )}
       {!loading && !error && employees.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {employees.map((emp) => (
-            <EmployeeCard
-              key={emp.id}
-              employee={emp}
-              onLongPress={async () => {
-                try {
-                  const results = await fetchSalaryCalcs(emp.name || 'Unknown');
-                  if (results.length === 0) {
-                    showSnack(`No salary calculations found for ${emp.name}`, true);
-                    return;
-                  }
-                  setSalaryDialog({ name: emp.name || 'Unknown' });
-                } catch (e) {
-                  showSnack(`Error loading salary calculations: ${e.message}`, true);
-                }
-              }}
-            />
-          ))}
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-md">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-secondary text-secondary-foreground">
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Type</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Email</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Salary</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Balance</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {employees.map((emp, idx) => {
+                  const salary = Number(emp.salary) || 0;
+                  const balance = Number(emp.balance) || 0;
+                  const name = emp.name || 'No name';
+                  const avatarLetter = (name.trim().charAt(0) || 'E').toUpperCase();
+                  const type = emp.role ? `${emp.type || 'N/A'} · ${emp.role}` : (emp.type || 'N/A');
+                  const isEven = idx % 2 === 0;
+
+                  return (
+                    <tr
+                      key={emp.id}
+                      onContextMenu={async (e) => {
+                        e.preventDefault();
+                        try {
+                          const results = await fetchSalaryCalcs(emp.name || 'Unknown');
+                          if (results.length === 0) {
+                            showSnack(`No salary calculations found for ${emp.name}`, true);
+                            return;
+                          }
+                          setSalaryDialog({ name: emp.name || 'Unknown' });
+                        } catch (err) {
+                          showSnack(`Error loading salary calculations: ${err.message}`, true);
+                        }
+                      }}
+                      className={`group cursor-pointer hover:bg-primary/8 ${isEven ? 'bg-card' : 'bg-muted/30'}`}
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm">
+                            {avatarLetter}
+                          </span>
+                          <Link href={`/dashboard/hr/employees/detail?id=${emp.id}`} className="font-semibold text-foreground group-hover:text-primary">
+                            {name}
+                          </Link>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center rounded-md bg-secondary/20 px-2 py-0.5 text-xs font-medium text-foreground">
+                          {type}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-muted-foreground">{emp.email || '—'}</td>
+                      <td className="px-5 py-4 font-medium text-foreground">{formatPriceLE(salary)}</td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold ${
+                            balance >= 0
+                              ? 'border-primary/20 bg-primary/10 text-primary'
+                              : 'border-destructive/25 bg-destructive/10 text-destructive'
+                          }`}
+                        >
+                          {formatPriceLE(balance)}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <Link
+                          href={`/dashboard/hr/employees/detail?id=${emp.id}`}
+                          className="inline-flex items-center rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:brightness-110"
+                        >
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="border-t border-border bg-muted/40 px-5 py-2.5 text-xs text-muted-foreground">
+            Right-click any row to open salary calculations.
+          </div>
         </div>
       )}
-
-      <button
-        type="button"
-        onClick={() => router.push('/dashboard/hr/employees/add')}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-primary-foreground rounded-2xl shadow-lg flex items-center justify-center text-2xl hover:scale-105 transition-transform z-40"
-        style={{ color: 'var(--primary)' }}
-        aria-label="Add employee"
-      >
-        +
-      </button>
 
       {salaryDialog && (
         <SalaryCalcDialog
