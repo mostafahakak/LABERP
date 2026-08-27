@@ -59,6 +59,13 @@ function periodCount(docs, dateField, period, timeField = 'Time') {
     .sort((a, b) => a[0].localeCompare(b[0]));
 }
 
+function formatDuration(hours) {
+  if (hours < 1) return `${Math.round(hours * 60)} min`;
+  if (hours < 24) return `${Math.round(hours * 10) / 10} hrs`;
+  const days = Math.round((hours / 24) * 10) / 10;
+  return `${days} days`;
+}
+
 function groupCount(docs, keyField) {
   const map = {};
   docs.forEach((d) => {
@@ -475,14 +482,14 @@ export default function ChartsPageContent() {
 
             <ChartCard
               title="Avg. Phase Duration"
-              description="Average hours each phase takes before moving to the next"
+              description="Average time each phase takes before moving to the next"
               className="xl:col-span-2"
             >
               {phaseDurations.length > 0 ? (
                 <Chart
                   type="bar"
                   height={360}
-                  series={[{ name: 'Avg Hours', data: phaseDurations.map(([, v]) => v) }]}
+                  series={[{ name: 'Avg Duration', data: phaseDurations.map(([, v]) => v) }]}
                   options={{
                     ...commonOptions,
                     chart: { ...commonOptions.chart, parentHeightOffset: 0 },
@@ -497,12 +504,12 @@ export default function ChartsPageContent() {
                       labels: {
                         ...commonOptions.xaxis.labels,
                         show: true,
-                        formatter: (v) => `${Number(v).toFixed(1)}h`,
+                        formatter: (v) => formatDuration(Number(v)),
                       },
                     },
                     tooltip: {
                       theme: colors.mode,
-                      y: { formatter: (v) => `${v} hours` },
+                      y: { formatter: (v) => formatDuration(v) },
                     },
                     grid: {
                       ...commonOptions.grid,

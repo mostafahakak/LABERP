@@ -80,6 +80,7 @@ export default function EditCaseDialog({ caseId, caseData, onClose, onSuccess })
         shade: shade.trim(),
         price: parsedPrice,
         notes: notes.trim(),
+        isEdited: true,
       };
 
       await updateDoc(doc(db, "Cases", caseId), nextData);

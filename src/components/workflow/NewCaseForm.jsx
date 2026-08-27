@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { addDoc, collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -24,6 +25,7 @@ import { canEditLockedCase, filterUsersForRole } from "@/lib/phase-utils";
 
 export default function NewCaseForm({ editCaseId }) {
   const { user } = useAuth();
+  const router = useRouter();
   const [width, setWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200,
   );
@@ -375,6 +377,7 @@ export default function NewCaseForm({ editCaseId }) {
       else caseData.assignedUser = selectedUser;
 
       if (isEdit) {
+        caseData.isEdited = true;
         await updateDoc(doc(db, "Cases", editCaseId), caseData);
 
         await addDoc(collection(db, "CasesTrack"), {
@@ -390,6 +393,7 @@ export default function NewCaseForm({ editCaseId }) {
         });
 
         setSnack({ message: "Case updated successfully", isError: false });
+        setTimeout(() => router.push("/dashboard/workflow/view-cases"), 800);
       } else {
         caseData.status = selectedCaseType === "Physical" ? "Physical" : "Design";
         caseData.phase = selectedCaseType === "Physical" ? "P1" : "P2";

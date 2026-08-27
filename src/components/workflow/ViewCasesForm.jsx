@@ -62,6 +62,9 @@ export default function ViewCasesForm() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [viewTab, setViewTab] = useState("All");
+  const PAGE_SIZE = 40;
 
   const withAllOption = (arr) => ["All", ...arr.filter(Boolean)];
   const toList = (val) => String(val || "")
@@ -140,8 +143,9 @@ export default function ViewCasesForm() {
       (snap) => {
         const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setAllCases(docs);
+        setLoading(false);
       },
-      (err) => setSnack({ message: err.message, isError: true }),
+      (err) => { setSnack({ message: err.message, isError: true }); setLoading(false); },
     );
 
     return () => unsub();
@@ -198,8 +202,43 @@ export default function ViewCasesForm() {
     if (selectedDate) docs = docs.filter((c) => c.caseRequestDate === selectedDate);
     if (dueFilter === "Delayed") docs = docs.filter((c) => isDelayed(c));
     if (dueFilter === "Overdue") docs = docs.filter((c) => isOverdue(c));
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      docs = docs.filter((c) =>
+        (c.caseCode || "").toLowerCase().includes(q) ||
+        (c.clinicName || "").toLowerCase().includes(q) ||
+        (c.patientName || "").toLowerCase().includes(q) ||
+        (c.drName || "").toLowerCase().includes(q)
+      );
+    }
     return docs;
-  }, [allCases, selectedClinic, selectedTypeSafe, selectedDrNameSafe, selectedStatusSafe, selectedDate, dueFilter]);
+  }, [allCases, selectedClinic, selectedTypeSafe, selectedDrNameSafe, selectedStatusSafe, selectedDate, dueFilter, searchQuery]);
+
+  const isDeliveredCase = (c) => c.status === "Ready to be delivered" || c.status === "Ready to Invoice" || c.status === "Done";
+  const isOverdueNotDelivered = (c) => isOverdue(c) && !isDeliveredCase(c);
+
+  const tabbedCases = useMemo(() => {
+    if (viewTab === "Overdue") return cases.filter((c) => isOverdueNotDelivered(c));
+    if (viewTab === "Delivered") return cases.filter((c) => isDeliveredCase(c));
+    if (viewTab === "Edited") return cases.filter((c) => !!c.isEdited);
+    if (viewTab === "Delayed") return cases.filter((c) => isDelayed(c) && !isOverdue(c) && !isDeliveredCase(c));
+    if (viewTab === "Delivered+Edited") return cases.filter((c) => isDeliveredCase(c) && !!c.isEdited);
+    if (viewTab === "Overdue+Edited") return cases.filter((c) => isOverdueNotDelivered(c) && !!c.isEdited);
+    return cases;
+  }, [cases, viewTab]);
+
+  const overdueCount = useMemo(() => cases.filter((c) => isOverdueNotDelivered(c)).length, [cases]);
+  const deliveredCount = useMemo(() => cases.filter((c) => isDeliveredCase(c)).length, [cases]);
+  const editedCount = useMemo(() => cases.filter((c) => !!c.isEdited).length, [cases]);
+  const delayedCount = useMemo(() => cases.filter((c) => isDelayed(c) && !isOverdue(c) && !isDeliveredCase(c)).length, [cases]);
+  const deliveredEditedCount = useMemo(() => cases.filter((c) => isDeliveredCase(c) && !!c.isEdited).length, [cases]);
+  const overdueEditedCount = useMemo(() => cases.filter((c) => isOverdueNotDelivered(c) && !!c.isEdited).length, [cases]);
+
+  const totalPages = Math.max(1, Math.ceil(tabbedCases.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedCases = tabbedCases.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE);
+
+  useEffect(() => { setCurrentPage(1); }, [selectedClinic, selectedTypeSafe, selectedDrNameSafe, selectedStatusSafe, selectedDate, dueFilter, searchQuery, viewTab]);
 
   const clearFilters = () => {
     setSelectedClinic(null);
@@ -208,6 +247,7 @@ export default function ViewCasesForm() {
     setSelectedStatus(null);
     setSelectedDate("");
     setDueFilter("All");
+    setSearchQuery("");
   };
 
   const handleDelete = async (caseId) => {
@@ -337,71 +377,288 @@ export default function ViewCasesForm() {
     }
   };
 
+  const getStatusColor = (status) => {
+    const s = normalizeStatus(status);
+    if (s.includes("done") || s.includes("ready to invoice")) return "text-emerald-600 bg-emerald-500/10 border-emerald-500/20";
+    if (s.includes("ready") || s.includes("delivered")) return "text-sky-600 bg-sky-500/10 border-sky-500/20";
+    if (s.includes("final") || s.includes("finishing")) return "text-amber-600 bg-amber-500/10 border-amber-500/20";
+    return "text-foreground bg-muted border-border";
+  };
+
   return (
     <>
       <Header title="View Cases" />
 
-      {/* Filters */}
-      <Card className="mb-5">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><Filter className="size-4" /> Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <SelectField label="Clinic Name" value={selectedClinic} onChange={(v) => setSelectedClinic(v === "All" ? null : v)} options={withAllOption(clinicOptions)} placeholder="All" />
-            <SelectField label="Type" value={selectedTypeSafe} onChange={(v) => setSelectedType(v === "All" ? null : v)} options={withAllOption(typeOptions)} placeholder="All" />
-            <SelectField label="Dr Name" value={selectedDrNameSafe} onChange={(v) => setSelectedDrName(v === "All" ? null : v)} options={withAllOption(drOptions)} placeholder="All" />
-            <SelectField
-              label="Status"
-              value={selectedStatusSafe}
-              onChange={(v) => setSelectedStatus(v === "All" ? null : v)}
-              options={withAllOption(statusOptions).map((s) => (
-                s === "All"
-                  ? { label: "All", value: "All" }
-                  : { label: statusLabel(s), value: s }
-              ))}
-              placeholder="All"
-            />
-            <SelectField label="Due Status" value={dueFilter} onChange={setDueFilter} options={["All", "Delayed", "Overdue"]} placeholder="All" />
-            <div className="space-y-1.5">
-              <Label>Date Arrival</Label>
-              <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search by code, clinic, patient, or doctor..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-card text-sm text-foreground shadow-sm"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">{cases.length} cases</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearFilters}
+            className="gap-1.5 rounded-xl text-xs"
+          >
+            <X className="size-3" /> Clear
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openDeleteAllDialog}
+            disabled={bulkDeleting}
+            className="gap-1.5 rounded-xl text-xs border-destructive/30 text-destructive hover:text-destructive"
+          >
+            <Trash2 className="size-3" /> Remove All
+          </Button>
+        </div>
+      </div>
+
+      <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Clinic</label>
+          <select value={selectedClinic || "All"} onChange={(e) => setSelectedClinic(e.target.value === "All" ? null : e.target.value)} className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground">
+            {withAllOption(clinicOptions).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Type</label>
+          <select value={selectedTypeSafe || "All"} onChange={(e) => setSelectedType(e.target.value === "All" ? null : e.target.value)} className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground">
+            {withAllOption(typeOptions).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Doctor</label>
+          <select value={selectedDrNameSafe || "All"} onChange={(e) => setSelectedDrName(e.target.value === "All" ? null : e.target.value)} className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground">
+            {withAllOption(drOptions).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Status</label>
+          <select value={selectedStatusSafe || "All"} onChange={(e) => setSelectedStatus(e.target.value === "All" ? null : e.target.value)} className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground">
+            {withAllOption(statusOptions).map((s) => <option key={s} value={s}>{s === "All" ? "All" : statusLabel(s)}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Due Status</label>
+          <select value={dueFilter} onChange={(e) => setDueFilter(e.target.value)} className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground">
+            <option value="All">All</option>
+            <option value="Delayed">Delayed</option>
+            <option value="Overdue">Overdue</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground mb-1">Date Arrival</label>
+          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground" />
+        </div>
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => setViewTab("All")} className={`px-4 py-2 rounded-xl text-sm font-medium border ${viewTab === "All" ? "bg-primary text-primary-foreground border-primary" : "border-border text-foreground hover:bg-muted"}`}>
+          All ({cases.length})
+        </button>
+        <button type="button" onClick={() => setViewTab("Overdue")} className={`px-4 py-2 rounded-xl text-sm font-medium border ${viewTab === "Overdue" ? "bg-red-600 text-white border-red-600" : "border-red-300 text-red-600 hover:bg-red-50"}`}>
+          Overdue ({overdueCount})
+        </button>
+        <button type="button" onClick={() => setViewTab("Delivered")} className={`px-4 py-2 rounded-xl text-sm font-medium border ${viewTab === "Delivered" ? "bg-emerald-600 text-white border-emerald-600" : "border-emerald-300 text-emerald-600 hover:bg-emerald-50"}`}>
+          Delivered ({deliveredCount})
+        </button>
+        <button type="button" onClick={() => setViewTab("Edited")} className={`px-4 py-2 rounded-xl text-sm font-medium border ${viewTab === "Edited" ? "bg-yellow-500 text-white border-yellow-500" : "border-yellow-400 text-yellow-600 hover:bg-yellow-50"}`}>
+          Edited ({editedCount})
+        </button>
+        <button type="button" onClick={() => setViewTab("Delivered+Edited")} className={`px-4 py-2 rounded-xl text-sm font-medium border ${viewTab === "Delivered+Edited" ? "bg-emerald-600 text-white border-emerald-600" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}`}>
+          Delivered & Edited ({deliveredEditedCount})
+        </button>
+        <button type="button" onClick={() => setViewTab("Overdue+Edited")} className={`px-4 py-2 rounded-xl text-sm font-medium border ${viewTab === "Overdue+Edited" ? "bg-red-600 text-white border-red-600" : "border-red-300 text-red-600 hover:bg-red-50"}`}>
+          Overdue & Edited ({overdueEditedCount})
+        </button>
+        <button type="button" onClick={() => setViewTab("Delayed")} className={`px-4 py-2 rounded-xl text-sm font-medium border ${viewTab === "Delayed" ? "bg-blue-900 text-white border-blue-900" : "border-blue-800 text-blue-800 hover:bg-blue-50"}`}>
+          Delayed ({delayedCount})
+        </button>
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-2.5 text-xs">
+        <span className="text-muted-foreground font-medium">Legend:</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-3 rounded-sm bg-red-500/30" /> Overdue</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-3 rounded-sm bg-emerald-500/30" /> Delivered</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-3 rounded-sm bg-yellow-400/40" /> Edited</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-3 rounded-sm" style={{ background: 'linear-gradient(to right, rgb(250 204 21 / 0.4) 50%, rgb(34 197 94 / 0.4) 50%)' }} /> Delivered & Edited</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-3 rounded-sm" style={{ background: 'linear-gradient(to right, rgb(250 204 21 / 0.4) 50%, rgb(239 68 68 / 0.4) 50%)' }} /> Overdue & Edited</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block w-4 h-3 rounded-sm bg-blue-900" /> Delayed</span>
+      </div>
+
+      {loading ? (
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="animate-pulse">
+            <div className="bg-secondary/60 h-11" />
+            {[1,2,3,4,5].map((i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4 border-t border-border/50">
+                <div className="h-4 w-16 rounded bg-muted" />
+                <div className="h-4 w-24 rounded bg-muted" />
+                <div className="h-4 w-20 rounded bg-muted" />
+                <div className="h-4 w-20 rounded bg-muted" />
+                <div className="h-4 w-16 rounded bg-muted" />
+                <div className="h-4 w-20 rounded bg-muted" />
+                <div className="h-6 w-16 rounded-full bg-muted" />
+                <div className="flex-1" />
+                <div className="h-7 w-20 rounded bg-muted" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : cases.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground rounded-2xl border border-dashed border-border bg-card">
+          <p className="text-3xl mb-2">📋</p>
+          <p>No cases found.</p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-md">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-secondary text-secondary-foreground">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Code</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Clinic</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Doctor</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Patient</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Price</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Due</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {paginatedCases.map((c, idx) => {
+                  const delayed = isDelayed(c);
+                  const overdue = isOverdue(c);
+                  const isDelivered = c.status === "Ready to be delivered" || c.status === "Ready to Invoice" || c.status === "Done";
+                  const isEdited = !!c.isEdited;
+                  const phase = c.phase || getPhaseInfo(c).currentPhase;
+                  const rowBg = isEdited && overdue && !isDelivered
+                    ? "[background:linear-gradient(to_right,rgb(250_204_21/0.4)_50%,rgb(239_68_68/0.4)_50%)]"
+                    : isEdited && isDelivered
+                      ? "[background:linear-gradient(to_right,rgb(250_204_21/0.4)_50%,rgb(34_197_94/0.4)_50%)]"
+                      : isEdited
+                      ? "bg-yellow-400/30 hover:bg-yellow-400/40"
+                      : overdue && !isDelivered
+                        ? "bg-red-500/25 hover:bg-red-500/35"
+                        : isDelivered
+                          ? "bg-emerald-500/25 hover:bg-emerald-500/35"
+                          : delayed
+                            ? "bg-blue-900 text-white hover:bg-blue-800"
+                            : idx % 2 === 0 ? "bg-card hover:bg-primary/5" : "bg-muted/30 hover:bg-primary/5";
+
+                  return (
+                    <tr key={c.id} className={`group ${rowBg}`}>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold text-black dark:text-white">{c.caseCode || "—"}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-block rounded-md bg-blue-500/10 px-2 py-0.5 text-sm font-semibold text-black dark:text-white">{c.clinicName || "—"}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-block rounded-md bg-violet-500/10 px-2 py-0.5 text-sm text-black dark:text-white">{c.drName || "—"}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-block rounded-md bg-sky-500/10 px-2 py-0.5 text-sm text-black dark:text-white">{c.patientName || "—"}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-block rounded-md bg-emerald-500/10 px-2 py-0.5 text-sm font-medium text-black dark:text-white">{formatPriceLE(c.price)}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-block rounded-md bg-orange-500/10 px-2 py-0.5 text-sm text-black dark:text-white">
+                          {c.dueDate || "—"}
+                          {overdue && !isDelivered && <span className="ml-1 text-red-500 text-[10px]">⚠</span>}
+                          {delayed && !overdue && <span className="ml-1 text-amber-500 text-[10px]">⏰</span>}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getStatusColor(c.status)}`}>
+                          {phase} · {c.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1">
+                          <button type="button" onClick={() => setManageCase(c)} className="p-1.5 rounded-lg hover:bg-primary/10 text-primary" title="Manage">
+                            <Settings2 className="size-3.5" />
+                          </button>
+                          <Link href={`/dashboard/workflow/cases/detail?id=${c.id}`} className="p-1.5 rounded-lg hover:bg-sky-500/10 text-sky-500" title="View">
+                            <Eye className="size-3.5" />
+                          </Link>
+                          {canEditLockedCase(user?.type, c.status) && (
+                            <Link href={`/dashboard/workflow/new-case?id=${c.id}`} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground" title="Edit">
+                              <Pencil className="size-3.5" />
+                            </Link>
+                          )}
+                          <button type="button" onClick={() => openDeleteCaseDialog(c)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive/60 hover:text-destructive" title="Delete">
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex items-center justify-between border-t border-border bg-muted/40 px-4 py-2.5">
+            <span className="text-xs text-muted-foreground">
+              Showing {(safeCurrentPage - 1) * PAGE_SIZE + 1}–{Math.min(safeCurrentPage * PAGE_SIZE, tabbedCases.length)} of {tabbedCases.length} cases
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={safeCurrentPage <= 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="px-2.5 py-1 rounded-lg border border-border text-xs font-medium text-foreground disabled:opacity-40"
+              >
+                Prev
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - safeCurrentPage) <= 2)
+                .reduce((acc, p, i, arr) => {
+                  if (i > 0 && p - arr[i - 1] > 1) acc.push('...');
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, i) =>
+                  p === '...' ? (
+                    <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setCurrentPage(p)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                        p === safeCurrentPage
+                          ? 'bg-primary text-primary-foreground'
+                          : 'border border-border text-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              <button
+                type="button"
+                disabled={safeCurrentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="px-2.5 py-1 rounded-lg border border-border text-xs font-medium text-foreground disabled:opacity-40"
+              >
+                Next
+              </button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={clearFilters} className="gap-1.5">
-              <X className="size-3.5" /> Clear Filters
-            </Button>
-            <Button
-              variant="outline"
-              onClick={openDeleteAllDialog}
-              className="gap-1.5 border-destructive/40 text-destructive hover:text-destructive"
-              disabled={bulkDeleting}
-            >
-              <Trash2 className="size-3.5" /> Remove All Cases
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Cases List */}
-      <div className="space-y-4">
-        {cases.map((c) => (
-          <CaseCard
-            key={c.id}
-            caseData={c}
-            onManage={() => setManageCase(c)}
-            onDelete={() => openDeleteCaseDialog(c)}
-            onFinalize={() => handleFinalize(c.id)}
-            canEdit={canEditLockedCase(user?.type, c.status)}
-          />
-        ))}
-        {cases.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">No cases found.</CardContent>
-          </Card>
-        )}
-      </div>
+        </div>
+      )}
 
       {manageCase && (
         <ManageCaseDialog
@@ -491,229 +748,5 @@ export default function ViewCasesForm() {
 
       <Snackbar message={snack.message} isError={snack.isError} onClose={() => setSnack({ message: "", isError: false })} />
     </>
-  );
-}
-
-function CaseCard({ caseData, onManage, onDelete, onFinalize, canEdit = true }) {
-  const [balance, setBalance] = useState(null);
-  const delayed = isDelayed(caseData);
-  const overdue = isOverdue(caseData);
-  const phase = caseData.phase || getPhaseInfo(caseData).currentPhase;
-  const phaseColors = {
-    "P1": "bg-orange-500/15 text-orange-600 dark:text-orange-300",
-    "P2": "bg-blue-500/15 text-blue-600 dark:text-blue-300",
-    "P3": "bg-violet-500/15 text-violet-600 dark:text-violet-300",
-    "P4": "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
-    "P5": "bg-cyan-500/15 text-cyan-600 dark:text-cyan-300",
-    "P6": "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-    "P7": "bg-rose-500/15 text-rose-600 dark:text-rose-300",
-    "Phase 1": "bg-orange-500/15 text-orange-600 dark:text-orange-300",
-    "Phase 2": "bg-blue-500/15 text-blue-600 dark:text-blue-300",
-    "Phase 3": "bg-violet-500/15 text-violet-600 dark:text-violet-300",
-    "Phase 4": "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
-    "Phase 5": "bg-cyan-500/15 text-cyan-600 dark:text-cyan-300",
-    "Phase 6": "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-    "Phase 7": "bg-rose-500/15 text-rose-600 dark:text-rose-300",
-  };
-  const isFinalized =
-    caseData.status === "Finalized" ||
-    caseData.status === "Final order" ||
-    caseData.status === "Ready to be delivered" ||
-    caseData.status === "Ready to Invoice" ||
-    caseData.status === "Done";
-  const isDelivered =
-    caseData.status === "Ready to be delivered" ||
-    caseData.status === "Ready to Invoice" ||
-    caseData.status === "Done";
-
-  const formatType = (typeStr) => {
-    if (!typeStr) return "";
-    const parts = typeStr.split(",").map((s) => s.trim()).filter(Boolean);
-    const counts = {};
-    parts.forEach((p) => { counts[p] = (counts[p] || 0) + 1; });
-    return Object.entries(counts)
-      .map(([name, count]) => (count > 1 ? `${count}x ${name}` : name))
-      .join(", ");
-  };
-
-  useEffect(() => {
-    if (!caseData.clinicName) return;
-    const q = query(
-      collection(db, "Clinics"),
-      where("name", "==", caseData.clinicName),
-      limit(1),
-    );
-    const unsub = onSnapshot(q, (snap) => {
-      if (!snap.empty) setBalance(snap.docs[0].data().balance);
-    });
-    return () => unsub();
-  }, [caseData.clinicName]);
-
-  return (
-    <Card className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl group ${
-      overdue
-        ? isDelivered
-          ? "border border-emerald-500/50 shadow-emerald-500/10"
-          : "border border-red-500/50 shadow-red-500/10"
-        : delayed
-          ? "border border-amber-500/50 shadow-amber-500/10"
-          : "border-border/50 hover:border-primary/30"
-    }`}>
-      {/* Status ribbon */}
-      {overdue && (
-        <div className={`${isDelivered ? "bg-gradient-to-r from-emerald-600 to-emerald-500" : "bg-gradient-to-r from-red-600 to-red-500"} text-white text-xs font-semibold px-4 py-1.5 flex items-center gap-2`}>
-          <span className={`inline-block w-1.5 h-1.5 bg-white rounded-full ${isDelivered ? "" : "animate-pulse"}`} />
-          {isDelivered ? "✅ Delivered" : "⚠️ Overdue"}
-        </div>
-      )}
-      {delayed && !overdue && (
-        <div className="bg-gradient-to-r from-amber-500 to-orange-400 text-white text-xs font-semibold px-4 py-1.5 flex items-center gap-2">
-          <span className="inline-block w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-          ⏰ Due Tomorrow
-        </div>
-      )}
-
-      <CardContent className="p-0">
-        {/* Top section — Clinic header with badges */}
-        <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <button
-              type="button"
-              onClick={onFinalize}
-              disabled={isFinalized}
-              className="shrink-0"
-              title="Mark as Finalized"
-            >
-              <CheckCircle2 className={`size-5 ${isFinalized ? 'text-emerald-500' : 'text-muted-foreground/30 hover:text-emerald-500'} transition-colors`} />
-            </button>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-base">🏥</span>
-                <p className="font-bold text-foreground truncate">{caseData.clinicName}</p>
-              </div>
-              {caseData.caseCode && (
-                <p className="text-xs text-muted-foreground ml-7 font-mono">{caseData.caseCode}</p>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-1.5 shrink-0">
-            <Badge variant="outline" className="text-[10px] px-2 py-0.5 border-blue-400/40 text-blue-400">{caseData.caseType}</Badge>
-            <Badge className={`text-[10px] px-2 py-0.5 ${phaseColors[phase] || "bg-muted text-foreground"}`}>{phase}</Badge>
-            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${
-              overdue && !isDelivered ? 'border-red-400/40 text-red-400' : delayed ? 'border-amber-400/40 text-amber-500' : 'border-emerald-400/40 text-emerald-400'
-            }`}>{caseData.status}</Badge>
-          </div>
-        </div>
-
-        {/* Info grid */}
-        <div className="px-4 pb-3">
-          <div className="rounded-xl bg-muted/40 border border-border/30 p-3 space-y-2">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <Stethoscope className="size-3.5 text-blue-500" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Doctor</p>
-                  <p className="text-foreground font-medium truncate text-sm">{caseData.drName}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
-                  <User className="size-3.5 text-violet-500" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Patient</p>
-                  <p className="text-foreground font-medium truncate text-sm">{caseData.patientName}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                  <DollarSign className="size-3.5 text-emerald-500" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Price</p>
-                  <p className="text-foreground font-medium text-sm">{formatPriceLE(caseData.price)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
-                  <Calendar className="size-3.5 text-orange-500" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Due</p>
-                  <p className="text-foreground font-medium text-sm">{caseData.dueDate || caseData.caseRequestDate}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Type tags */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider mr-1 self-center">🦷</span>
-              {formatType(caseData.type).split(", ").map((t, i) => (
-                <span key={i} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">{t}</span>
-              ))}
-            </div>
-
-            {/* Teeth / Jaw chips */}
-            {Array.isArray(caseData.types) && caseData.types.some((t) => t.toothLabel || t.jawLabel) && (
-              <div className="flex flex-wrap gap-1.5 pt-0.5">
-                {caseData.types.map((t, i) => {
-                  if (t.toothLabel) return (
-                    <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-medium">
-                      <span className="w-4 h-4 rounded-full bg-sky-500 text-white text-[9px] flex items-center justify-center font-bold">{t.toothLabel}</span>
-                      {t.name}
-                    </span>
-                  );
-                  if (t.jawLabel) return (
-                    <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-medium">
-                      🦴 {t.jawLabel} — {t.name}
-                    </span>
-                  );
-                  return null;
-                })}
-              </div>
-            )}
-
-            {balance !== null && (
-              <div className="pt-1">
-                <span className={`text-xs font-semibold ${balance >= 0 ? "text-emerald-500" : "text-destructive"}`}>
-                  Clinic Balance: {formatPriceLE(balance)}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-1.5 px-4 pb-4">
-          <Button size="sm" onClick={onManage} className="gap-1.5 rounded-lg h-8 text-xs">
-            <Settings2 className="size-3" /> Manage
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            asChild
-            className="gap-1.5 rounded-lg h-8 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-          >
-            <Link href={`/dashboard/workflow/cases/detail?id=${caseData.id}`} className="inline-flex items-center gap-1.5">
-              <Eye className="size-3 shrink-0" />
-              View
-            </Link>
-          </Button>
-          {canEdit && (
-            <Button size="sm" variant="ghost" asChild className="gap-1.5 rounded-lg h-8 text-xs text-muted-foreground hover:text-foreground">
-              <Link href={`/dashboard/workflow/new-case?id=${caseData.id}`}>
-                <Pencil className="size-3" /> Edit
-              </Link>
-            </Button>
-          )}
-          <div className="flex-1" />
-          <Button size="sm" variant="ghost" onClick={onDelete} className="gap-1 rounded-lg h-8 text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10">
-            <Trash2 className="size-3" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }

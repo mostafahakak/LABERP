@@ -120,6 +120,7 @@ export default function EditCaseForm({ caseId }) {
         shade: shade.trim(),
         price: parsedPrice,
         notes: notes.trim(),
+        isEdited: true,
       };
 
       await updateDoc(doc(db, "Cases", caseId), nextData);
