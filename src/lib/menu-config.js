@@ -31,6 +31,7 @@ import {
   Briefcase,
   Syringe,
   Hospital,
+  FileBarChart,
 } from "lucide-react";
 
 export function getSuperAdminMenu() {
@@ -196,6 +197,11 @@ export function getSuperAdminMenu() {
       ],
     },
     {
+      title: "Reports",
+      icon: FileBarChart,
+      href: "/dashboard/reports",
+    },
+    {
       title: "Notifications",
       icon: Bell,
       href: "/dashboard/notifications",
@@ -353,6 +359,11 @@ export function getHrAdminMenu() {
       children: [
         { title: "Settings", href: "/dashboard/settings", icon: Settings },
       ],
+    },
+    {
+      title: "Reports",
+      icon: FileBarChart,
+      href: "/dashboard/reports",
     },
     {
       title: "Notifications",
