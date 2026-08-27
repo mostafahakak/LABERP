@@ -127,7 +127,7 @@ function DeductionDialog({ userData, userId, authUser, onClose, onSnack }) {
       const logDate = formatDate(now);
       const logTime = formatTime(now);
       const balanceBefore = Number(userData.balance) || 0;
-      const balanceAfter = balanceBefore + val;
+      const balanceAfter = balanceBefore - val;
 
       const financeRef = doc(collection(db, 'Finance'));
       await setDoc(financeRef, {
@@ -227,7 +227,7 @@ function DeductionDialog({ userData, userId, authUser, onClose, onSnack }) {
           <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50/60 p-3 text-sm dark:bg-rose-950/20">
             <p className="text-muted-foreground">Balance after deduction:</p>
             <p className="font-bold text-foreground">
-              {formatPriceLE((Number(userData.balance) || 0) + parseFloat(amount))}
+              {formatPriceLE((Number(userData.balance) || 0) - parseFloat(amount))}
             </p>
           </div>
         )}
