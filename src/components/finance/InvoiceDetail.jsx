@@ -24,6 +24,34 @@ import Header from '@/components/layout/Header';
 import { PageCard, TextField, SelectField, Snackbar, LoadingOverlay } from '@/components/ui/PageComponents';
 import { calcCardFee, calcNetAmountToBank } from './finance-helpers';
 
+function itemColorStyle(index) {
+  const hue = Math.round((index * 137.508) % 360);
+  return {
+    backgroundColor: `hsl(${hue} 62% 90%)`,
+    borderColor: `hsl(${hue} 42% 72%)`,
+    color: `hsl(${hue} 38% 22%)`,
+  };
+}
+
+function groupItemNames(name, quantity) {
+  const rawQty = Number(quantity);
+  const multiplier = Number.isFinite(rawQty) && rawQty > 0 ? rawQty : 1;
+  const parts = String(name || '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return [{ name: 'Item', quantity: multiplier }];
+
+  const groups = new Map();
+  for (const part of parts) {
+    const key = part.toLowerCase();
+    const existing = groups.get(key);
+    if (existing) existing.quantity += multiplier;
+    else groups.set(key, { name: part, quantity: multiplier });
+  }
+  return Array.from(groups.values());
+}
+
 export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -671,10 +699,20 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
       <PageCard title="Items">
         {items.length === 0 ? <p className="text-muted-foreground">No items.</p> : (
           <div className="space-y-2">
-            {items.map((item) => (
-              <div key={item.id} className="flex justify-between border rounded-lg p-3">
-                <span>{item.name} x{item.quantity}</span>
-                <span>{formatPriceLE((Number(item.price) || 0) * (Number(item.quantity) || 1))}</span>
+            {items.map((item, itemIndex) => (
+              <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 border rounded-lg p-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {groupItemNames(item.name, item.quantity).map((part, partIndex) => (
+                    <span
+                      key={part.name}
+                      style={itemColorStyle(itemIndex * 5 + partIndex)}
+                      className="rounded-md border px-2 py-1 text-xs"
+                    >
+                      {part.quantity} × {part.name}
+                    </span>
+                  ))}
+                </div>
+                <span className="text-sm font-medium">{formatPriceLE((Number(item.price) || 0) * (Number(item.quantity) || 1))}</span>
               </div>
             ))}
           </div>
@@ -854,7 +892,7 @@ export default function InvoiceDetail({ invoiceId: propId, type: propType }) {
                     <td>{getPrintedCaseCode(item)}</td>
                     <td>{item.patientName || invoice.patientName || invoice.name || '—'}</td>
                     <td>{item.quantity || 1}</td>
-                    <td>{item.name || '—'}</td>
+                    <td>{groupItemNames(item.name, item.quantity).map((part) => `${part.quantity} × ${part.name}`).join(', ') || '—'}</td>
                   </tr>
                 ))}
                 {items.length === 0 && (

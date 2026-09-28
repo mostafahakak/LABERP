@@ -108,7 +108,7 @@ export default function AppSidebar() {
                     >
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+                      <ChevronRight className="ml-auto transition-transform duration-300 ease-in-out group-data-open/collapsible:rotate-90" />
                     </SidebarMenuButton>
                     <CollapsibleContent>
                       <SidebarMenuSub>
